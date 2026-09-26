@@ -25,6 +25,20 @@ window.CURUL = window.CURUL || {};
     },
     ejecutar(E, a) {
       const J = E.jugador;
+      if (a.via === 'primaria') {
+        const r = C.Partidos.primaria(E, a.cargo, a.depto || J.residencia);
+        E.elecciones.primariaPendiente = r;
+        if (!r.gana) {
+          E.partidos[J.partido].relJ -= 2;
+          J.avalNegado = { partido: J.partido, t: E.fecha.t };
+          return { ok: true, msg: `Pierdes la consulta interna del ${E.partidos[J.partido].sigla}`, exito: false };
+        }
+        const res = El.inscribir(E, a.cargo, a.depto, 'primaria');
+        const cam = E.elecciones.campana;
+        cam.primariaGanada = true;
+        if (a.cargo === 'senado' || a.cargo === 'camara') cam.cabezaLista = true;
+        return res;
+      }
       if (a.via !== 'firmas') {
         const p = C.Partidos.probAval(E, J.partido, a.cargo);
         if (!U.chance(p)) {

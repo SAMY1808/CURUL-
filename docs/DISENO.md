@@ -232,8 +232,33 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **completa** |
 | **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
 | **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios; Asambleas Departamentales y Concejos Municipales con miembros elegidos y voto nominal real; capa de los 1122 municipios reales en el mapa | **completa** |
-| 4 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
-| 5 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados | **completa (esta entrega)** |
+| 5 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| 6 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 4
+
+- **Peso interno de partido** (`Partidos.peso(E, pol)` en `js/sistemas/partidos.js`): no es un
+  campo guardado aparte, se deriva del cargo que la persona ocupa (o el más alto que ocupó),
+  su carisma y experiencia y, sólo para el jugador —de quien sí se seguía ya la relación con la
+  dirección vía `partido.relJ`—, esa relación. Dos números, 0-100: peso frente a la dirección
+  **nacional** y frente a la **departamental**. Cuando la dirección arma una lista cerrada
+  (`Elecciones.formarLista`), los aspirantes del partido se ordenan por este peso antes de
+  completar los renglones disponibles: quien más pesa entra primero a la lista, aunque el orden
+  final de elección lo sigue decidiendo el voto preferente de la noche electoral (no se cambia
+  ese sistema, que ya existía desde la Fase 1).
+- **Consultas internas (primarias)** (`Partidos.primaria`/`Partidos.rivalesPrimaria` y la vía
+  `primaria` de la acción `inscribir` en `js/sistemas/campana.js`): en vez de esperar el aval de
+  la dirección (una probabilidad), el jugador puede medirse contra un puñado de compañeros de su
+  propio partido por el mismo cupo. Cada candidato pesa según su peso interno y su fuerza
+  electoral personal, con su dosis de azar; el resultado se ve en una noche de resultados propia
+  (`Pantallas.elecciones.nochePrimaria`), más ligera que la noche electoral general pero con la
+  misma idea: barras de apoyo por candidato y un veredicto claro de paso/no paso. Ganar tiene
+  efecto real: en Senado o Cámara, el jugador sale de **cabeza de lista** (bonus de arrastre en
+  `Elecciones.pesoPreferente` durante la elección general); en Gobernación, Alcaldía o
+  Presidencia, el jugador queda como el único candidato de su partido en esa contienda (se retira
+  cualquier otro nombre generado automáticamente para esa colectividad). Perder tiene las mismas
+  consecuencias que un aval negado: la campaña no se inscribe y hay que esperar antes de insistir.
 
 ### Notas de la Fase 3
 

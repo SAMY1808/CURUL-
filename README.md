@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1, 2 y 3 completas)
+## Qué hay en esta versión (Fases 1 a 4 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -57,6 +57,13 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   de cada uno de sus miembros, visible en su propio hemiciclo.
 - **Mapa de municipios**: capa opcional con el contorno real de los 1122 municipios de Colombia
   (nombre, departamento y población al pasar el cursor), sobre el mismo mapa departamental.
+- **Peso interno de partido y consultas internas**: tu peso frente a la dirección nacional y a la
+  departamental (según el cargo que ocupes, tu experiencia y tu relación con el partido) decide
+  qué tan buen renglón te da la dirección al armar una lista cerrada. Si prefieres no dejarlo en
+  sus manos, puedes exigir una consulta interna: te mides contra otros aspirantes de tu propio
+  partido en una noche de resultados aparte. Ganarla te hace cabeza de lista en Senado o Cámara,
+  o el único candidato de tu partido en Gobernación, Alcaldía o Presidencia; perderla cierra esa
+  puerta por un tiempo, igual que un aval negado.
 
 ## Arquitectura
 

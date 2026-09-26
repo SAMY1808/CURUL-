@@ -69,6 +69,7 @@ window.CURUL = window.CURUL || {};
       const r = C.Acciones.ejecutar(id, args);
       if (!opts.silencio) UI.toast((r.ok === false ? '⚠ ' : '') + U.esc(r.msg || 'Hecho'), r.ok === false ? 'mal' : r.exito === false ? '' : 'bien');
       if (!opts.sinRefresco) C.App.refrescar();
+      if (C.E && C.E.elecciones && C.E.elecciones.primariaPendiente) { const p = C.E.elecciones.primariaPendiente; C.E.elecciones.primariaPendiente = null; C.Pantallas.elecciones.nochePrimaria(p); }
       return r;
     },
     /* Botón de acción con su costo y disponibilidad */

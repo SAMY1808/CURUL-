@@ -122,6 +122,7 @@ window.CURUL = window.CURUL || {};
     revisarPendientes() {
       const E = C.E;
       if (E.eventos.pendientes.length) { App.modalEvento(E.eventos.pendientes[0]); return; }
+      if (E.elecciones.primariaPendiente) { const r = E.elecciones.primariaPendiente; E.elecciones.primariaPendiente = null; C.Pantallas.elecciones.nochePrimaria(r); return; }
       if (E.elecciones.nochePendiente) { const id = E.elecciones.nochePendiente; E.elecciones.nochePendiente = null; C.Pantallas.elecciones.noche(id); return; }
       if ((E.ui.sancionesPendientes || []).length) C.Pantallas.proyectos.sancion(E.ui.sancionesPendientes[0]);
     },

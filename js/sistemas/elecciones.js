@@ -94,7 +94,10 @@ window.CURUL = window.CURUL || {};
     /* ── Candidaturas ──────────────────────────────────────── */
     /* Fuerza personal de un candidato en una lista (voto preferente) */
     pesoPreferente(E, p, dId) {
-      if (p.id === 'J') return Math.pow(El.fuerzaJugador(E, dId), 1.6);
+      if (p.id === 'J') {
+        const cam = E.elecciones.campana;
+        return Math.pow(El.fuerzaJugador(E, dId), 1.6) * (cam && cam.cabezaLista ? 2.2 : 1);
+      }
       const inc = (p.cargo && (p.cargo.tipo === 'senador' || p.cargo.tipo === 'representante')) ? 15 : 0;
       return Math.pow(p.fuerza + p.r.car * 0.3 + p.r.exp * 0.1 + inc, 1.6) * Math.exp(U.gauss(0, 0.25));
     },
@@ -110,7 +113,10 @@ window.CURUL = window.CURUL || {};
       const inc = (J.cargo === 'senador' || J.cargo === 'representante') ? 15 : 0;
       return 10 + rec * 0.55 + fav * 0.35 + est * 0.3 + gasto + inc + (J.atributos.carisma - 50) * 0.15;
     },
-    /* Candidatos de un partido para una lista */
+    /* Candidatos de un partido para una lista. Los incumbentes van primero (buscan reelección);
+       los aspirantes se ordenan por su peso interno en el partido, porque cuando la dirección
+       arma una lista cerrada prioriza a quien más pesa a la hora de completar los renglones
+       disponibles (quien gana una consulta interna ya llega aparte, como cabeza de lista). */
     formarLista(E, pid, camara, dId, cupo, electosPrevios) {
       const lista = [];
       const es = p => p.activo && p.id !== 'J' && (p.proximoPartido || p.partido) === pid && El.edadOK(p);
@@ -120,13 +126,16 @@ window.CURUL = window.CURUL || {};
         if (camara === 'senado' && p.cargo.tipo === 'senador' && !p.aspiraOtro) lista.push(p);
         if (camara === 'camara' && p.cargo.tipo === 'representante' && p.cargo.circ === dId && !p.aspiraOtro) lista.push(p);
       }
-      // Aspirantes del partido
+      // Aspirantes del partido, ordenados por peso interno (nacional para Senado, departamental para Cámara)
+      const nivel = camara === 'senado' ? 'nac' : 'dep';
+      const aspirantes = [];
       for (const p of Object.values(E.politicos)) {
-        if (lista.length >= cupo) break;
         if (!es(p) || !p.cargo || p.cargo.tipo !== 'aspirante') continue;
-        if (camara === 'senado' && p.cargo.aspira === 'senado') lista.push(p);
-        if (camara === 'camara' && p.cargo.aspira === 'camara' && p.depto === dId) lista.push(p);
+        if (camara === 'senado' && p.cargo.aspira === 'senado') aspirantes.push(p);
+        if (camara === 'camara' && p.cargo.aspira === 'camara' && p.depto === dId) aspirantes.push(p);
       }
+      aspirantes.sort((a, b) => C.Partidos.peso(E, b)[nivel] - C.Partidos.peso(E, a)[nivel]);
+      for (const p of aspirantes) { if (lista.length >= cupo) break; lista.push(p); }
       while (lista.length < cupo) lista.push(C.Politicos.crear(E, { partido: pid, depto: dId || undefined, cargo: { tipo: 'aspirante', aspira: camara } }));
       for (const p of lista) if (p.proximoPartido) { p.partido = p.proximoPartido; delete p.proximoPartido; }
       return lista.slice(0, Math.max(cupo, lista.length));
@@ -333,7 +342,10 @@ window.CURUL = window.CURUL || {};
           const top = Object.entries(cuo).filter(([p]) => p !== 'BLANCO').sort((a, b) => b[1] - a[1]).slice(0, U.ri(3, 4));
           const cands = top.map(([pid, s]) => ({ pol: C.Politicos.crear(E, { partido: pid, depto: d.id, cargo: { tipo: 'aspirante', aspira: tipo } }).id, partido: pid, s }));
           if (cam && cam.eleccion === 'regional' && cam.cargo === tipo && cam.depto === d.id) {
-            cands.push({ pol: 'J', partido: cam.partido, s: El.fuerzaJugador(E, d.id) / 250 });
+            // Si el jugador ganó la consulta interna de su partido, es el único candidato de esa
+            // colectividad (no compite consigo mismo contra otro nombre de su propio partido).
+            if (cam.primariaGanada) { const iOld = cands.findIndex(c => c.partido === cam.partido); if (iOld >= 0) cands.splice(iOld, 1); }
+            cands.push({ pol: 'J', partido: cam.partido, s: El.fuerzaJugador(E, d.id) / 250 * (cam.primariaGanada ? 1.15 : 1) });
           }
           const electores = El.electores(d) * (tipo === 'alcaldia' ? 0.45 : 1), part = El.participacionBase(E, d, 'regional');
           const validos = Math.round(electores * part * 0.95);
@@ -508,7 +520,7 @@ window.CURUL = window.CURUL || {};
         equipo: {}, voluntarios: 20 + Math.round(J.redes * 3), estructura: 8 + (J.cargo === 'representante' || J.cargo === 'senador' ? 12 : 0),
         actividades: [], encuestas: [], inicio: E.fecha.t, firmas: via === 'firmas' ? 0 : null
       };
-      C.Medios.noticia(E, { tipo: 'campana', titular: `${J.nombre} inscribe su candidatura a ${El.CARGOS_CAMPANA[cargo]}${partido === 'MOV' ? ' por firmas' : ' con aval del ' + E.partidos[partido].sigla}`, tono: 1, jugador: true });
+      C.Medios.noticia(E, { tipo: 'campana', titular: `${J.nombre} inscribe su candidatura a ${El.CARGOS_CAMPANA[cargo]}${partido === 'MOV' ? ' por firmas' : via === 'primaria' ? ' tras ganar la consulta interna del ' + E.partidos[partido].sigla : ' con aval del ' + E.partidos[partido].sigla}`, tono: 1, jugador: true });
       return { ok: true, msg: 'Candidatura inscrita' };
     },
     turnoCampana(E) {

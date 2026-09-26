@@ -46,6 +46,8 @@ window.CURUL = window.CURUL || {};
     const cargo = E.ui.cargoInsc || (J.cargo === 'representante' ? 'camara' : J.cargo === 'senador' ? 'senado' : 'camara');
     const tipo = El.tipoEleccion(cargo), ev = El.proxima(E, tipo);
     const pAval = J.partido && E.partidos[J.partido] ? C.Partidos.probAval(E, J.partido, cargo) : 0;
+    const peso = J.partido && E.partidos[J.partido] ? C.Partidos.peso(E, E.politicos.J) : null;
+    const nivelPeso = (cargo === 'senado' || cargo === 'presidencia') ? 'nac' : 'dep';
     const local = !['senado', 'presidencia'].includes(cargo);
     return `<div class="grid g2">
       <div class="tarjeta"><h3>Inscribir una candidatura</h3>
@@ -53,11 +55,12 @@ window.CURUL = window.CURUL || {};
         <div class="accion-form" style="margin-top:12px">
           <input type="hidden" data-arg="cargo" value="${cargo}">
           ${local ? `<div class="campo"><label>Circunscripción</label><select data-arg="depto">${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === J.residencia ? 'selected' : ''}>${esc(d.nombre)}${cargo === 'alcaldia' || cargo === 'concejo' ? ' (' + esc(d.capital) + ')' : ''}</option>`).join('')}</select></div>` : ''}
-          <div class="campo"><label>Vía de inscripción</label><select data-arg="via">${J.partido && E.partidos[J.partido] ? `<option value="aval">Aval del ${esc(E.partidos[J.partido].sigla)} (probabilidad ${Math.round(pAval * 100)}%)</option>` : ''}<option value="firmas">Grupo significativo de ciudadanos (firmas)</option></select></div>
+          <div class="campo"><label>Vía de inscripción</label><select data-arg="via">${J.partido && E.partidos[J.partido] ? `<option value="aval">Aval de la dirección del ${esc(E.partidos[J.partido].sigla)} (probabilidad ${Math.round(pAval * 100)}%)</option><option value="primaria">Consulta interna del ${esc(E.partidos[J.partido].sigla)}: mídete contra otros aspirantes</option>` : ''}<option value="firmas">Grupo significativo de ciudadanos (firmas)</option></select></div>
           ${UI.botonAccion('inscribir', { cargo }, 'Inscribir candidatura', 'prim')}
         </div>
-        <p class="tenue" style="font-size:12px">Las inscripciones abren 52 semanas antes y cierran 6 semanas antes de la elección. Por firmas no dependes de un partido, pero necesitas voluntarios y sin maquinaria cuesta más.</p></div>
+        <p class="tenue" style="font-size:12px">Las inscripciones abren 52 semanas antes y cierran 6 semanas antes de la elección. Por firmas no dependes de un partido, pero necesitas voluntarios y sin maquinaria cuesta más. En una consulta interna compites de verdad por el cupo: si ganas, en Senado o Cámara sales de cabeza de lista (más arrastre en la noche electoral); en los demás cargos, tu partido no lleva otro candidato aparte de ti.</p></div>
       <div class="tarjeta"><h3>Tu posición de partida</h3>
+        ${peso ? `<div class="tenue" style="font-size:12px;margin-bottom:6px">Tu peso en el ${esc(E.partidos[J.partido].sigla)} (${nivelPeso === 'nac' ? 'dirección nacional' : 'dirección departamental'}): <b style="color:var(--oro2)">${Math.round(peso[nivelPeso])}/100</b></div>` : ''}
         ${G.barrasH([{ etq: 'Reconocimiento', v: J.reconocimiento }, { etq: 'Favorabilidad', v: J.popularidad }, { etq: 'Credibilidad', v: J.credibilidad }, { etq: 'Red de apoyo', v: J.redes * 10 }].map(x => ({ ...x, color: '#D9B45A' })), { max: 100, fmt: v => U.n(v) })}
         <div class="tenue" style="font-size:12px;margin-top:10px">${ev ? `Próxima elección: <b>${esc(ev.nombre)}</b> el ${U.fmtFecha(ev.fecha)}.` : ''}</div>
         ${E.elecciones.ultimaCampana ? `<div class="tarjeta" style="margin-top:10px"><h3>Tu última campaña</h3>${esc(El.CARGOS_CAMPANA[E.elecciones.ultimaCampana.cargo])}: ${E.elecciones.ultimaCampana.resultado && E.elecciones.ultimaCampana.resultado.electo ? '<b class="bien">Elegido</b>' : '<b class="mal">Derrota</b>'} ${E.elecciones.ultimaCampana.resultado ? '· ' + U.n(E.elecciones.ultimaCampana.resultado.votos) + ' votos' : ''}</div>` : ''}</div>
@@ -175,6 +178,21 @@ window.CURUL = window.CURUL || {};
       const tick = () => { if (!document.body.contains(m.el)) return; paso++; pintar(); if (paso < PASOS) timer = setTimeout(tick, 420); };
       pintar();
       if (!sinAnimar) timer = setTimeout(tick, 600);
+    },
+
+    /* ── Noche de la consulta interna: mucho más ligera que la noche electoral general, pero con
+       la misma idea de tensión — barras de apoyo por candidato y un veredicto claro de paso/no
+       paso para el jugador. ── */
+    nochePrimaria(r) {
+      const E = C.E;
+      const nombre = { senado: 'Senado', camara: 'Cámara', gobernacion: 'Gobernación', alcaldia: 'Alcaldía', presidencia: 'Presidencia' }[r.cargo] || r.cargo;
+      const pa = E.partidos[E.jugador.partido];
+      const cuerpo = `<p class="tenue" style="margin-top:0">Consulta interna del ${esc(pa.sigla)} por la candidatura a ${esc(nombre)}${r.depto && E.deptos[r.depto] ? ' · ' + esc(E.deptos[r.depto].nombre) : ''}.</p>
+        ${G.barrasH(r.candidatos.map(c => ({ etq: c.id === 'J' ? c.nombre + ' (tú)' : c.nombre, v: c.pct, color: c.id === 'J' ? 'var(--oro)' : '#8C96A3' })), { max: 100, fmt: v => U.d1(v) + '%', anchoEtq: '150px' })}
+        <div class="resultado-jugador ${r.gana ? 'ok' : 'no'}" style="margin-top:14px"><div style="font-size:30px">${r.gana ? '🎉' : '📉'}</div><div><b>${r.gana ? '¡Ganas la consulta interna!' : 'No ganas la consulta interna'}</b><div class="tenue">${U.d1(r.candidatos.find(c => c.id === 'J').pct)} % de apoyo interno · ${r.gana ? (r.cargo === 'senado' || r.cargo === 'camara' ? 'sales de cabeza de lista' : 'eres el único candidato de tu partido') : 'tu partido no te avala esta vez'}</div></div></div>
+        <div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="np-cerrar">Continuar</button></div>`;
+      const m = UI.modal({ titulo: 'Consulta interna · ' + esc(pa.sigla), icono: '🗳', cuerpo, sinCerrar: true });
+      m.cuerpo.querySelector('#np-cerrar').onclick = () => { m.cerrar(); C.App.refrescar(); C.App.revisarPendientes(); };
     }
   };
   C.Pantallas.elecciones = P;
