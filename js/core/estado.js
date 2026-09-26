@@ -38,6 +38,12 @@ window.CURUL = window.CURUL || {};
       for (const k of Object.keys(base)) if (E[k] === undefined) E[k] = base[k];
       // Partidas de la Fase 1 no traían presupuesto por sectores: se inicializa sobre la economía ya existente.
       if (C.Presupuesto && (!E.presupuesto || !E.presupuesto.vigente)) { const prev = C.E; C.E = E; C.Presupuesto.init(E); C.E = prev; }
+      // Partidas previas a la Fase 3 (asambleas/concejos con voto real) no traen la corporación local.
+      if (C.Corporaciones && (E.jugador.cargo === 'gobernador' || E.jugador.cargo === 'alcalde')) {
+        const prev = C.E; C.E = E;
+        C.Corporaciones.asegurar(E, E.jugador.cargoInfo.depto, E.jugador.cargo === 'gobernador' ? 'gobernacion' : 'alcaldia');
+        C.E = prev;
+      }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

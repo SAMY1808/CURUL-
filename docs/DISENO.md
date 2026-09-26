@@ -231,7 +231,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 |---|---|---|
 | **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **completa** |
 | **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
-| **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios | **en curso (esta entrega)** — falta: asambleas/concejos con vida propia para políticos NPC, municipios individuales en el mapa |
+| **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios; Asambleas Departamentales y Concejos Municipales con miembros elegidos y voto nominal real; capa de los 1122 municipios reales en el mapa | **completa** |
 | 4 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
 | 5 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
 
@@ -259,9 +259,26 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   departamento donde el jugador es gobernador o alcalde (el resto del país sigue teniendo
   gobernadores y alcaldes NPC, como en las fases anteriores). Reasignar el presupuesto entre
   secretarías existentes y firmar decretos son potestad ejecutiva directa (sin voto); crear una
-  secretaría nueva sí necesita el visto bueno de la Asamblea o el Concejo, resuelto como una
-  probabilidad según la fuerza política del jugador en la región — una votación real con hemiciclo
-  local queda para cuando existan asambleas y concejos con vida propia (resto de la Fase 3).
+  secretaría nueva necesita el visto bueno de la Asamblea o el Concejo, resuelto con una votación
+  nominal real (ver más abajo), no con una probabilidad.
+- **Asambleas Departamentales y Concejos Municipales** (`js/sistemas/corporaciones.js`): igual que
+  el resto del gobierno local, sólo se genera (de forma perezosa, al asumir el cargo) la corporación
+  del departamento o municipio donde ejerce el jugador. Sus diputados o concejales se eligen con la
+  misma cifra repartidora (D'Hondt) que el Congreso, sobre las cuotas de voto reales del
+  departamento (`Elecciones.cuotas`/`Elecciones.dhondt`); el número de curules se aproxima a los
+  rangos reales según población (11-31 en asambleas, 7-21 en concejos). Cada miembro vota en una
+  votación nominal real según su afinidad de partido con el gobierno del jugador, su relación
+  personal (`relJ`) y la capacidad de negociación del jugador — no una probabilidad agregada — y el
+  resultado se puede ver en un hemiciclo propio (reutilizando `Hemiciclo.svg`) en la pantalla de
+  Gobierno local, coloreado por partido o por voto (a favor/en contra/ausente) tras la última
+  votación. `GobiernoLocal.proponerCreacion` llama a `Corporaciones.votar` en vez de tirar un dado.
+- **Municipios en el mapa** (`data/municipios-colombia.js`): capa opcional (activable con una
+  casilla en la pantalla de Mapa) con el contorno real de los 1122 municipios de Colombia,
+  derivados de la misma fuente DANE que el mapa departamental (`@john-guerra/geo-colombia`), con
+  nombre, departamento y población real al pasar el cursor. Es una capa visual e informativa: el
+  juego sigue simulando la economía y política a nivel departamental (y de la capital, para
+  alcaldías), no una economía independiente por cada uno de los 1122 municipios — eso excede el
+  alcance de esta fase.
 
 ### Notas de la Fase 2
 

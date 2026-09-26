@@ -45,17 +45,20 @@ window.CURUL = window.CURUL || {};
       const E = C.E;
       const capa = params.capa || E.ui.capaMapa || 'senado';
       const sel = params.depto || null;
-      const m = C.Mapa.svg(E, { capa, seleccion: sel, etiquetas: true, altoMax: 760 });
+      const municipios = !!E.ui.verMunicipios;
+      const m = C.Mapa.svg(E, { capa, seleccion: sel, etiquetas: true, altoMax: 760, municipios });
       const capas = Object.entries(C.Mapa.CAPAS);
-      el.innerHTML = `<div class="cab"><div><h1>Mapa de Colombia</h1><div class="sub">Haz clic en un departamento para abrir su tablero regional.</div></div></div>
+      el.innerHTML = `<div class="cab"><div><h1>Mapa de Colombia</h1><div class="sub">Haz clic en un departamento para abrir su tablero regional. ${C.DATA.municipios ? Object.keys(C.DATA.municipios).length + ' municipios reales disponibles como capa.' : ''}</div></div></div>
         <div class="mapa-layout ${sel ? 'con-panel' : ''}">
           <div class="tarjeta">
-            <div class="capas">${Object.entries(U.agrupar(capas, ([k, c]) => c.grupo)).map(([g, arr]) => `<div class="capa-grupo"><span>${g}</span>${arr.map(([k, c]) => `<button class="btn chico ${k === capa ? 'prim' : ''}" data-capa="${k}">${esc(c.n)}</button>`).join('')}</div>`).join('')}</div>
+            <div class="capas">${Object.entries(U.agrupar(capas, ([k, c]) => c.grupo)).map(([g, arr]) => `<div class="capa-grupo"><span>${g}</span>${arr.map(([k, c]) => `<button class="btn chico ${k === capa ? 'prim' : ''}" data-capa="${k}">${esc(c.n)}</button>`).join('')}</div>`).join('')}
+              ${C.DATA.municipios ? `<div class="capa-grupo"><span>Municipios</span><label class="fila" style="gap:6px;align-items:center;font-size:12.5px;cursor:pointer"><input type="checkbox" id="m-toggle-mun" ${municipios ? 'checked' : ''}> Ver los 1122 municipios</label></div>` : ''}</div>
             <div id="m-mapa" class="mapa-grande">${m.svg}</div>${m.leyenda}
           </div>
           ${sel ? `<div class="tarjeta">${panelDepto(E, sel)}</div>` : ''}
         </div>`;
       UI.$$('[data-capa]', el).forEach(b => b.onclick = () => { E.ui.capaMapa = b.dataset.capa; C.App.ir('mapa', { capa: b.dataset.capa, depto: sel }); });
+      const tMun = UI.$('#m-toggle-mun', el); if (tMun) tMun.onchange = () => { E.ui.verMunicipios = tMun.checked; C.App.ir('mapa', { capa, depto: sel }); };
       C.Mapa.enlazar(UI.$('#m-mapa', el), id => C.App.ir('mapa', { capa, depto: id }));
       const c = UI.$('#pd-cerrar', el); if (c) c.onclick = () => C.App.ir('mapa', { capa });
       UI.$$('[data-pol-ficha]', el).forEach(b => b.onclick = () => Comp.fichaPolitico(E, b.dataset.polFicha));

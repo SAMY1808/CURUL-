@@ -16,6 +16,7 @@ window.CURUL = window.CURUL || {};
       const organo = J.cargo === 'gobernador' ? 'gobernacion' : 'alcaldia';
       const depto = J.cargoInfo.depto, d = E.deptos[depto];
       const g = GL.asegurar(E, depto, organo);
+      const Co = C.Corporaciones, corp = Co.asegurar(E, depto, organo);
       const info = GL.ORGANOS[organo];
       const total = GL.presupuestoTotal(E, depto, organo);
       const asignado = GL.asignado(E, depto, organo);
@@ -40,9 +41,15 @@ window.CURUL = window.CURUL || {};
               ${UI.botonAccion('decretoLocal', { depto, organo, secretaria: s.id }, 'Decretar', 'chico')}</div>
           </div>`;
         }).join('')}</div>
+        <div class="tarjeta" style="margin-top:14px"><h3>${esc(info.corp)}</h3>
+          <div class="tenue" style="font-size:12px;margin-bottom:8px">${corp.miembros.length} ${organo === 'gobernacion' ? 'diputados' : 'concejales'} elegidos por cifra repartidora sobre el voto real del ${organo === 'gobernacion' ? 'departamento' : 'municipio'}. Apoyo estimado a tu gestión: <b style="color:var(--oro2)">${Math.round(Co.apoyoEsperado(E, depto, organo) * 100)}%</b>.</div>
+          <div style="max-width:520px;margin:0 auto">${Co.hemiciclo(E, depto, organo, { altoMax: 300 })}</div>
+          ${C.Hemiciclo.leyenda(E, 'local', corp.ultimoVoto ? 'voto' : 'partido', Co.miembros(E, depto, organo))}
+          ${corp.ultimoVoto ? `<div class="tenue" style="font-size:12px;margin-top:6px">Última votación: <b>${esc(corp.ultimoVoto.asunto)}</b> · ${corp.ultimoVoto.si}-${corp.ultimoVoto.no} (${corp.ultimoVoto.aus} ausentes) · ${corp.ultimoVoto.aprobado ? 'aprobada' : 'negada'}</div>` : ''}
+        </div>
         <div class="grid g2" style="margin-top:14px">
           <div class="tarjeta"><h3>Crear una nueva secretaría (necesita ${info.acto.toLowerCase()} de ${info.corp})</h3>
-            <div class="tenue" style="font-size:12px;margin-bottom:8px">Probabilidad estimada de aprobación: <b style="color:var(--oro2)">${Math.round(GL.probabilidadCorp(E, depto, organo) * 100)}%</b>, según tu fuerza política en la región.</div>
+            <div class="tenue" style="font-size:12px;margin-bottom:8px">Se somete a votación nominal real en la ${esc(info.corp)}: cada uno de los ${corp.miembros.length} miembros vota según su afinidad con tu gobierno.</div>
             <div class="fila accion-form" style="flex-wrap:nowrap"><input data-arg="nombre" placeholder="Nombre (sin «Secretaría de»)" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
               <select data-arg="sector">${Object.entries(C.DATA.sectores).map(([k, s]) => `<option value="${k}">${s.icono} ${esc(s.nombre)}</option>`).join('')}</select>
               ${UI.botonAccion('crearSecretaria', { depto, organo })}</div></div>
@@ -50,6 +57,7 @@ window.CURUL = window.CURUL || {};
         </div>`;
       el.onclick = e => {
         const f = e.target.closest('[data-ficha]'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha);
+        const pol = e.target.closest('[data-pol]'); if (pol) return Comp.fichaPolitico(E, pol.dataset.pol);
       };
       el.onchange = e => {
         if (e.target.dataset.secshare) { GL.setShare(E, depto, organo, e.target.dataset.secshare, +e.target.value); return C.App.refrescar(); }

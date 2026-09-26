@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 y 2 completas + Fase 3 en curso)
+## Qué hay en esta versión (Fases 1, 2 y 3 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -51,6 +51,12 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Gobierno local**: si ganas una gobernación o una alcaldía, manejas tu propio gabinete de
   secretarías, tu presupuesto regional y firmas decretos con efecto inmediato; crear una secretaría
   nueva necesita el visto bueno de la Asamblea o el Concejo.
+- **Asambleas y Concejos con voto real**: la Asamblea Departamental o el Concejo Municipal de tu
+  región tiene diputados o concejales elegidos de verdad (misma cifra repartidora que el Congreso,
+  sobre el voto real del departamento); crear una secretaría se somete a una votación nominal real
+  de cada uno de sus miembros, visible en su propio hemiciclo.
+- **Mapa de municipios**: capa opcional con el contorno real de los 1122 municipios de Colombia
+  (nombre, departamento y población al pasar el cursor), sobre el mismo mapa departamental.
 
 ## Arquitectura
 

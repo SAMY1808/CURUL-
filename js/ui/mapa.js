@@ -69,6 +69,14 @@ window.CURUL = window.CURUL || {};
         s += `<path class="depto${sel ? ' sel' : ''}" data-depto="${id}" d="${g.d}" fill="${inf.fill}" fill-opacity="${U.clamp(inf.op || 1, 0.35, 1)}"${C.UI.tt(tt)}/>`;
       }
       if (o.etiquetas) for (const [id, g] of Object.entries(data.deptos)) if (E.deptos[id].poblacion > 700 || id === 'SAP') s += `<text x="${g.cx}" y="${g.cy}" text-anchor="middle" class="etq-mapa">${id}</text>`;
+      if (o.municipios && C.DATA.municipios) {
+        s += '<g class="capa-municipios">';
+        for (const [cod, m] of Object.entries(C.DATA.municipios)) {
+          const tt = `<div class="tt-t">${esc(m.n)}</div><div class="tt-f"><span>Departamento</span><b>${esc(E.deptos[m.dp] ? E.deptos[m.dp].nombre : m.dp)}</b></div><div class="tt-f"><span>Población</span><b>${U.n(m.pob)}</b></div>`;
+          s += `<path class="municipio" data-municipio="${cod}" d="${m.d}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="0.6"${C.UI.tt(tt)}/>`;
+        }
+        s += '</g>';
+      }
       if (o.marcador) { const g = data.deptos[o.marcador]; if (g) s += `<g class="pin"><circle cx="${g.cx}" cy="${g.cy}" r="7" fill="var(--oro)" stroke="#0A111D" stroke-width="2"/><circle cx="${g.cx}" cy="${g.cy}" r="14" fill="none" stroke="var(--oro)" stroke-width="1.5" class="pulso"/></g>`; }
       s += '</svg>';
       return { svg: s, leyenda: M.leyenda(E, o.capa || 'senado', pids) };

@@ -85,17 +85,13 @@ window.CURUL = window.CURUL || {};
       return { ef, magnitud };
     },
 
-    /* ── Crear una secretaría nueva: necesita el visto bueno de la corporación local ── */
-    probabilidadCorp(E, depto, organo) {
-      const J = E.jugador;
-      const cuo = C.Elecciones.cuotas(E, depto, false);
-      const propio = cuo[J.partido] || 0.1;
-      return U.clamp(0.35 + propio * 0.9 + J.atributos.negociacion / 300, 0.05, 0.92);
-    },
+    /* ── Crear una secretaría nueva: necesita el visto bueno de la corporación local, con una
+       votación nominal real de sus diputados o concejales (no un simple lanzamiento de moneda). ── */
+    probabilidadCorp(E, depto, organo) { return C.Corporaciones.apoyoEsperado(E, depto, organo); },
     proponerCreacion(E, depto, organo, nombre, sector) {
       const g = GL.asegurar(E, depto, organo);
-      const prob = GL.probabilidadCorp(E, depto, organo);
-      const aprueba = U.chance(prob);
+      const voto = C.Corporaciones.votar(E, depto, organo, `Crear la ${nombre}`);
+      const aprueba = voto.aprobado, marcador = `${voto.si}-${voto.no}`;
       const corp = ORGANOS[organo].corp, acto = ORGANOS[organo].acto;
       if (aprueba) {
         const id = U.id('sec');
@@ -106,11 +102,11 @@ window.CURUL = window.CURUL || {};
         for (const k of Object.keys(g.pesoBase)) g.pesoBase[k] *= factor;
         g.pesoBase[id] = pct;
         g.secretarios[id] = C.Politicos.crear(E, { partido: E.jugador.partido, depto, r: { exp: U.ri(40, 80) } }).id;
-        C.Medios.noticia(E, { tipo: 'regional', titular: `${corp} aprueba el ${acto.toLowerCase()} que crea la Secretaría de ${nombre}`, tono: 1, jugador: true });
+        C.Medios.noticia(E, { tipo: 'regional', titular: `${corp} aprueba (${marcador}) el ${acto.toLowerCase()} que crea la ${nombre}`, tono: 1, jugador: true });
       } else {
-        C.Medios.noticia(E, { tipo: 'regional', titular: `${corp} niega el ${acto.toLowerCase()} para crear la Secretaría de ${nombre}`, tono: -1, jugador: true });
+        C.Medios.noticia(E, { tipo: 'regional', titular: `${corp} niega (${marcador}) el ${acto.toLowerCase()} para crear la ${nombre}`, tono: -1, jugador: true });
       }
-      return { aprobado: aprueba, prob };
+      return { aprobado: aprueba, voto };
     },
 
     turno(E) {
@@ -147,7 +143,7 @@ window.CURUL = window.CURUL || {};
           const nombre = (a.nombre || '').trim(); if (!nombre) return { ok: false, msg: 'Dale un nombre a la secretaría' };
           const sector = C.DATA.sectores[a.sector] ? a.sector : 'politica';
           const r = GL.proponerCreacion(E, a.depto, a.organo, 'Secretaría de ' + nombre, sector);
-          return { ok: true, msg: r.aprobado ? `${ORGANOS[a.organo].corp} aprueba la nueva secretaría` : `${ORGANOS[a.organo].corp} la rechaza (probabilidad estimada ${Math.round(r.prob * 100)}%)` };
+          return { ok: true, msg: r.aprobado ? `${ORGANOS[a.organo].corp} aprueba la nueva secretaría (${r.voto.si}-${r.voto.no})` : `${ORGANOS[a.organo].corp} la rechaza (${r.voto.si}-${r.voto.no})` };
         } });
     }
   };
@@ -157,6 +153,8 @@ window.CURUL = window.CURUL || {};
   GL.registrarAcciones();
   C.Bus.on('jugador:cargo', tipo => {
     const E = C.E; if (!E || (tipo !== 'gobernador' && tipo !== 'alcalde')) return;
-    GL.asegurar(E, E.jugador.cargoInfo.depto, tipo === 'gobernador' ? 'gobernacion' : 'alcaldia');
+    const depto = E.jugador.cargoInfo.depto, organo = tipo === 'gobernador' ? 'gobernacion' : 'alcaldia';
+    GL.asegurar(E, depto, organo);
+    C.Corporaciones.asegurar(E, depto, organo);
   });
 })(window.CURUL);
