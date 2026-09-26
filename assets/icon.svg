@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#1c2c4a"/>
+      <stop offset="100%" stop-color="#0A111D"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="none" stroke="#D9B45A" stroke-opacity="0.35" stroke-width="6"/>
+  <circle cx="196.0" cy="286.7" r="15" fill="#E0504A"/>
+<circle cx="207.5" cy="251.5" r="15" fill="#4A7BE0"/>
+<circle cx="237.5" cy="229.7" r="15" fill="#F0D48A"/>
+<circle cx="274.5" cy="229.7" r="15" fill="#3FBF7A"/>
+<circle cx="304.5" cy="251.5" r="15" fill="#E0504A"/>
+<circle cx="316.0" cy="286.7" r="15" fill="#4A7BE0"/>
+<circle cx="163.5" cy="286.7" r="15" fill="#D9B45A"/>
+<circle cx="170.5" cy="251.3" r="15" fill="#D9B45A"/>
+<circle cx="190.6" cy="221.3" r="15" fill="#E0504A"/>
+<circle cx="220.6" cy="201.3" r="15" fill="#4A7BE0"/>
+<circle cx="256.0" cy="194.2" r="15" fill="#F0D48A"/>
+<circle cx="291.4" cy="201.3" r="15" fill="#3FBF7A"/>
+<circle cx="321.4" cy="221.3" r="15" fill="#E0504A"/>
+<circle cx="341.5" cy="251.3" r="15" fill="#4A7BE0"/>
+<circle cx="348.5" cy="286.7" r="15" fill="#D9B45A"/>
+<circle cx="131.0" cy="286.7" r="15" fill="#D9B45A"/>
+<circle cx="135.3" cy="254.4" r="15" fill="#E0504A"/>
+<circle cx="147.7" cy="224.2" r="15" fill="#4A7BE0"/>
+<circle cx="167.6" cy="198.3" r="15" fill="#F0D48A"/>
+<circle cx="193.5" cy="178.5" r="15" fill="#3FBF7A"/>
+<circle cx="223.6" cy="166.0" r="15" fill="#E0504A"/>
+<circle cx="256.0" cy="161.7" r="15" fill="#4A7BE0"/>
+<circle cx="288.4" cy="166.0" r="15" fill="#D9B45A"/>
+<circle cx="318.5" cy="178.5" r="15" fill="#D9B45A"/>
+<circle cx="344.4" cy="198.3" r="15" fill="#E0504A"/>
+<circle cx="364.3" cy="224.2" r="15" fill="#4A7BE0"/>
+<circle cx="376.7" cy="254.4" r="15" fill="#F0D48A"/>
+<circle cx="381.0" cy="286.7" r="15" fill="#3FBF7A"/>
+<circle cx="98.5" cy="286.7" r="15" fill="#E0504A"/>
+<circle cx="101.9" cy="254.0" r="15" fill="#4A7BE0"/>
+<circle cx="112.1" cy="222.7" r="15" fill="#D9B45A"/>
+<circle cx="128.6" cy="194.1" r="15" fill="#D9B45A"/>
+<circle cx="150.6" cy="169.7" r="15" fill="#E0504A"/>
+<circle cx="177.2" cy="150.3" r="15" fill="#4A7BE0"/>
+<circle cx="207.3" cy="136.9" r="15" fill="#F0D48A"/>
+<circle cx="239.5" cy="130.1" r="15" fill="#3FBF7A"/>
+<circle cx="272.5" cy="130.1" r="15" fill="#E0504A"/>
+<circle cx="304.7" cy="136.9" r="15" fill="#4A7BE0"/>
+<circle cx="334.8" cy="150.3" r="15" fill="#D9B45A"/>
+<circle cx="361.4" cy="169.7" r="15" fill="#D9B45A"/>
+<circle cx="383.4" cy="194.1" r="15" fill="#E0504A"/>
+<circle cx="399.9" cy="222.7" r="15" fill="#4A7BE0"/>
+<circle cx="410.1" cy="254.0" r="15" fill="#F0D48A"/>
+<circle cx="413.5" cy="286.7" r="15" fill="#3FBF7A"/>
+<circle cx="66.0" cy="286.7" r="15" fill="#E0504A"/>
+<circle cx="68.6" cy="255.4" r="15" fill="#4A7BE0"/>
+<circle cx="76.3" cy="225.0" r="15" fill="#D9B45A"/>
+<circle cx="88.9" cy="196.3" r="15" fill="#D9B45A"/>
+<circle cx="106.1" cy="170.0" r="15" fill="#E0504A"/>
+<circle cx="127.3" cy="146.9" r="15" fill="#4A7BE0"/>
+<circle cx="152.1" cy="127.7" r="15" fill="#F0D48A"/>
+<circle cx="179.7" cy="112.7" r="15" fill="#3FBF7A"/>
+<circle cx="209.4" cy="102.5" r="15" fill="#E0504A"/>
+<circle cx="240.3" cy="97.4" r="15" fill="#4A7BE0"/>
+<circle cx="271.7" cy="97.4" r="15" fill="#D9B45A"/>
+<circle cx="302.6" cy="102.5" r="15" fill="#D9B45A"/>
+<circle cx="332.3" cy="112.7" r="15" fill="#E0504A"/>
+<circle cx="359.9" cy="127.7" r="15" fill="#4A7BE0"/>
+<circle cx="384.7" cy="146.9" r="15" fill="#F0D48A"/>
+<circle cx="405.9" cy="170.0" r="15" fill="#3FBF7A"/>
+<circle cx="423.1" cy="196.3" r="15" fill="#E0504A"/>
+<circle cx="435.7" cy="225.0" r="15" fill="#4A7BE0"/>
+<circle cx="443.4" cy="255.4" r="15" fill="#D9B45A"/>
+<circle cx="446.0" cy="286.7" r="15" fill="#D9B45A"/>
+  <rect x="198.0" y="294.72" width="116" height="30" rx="6" fill="#121D30" stroke="#D9B45A" stroke-width="3"/>
+  <rect x="30" y="466" width="226" height="16" fill="#F0C419"/>
+  <rect x="256" y="466" width="113" height="16" fill="#2A5CAA"/>
+  <rect x="369" y="466" width="113" height="16" fill="#CE1126"/>
+</svg>
