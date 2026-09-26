@@ -64,6 +64,10 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   partido en una noche de resultados aparte. Ganarla te hace cabeza de lista en Senado o Cámara,
   o el único candidato de tu partido en Gobernación, Alcaldía o Presidencia; perderla cierra esa
   puerta por un tiempo, igual que un aval negado.
+- **Diputados y concejales con agenda propia**: si eres diputado de una Asamblea o concejal de un
+  Concejo, tienes tu propia curul (real, dentro del hemiciclo) y una pestaña para radicar
+  ordenanzas o acuerdos sobre salud, educación, infraestructura o seguridad, con una votación
+  nominal real de tus colegas.
 
 ## Arquitectura
 

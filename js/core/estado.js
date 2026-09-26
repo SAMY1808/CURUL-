@@ -44,6 +44,13 @@ window.CURUL = window.CURUL || {};
         C.Corporaciones.asegurar(E, E.jugador.cargoInfo.depto, E.jugador.cargo === 'gobernador' ? 'gobernacion' : 'alcaldia');
         C.E = prev;
       }
+      // Partidas previas a esta entrega: si el jugador es diputado o concejal, aún no tenía
+      // ni curul propia en su Asamblea o Concejo ni forma de radicar ordenanzas/acuerdos.
+      if (C.Corporaciones && (E.jugador.cargo === 'diputado' || E.jugador.cargo === 'concejal')) {
+        const prev = C.E; C.E = E;
+        C.Corporaciones.asegurarJugador(E);
+        C.E = prev;
+      }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

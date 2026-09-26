@@ -73,6 +73,10 @@ window.CURUL = window.CURUL || {};
         const i = nav.findIndex(n => n && n[0] === 'gobierno');
         nav.splice(i + 1, 0, ['local', '🏘', E.jugador.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']);
       }
+      if (E.jugador.cargo === 'diputado' || E.jugador.cargo === 'concejal') {
+        const i = nav.findIndex(n => n && n[0] === 'congreso');
+        nav.splice(i + 1, 0, ['corporacion', '🏘', E.jugador.cargo === 'diputado' ? 'Asamblea' : 'Concejo']);
+      }
       const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '' };
       document.getElementById('nav').innerHTML = nav.map(n => n ? `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>` : '<div class="sep"></div>').join('');
       UI.$$('#nav button').forEach(b => b.onclick = () => App.ir(b.dataset.p));

@@ -259,6 +259,19 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   Presidencia, el jugador queda como el único candidato de su partido en esa contienda (se retira
   cualquier otro nombre generado automáticamente para esa colectividad). Perder tiene las mismas
   consecuencias que un aval negado: la campaña no se inscribe y hay que esperar antes de insistir.
+- **Diputados y concejales con algo que hacer** (`Corporaciones.asegurarJugador`/`Corporaciones.proponer`
+  en `js/sistemas/corporaciones.js`, pantalla `js/pantallas/corporacion.js`): hasta esta entrega, si
+  el jugador ejercía como diputado o concejal (sea desde el origen inicial o por haber ganado una
+  elección regional) no tenía ninguna pantalla ni acción propias — la Asamblea o el Concejo sólo
+  existían para cuando el jugador era gobernador o alcalde y necesitaba su visto bueno. Ahora, al
+  asumir el cargo (`jugador:cargo`, o al generar el mundo si es el origen inicial), el jugador
+  reemplaza a un miembro de su mismo partido dentro de `corp.miembros` y aparece como una curul más
+  del hemiciclo (`Corporaciones.hemiciclo`), con su propia pestaña de navegación («Asamblea» o
+  «Concejo»). Desde ahí puede radicar una ordenanza o un acuerdo sobre salud, educación,
+  infraestructura o seguridad: se somete a una votación nominal real igual que la de crear una
+  secretaría (su propio voto cuenta como sí, por ser el autor) y, si se aprueba, mejora de verdad
+  el indicador del departamento. Partidas guardadas antes de esta entrega se migran igual que las
+  de gobernadores/alcaldes (`Estado.migrar`).
 
 ### Notas de la Fase 3
 

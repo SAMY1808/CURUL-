@@ -48,7 +48,7 @@ window.CURUL = window.CURUL || {};
           d[tipo] = p.id;
         }
       }
-      if (J.cargo === 'concejal' || J.cargo === 'diputado') J.cargoInfo = { depto: J.residencia };
+      if (J.cargo === 'concejal' || J.cargo === 'diputado') { J.cargoInfo = { depto: J.residencia }; C.Corporaciones.asegurarJugador(E); }
       // 5. Elecciones del ciclo de instalación (historia inicial)
       const forzar = J.cargo === 'senador' ? 'senado' : J.cargo === 'representante' ? 'camara' : null;
       const resC = C.Elecciones.congreso(E, { anio: ciclo, forzarJugador: forzar });
