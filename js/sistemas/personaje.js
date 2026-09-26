@@ -16,7 +16,8 @@ window.CURUL = window.CURUL || {};
     concejal:     { n: 'Concejal', icono: '🏛', desc: 'Ya ocupas una curul en el concejo de tu ciudad.', rec: 12, redes: 6, patrimonio: 140, salario: 12, cargo: 'concejal', electo: true },
     diputado:     { n: 'Diputado', icono: '🏛', desc: 'Miembro de la Asamblea de tu departamento.', rec: 14, redes: 6, patrimonio: 180, salario: 15, cargo: 'diputado', electo: true },
     representante:{ n: 'Representante a la Cámara', icono: '🟢', desc: 'Recién elegido por tu departamento para el nuevo cuatrienio.', rec: 24, redes: 7, patrimonio: 420, salario: 48, cargo: 'representante', electo: true, requierePartido: true },
-    senador:      { n: 'Senador', icono: '🔴', desc: 'Recién elegido en la lista nacional del Senado.', rec: 36, redes: 8, patrimonio: 700, salario: 48, cargo: 'senador', electo: true, requierePartido: true }
+    senador:      { n: 'Senador', icono: '🔴', desc: 'Recién elegido en la lista nacional del Senado.', rec: 36, redes: 8, patrimonio: 700, salario: 48, cargo: 'senador', electo: true, requierePartido: true },
+    heredero:     { n: 'Heredero político', icono: '👪', desc: 'Hijo de un político reconocido: empiezas con el apellido, no con el cargo.', rec: 8, redes: 5, patrimonio: 40, salario: 4, cargo: 'ciudadano', oculto: true }
   };
   const SALARIOS = { senador: 48, representante: 48, presidente: 45, ministro: 38, gobernador: 30, alcalde: 28, diputado: 15, concejal: 12 };
   const EDUCACION = ['Bachiller', 'Técnico', 'Profesional', 'Especialización', 'Maestría', 'Doctorado'];
@@ -44,7 +45,7 @@ window.CURUL = window.CURUL || {};
         imagen: { seg: Object.assign({}, o.seg || {}), dep: {}, rec: {} }
       };
       if (cfg.pareja) J.familia.push({ rol: 'Pareja', nombre: cfg.pareja, edad: cfg.edad + U.ri(-4, 4) });
-      for (let i = 0; i < (cfg.hijos || 0); i++) J.familia.push({ rol: U.chance(0.5) ? 'Hija' : 'Hijo', nombre: U.pick(U.chance(0.5) ? C.DATA.nombres.h : C.DATA.nombres.m), edad: U.ri(1, Math.max(2, cfg.edad - 22)) });
+      for (let i = 0; i < (cfg.hijos || 0); i++) { const gh = U.chance(0.5) ? 'f' : 'm'; J.familia.push({ rol: gh === 'f' ? 'Hija' : 'Hijo', genero: gh, nombre: U.pick(gh === 'f' ? C.DATA.nombres.m : C.DATA.nombres.h), edad: U.ri(1, Math.max(2, cfg.edad - 22)), id: U.id('hij') }); }
       J.familia.push({ rol: 'Madre', nombre: U.pick(C.DATA.nombres.m), edad: cfg.edad + U.ri(22, 32) });
       E.jugador = J;
       if (o.partido && J.partido && E.partidos[J.partido]) E.partidos[J.partido].relJ = o.partido;
@@ -104,7 +105,16 @@ window.CURUL = window.CURUL || {};
       J.patrimonio += (J.ingresos - J.gastos) / 4.33 + J.patrimonio * 0.035 / 52;
       J.bienestar = U.clamp((J.bienestar || 60) + (C.DATA.cargos[J.cargo].nivel >= 3 ? -0.3 : 0.2), 0, 100);
       // Cumpleaños de la familia
-      const hoy = U.hoy(); if (hoy.getUTCMonth() === 0 && hoy.getUTCDate() <= 7) J.familia.forEach(f => f.edad++);
+      const hoy = U.hoy();
+      if (hoy.getUTCMonth() === 0 && hoy.getUTCDate() <= 7) {
+        J.familia.forEach(f => f.edad++);
+        if (C.Familia) C.Familia.turnoAnual(E);
+        const edad = Pj.edad(E);
+        if (edad > 68 && !E.ui.finPartida && !E.ui.sucesionPendiente) {
+          const probMuerte = U.clamp((edad - 68) * 0.012, 0, 0.4);
+          if (U.chance(probMuerte)) C.Familia.finDeCarrera(E, 'fallecimiento');
+        }
+      }
       // La reputación converge lentamente
       J.rep.honestidad += ((50 + (J.atributos.integridad - 50) * 0.5) - J.rep.honestidad) * 0.005;
       Pj.sincronizar(E);

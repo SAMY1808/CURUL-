@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 5 completas)
+## Qué hay en esta versión (Fases 1 a 6 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -73,6 +73,15 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   gobierno, puedes presionar por un ministerio para ti mismo. Consiguiéndolo te conviertes en
   ministro (por primera vez jugable, no sólo un cargo de político NPC) y desbloqueas tu propia
   **mesa de trabajo** del ministerio para avanzar la agenda del sector.
+- **Familia y legado político**: tus hijos crecen con su propia educación, atributos y relación
+  contigo (puedes pasar tiempo con ellos o pagarles estudios). Cuando te retiras o falleces (hay
+  una probabilidad creciente de fallecer pasados los 68 años), si tienes un hijo mayor de edad
+  puedes continuar la partida con él —hereda el apellido, algo de tu reconocimiento y parte del
+  patrimonio— o cerrar la carrera ahí con un resumen de todo lo que lograste.
+- **Propiedades y riesgo patrimonial**: compra apartamentos, fincas, locales o acciones que rentan
+  cada semana y suben o bajan de valor con la economía; puedes venderlos de vuelta al precio de
+  mercado. Un patrimonio que crece mucho más rápido de lo que explica tu sueldo declarado puede
+  disparar un escándalo mediático por "¿de dónde sacó eso?".
 
 ## Arquitectura
 

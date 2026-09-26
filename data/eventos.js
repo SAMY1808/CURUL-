@@ -80,6 +80,13 @@ CURUL.DATA.eventos = [
       { t:'Publicar todas tus cuentas', jug:{credibilidad:4, rep:{transparencia:6}}, costoAgenda:1 },
       { t:'Dar una entrevista para aclarar', jug:{credibilidad:1, reconocimiento:2}, medioRel:3 },
       { t:'Ignorar el tema', jug:{credibilidad:-5, rep:{transparencia:-6}} } ] },
+  { id:'patrimonioSospechoso', tipo:'escándalo', icono:'🕵', alcance:'jugador', peso:2,
+    req:(E)=>CURUL.Propiedades && CURUL.Propiedades.riesgoPatrimonial(E) > 0.12,
+    titulo:'¿De dónde sacó eso? Cuestionan tu patrimonio', texto:'Un reportaje señala que tu patrimonio creció mucho más rápido de lo que explica tu sueldo declarado. Te piden cuentas.',
+    opciones:[
+      { t:'Mostrar la declaración de renta completa', jug:{credibilidad:3, patrimonio:-6, rep:{transparencia:5, honestidad:3}}, costoAgenda:1 },
+      { t:'Explicar en rueda de prensa, sin abrir libros', jug:{credibilidad:-1, reconocimiento:2}, medioRel:2 },
+      { t:'Guardar silencio: que hablen los abogados', jug:{credibilidad:-7, rep:{transparencia:-6, honestidad:-4}} } ] },
   { id:'reconocimiento', tipo:'reconocimiento', icono:'🏅', alcance:'jugador', peso:1, req:(E)=>E.jugador.historialLegislativo.length>0 || E.jugador.reconocimiento>20,
     titulo:'Reconocimiento por tu trabajo', texto:'La organización Congreso Visible te incluye entre los políticos más activos del semestre.',
     opciones:[ { t:'Agradecer públicamente', jug:{credibilidad:3, reconocimiento:3, rep:{competencia:3}}, reconocimientoTxt:'Congreso Visible: político destacado' } ] },

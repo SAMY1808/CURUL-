@@ -233,9 +233,38 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
 | **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios; Asambleas Departamentales y Concejos Municipales con miembros elegidos y voto nominal real; capa de los 1122 municipios reales en el mapa | **completa** |
 | **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados; diputados y concejales con curul propia y ordenanzas/acuerdos; noche electoral candidato a candidato en Senado, Cámara, Asamblea y Concejo | **completa** |
-| **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa (esta entrega)** |
-| 6 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
-| 7 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa** |
+| **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa (esta entrega)** |
+| 7 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| 8 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 6
+
+- **Hijos con vida propia** (`js/sistemas/familia.js`, `Familia.hijos`/`turnoAnual`): cada hijo tiene
+  educación, atributos propios, ideología (heredada de la del jugador con ruido) y una relación
+  contigo que decae si no le dedicas tiempo. Dos acciones nuevas: "Pasar tiempo con un hijo"
+  (sube la relación) y "Pagar sus estudios" (sube un nivel educativo, cuesta dinero). Se corrigió de
+  paso un bug de la Fase 1: el rol (Hijo/Hija) y el nombre elegido al crear personaje se sorteaban
+  por separado, así que podían no coincidir en género; ahora se sortea una sola vez y el género
+  queda guardado en el propio hijo (necesario para heredarlo más adelante).
+- **Retiro, fallecimiento y sucesión** (`Familia.finDeCarrera`/`heredar`, acción `retirarseVida`,
+  cargo `heredero` oculto en `Personaje.ORIGENES`): a partir de los 68 años hay una probabilidad
+  creciente de fallecer cada cumpleaños (`Personaje.turno`); retirarse es siempre voluntario. En
+  cualquiera de los dos casos, si hay un hijo mayor de edad, se ofrece continuar la partida con él
+  (reutiliza `Personaje.crear` con el origen `heredero` para no dejar el objeto del jugador a
+  medias, y le superpone sus propios atributos, ideología y una fracción del patrimonio y el
+  reconocimiento de su predecesor); si no hay heredero, o el jugador prefiere no continuar, se
+  muestra un resumen de la carrera (cargo más alto, elecciones ganadas, leyes aprobadas, patrimonio)
+  y la partida termina ahí. Estos dos estados (`E.ui.sucesionPendiente`/`E.ui.finPartida`) bloquean
+  el avance del tiempo igual que un evento o una noche electoral (`Tiempo.bloqueo`).
+- **Propiedades** (`js/sistemas/propiedades.js`): el patrimonio deja de ser sólo un número que
+  crece solo — el jugador compra bienes concretos (apartamento, finca, local, acciones), cada uno
+  con su propia renta semanal y una volatilidad (`beta`) ligada al crecimiento económico nacional;
+  se pueden vender de vuelta a precio de mercado. `Propiedades.riesgoPatrimonial` compara el
+  patrimonio total (líquido + bienes) contra el salario anual declarado: una fortuna que crece
+  mucho más rápido de lo que el sueldo explica alimenta la probabilidad del nuevo evento
+  `patrimonioSospechoso` (`data/eventos.js`, reutilizando el motor de eventos ya existente desde la
+  Fase 1) — un reportaje que cuestiona de dónde salió esa plata, con distintas formas de responder.
 
 ### Notas de la Fase 5
 

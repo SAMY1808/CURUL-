@@ -28,6 +28,8 @@ window.CURUL = window.CURUL || {};
     /* Un evento que exige decisión del jugador, o una noche electoral, detiene el avance múltiple. */
     bloqueo() {
       const E = C.E;
+      if (E.ui.finPartida) return 'fin';
+      if (E.ui.sucesionPendiente) return 'sucesion';
       if (E.eventos.pendientes.length) return 'evento';
       if (E.elecciones.nochePendiente) return 'noche';
       return null;

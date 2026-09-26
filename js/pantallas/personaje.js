@@ -38,8 +38,10 @@ window.CURUL = window.CURUL || {};
       const segs = C.Opinion.SEGMENTOS[dim];
       const pa = E.partidos[J.partido];
       const topDep = Object.values(E.deptos).map(d => ({ d, v: C.Opinion.favDepto(E, d.id) })).sort((a, b) => b.v - a.v);
+      C.Familia.asegurarDatos(E);
       el.innerHTML = `<div class="cab"><div><h1>Mi carrera</h1><div class="sub">${esc(C.DATA.cargos[J.cargo].nombre)} · ${U.anio() - J.nac} años · ${esc(J.profesion)} · ${esc(J.educacion)}</div></div>
-        <div class="fila">${UI.botonAccion('descansar', {})}${UI.botonAccion('estudiar', {})}${UI.botonAccion('trabajar', {})}</div></div>
+        <div class="fila">${UI.botonAccion('descansar', {})}${UI.botonAccion('estudiar', {})}${UI.botonAccion('trabajar', {})}${UI.botonAccion('retirarseVida', {}, 'Retirarte', 'chico peligro')}</div></div>
+      ${J.legado ? `<div class="tarjeta" style="margin-top:0;margin-bottom:14px;border-left:4px solid var(--oro)"><div class="fila" style="gap:10px"><span style="font-size:24px">👪</span><div><b>Continúas el legado de ${esc(J.legado.predecesor)}</b><div class="tenue" style="font-size:12px">Llegó a ser ${esc(J.legado.cargoMaximo || 'ciudadano')} y ganó ${J.legado.eleccionesGanadas} elecciones. Heredaste su apellido y algo de su reconocimiento.</div></div></div></div>` : ''}
       <div class="grid g3">
         <div class="tarjeta perfil"><div class="fila" style="flex-wrap:nowrap">${Comp.avatar(E, E.politicos.J, 92)}<div><h2 style="font-size:23px">${esc(J.nombre)}</h2>
           <div class="tenue" style="font-size:12.5px">Nacido en ${esc(E.deptos[J.nacimiento].capital)} · vive en ${esc(E.deptos[J.residencia].capital)}</div>
@@ -56,19 +58,64 @@ window.CURUL = window.CURUL || {};
       </div>
       <div class="tarjeta" style="margin-top:14px"><h3>Árbol de carrera</h3>${arbol(E)}<div class="tenue" style="font-size:12px">Dorado: cargos que has ocupado. Hay muchas rutas hacia la Casa de Nariño: por la vía territorial, la legislativa o la técnica.</div></div>
       <div class="grid g3" style="margin-top:14px">
-        <div class="tarjeta"><h3>Patrimonio y finanzas</h3>${Comp.kpi('Patrimonio', U.cop(J.patrimonio * 1))}
+        <div class="tarjeta"><h3>Patrimonio y finanzas</h3>${Comp.kpi('Efectivo', U.cop(J.patrimonio))}
           <div class="tt-f" style="margin-top:6px"><span class="tenue">Ingresos mensuales</span><b>${U.cop(J.ingresos)}</b></div><div class="tt-f"><span class="tenue">Gastos mensuales</span><b>${U.cop(J.gastos)}</b></div>
-          ${G.linea([{ nombre: 'Patrimonio', color: '#5DB85A', datos: S['jug:patrimonio'] || [] }], { alto: 110, fmt: v => U.n(v), unidad: ' M' })}
-          <h3 style="margin-top:10px">Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3><div class="lista">${J.familia.map(f => `<div class="it"><span>${{ Pareja: '💞', Hijo: '👦', Hija: '👧', Madre: '👩‍🦳', Padre: '👨‍🦳' }[f.rol] || '👤'}</span><div class="cuerpo"><b>${esc(f.nombre)}</b><span>${f.rol} · ${f.edad} años</span></div></div>`).join('')}</div></div>
+          <div class="tt-f"><span class="tenue">Patrimonio total (con bienes)</span><b>${U.cop(J.patrimonio + C.Propiedades.valorTotal(E))}</b></div>
+          ${C.Propiedades.riesgoPatrimonial(E) > 0.1 ? `<div class="tt-f"><span class="tenue">Riesgo de escándalo patrimonial</span><b class="mal">${Math.round(C.Propiedades.riesgoPatrimonial(E) * 100)}%</b></div>` : ''}
+          ${G.linea([{ nombre: 'Patrimonio', color: '#5DB85A', datos: S['jug:patrimonio'] || [] }], { alto: 100, fmt: v => U.n(v), unidad: ' M' })}
+          <h3 style="margin-top:10px">Bienes</h3><div class="lista">${C.Propiedades.bienes(E).map(b => `<div class="it"><span>${C.Propiedades.TIPOS[b.tipo].icono}</span><div class="cuerpo"><b>${esc(b.nombre)}</b><span>${U.cop(b.valor)}</span></div>${UI.botonAccion('venderBien', { bien: b.id }, 'Vender', 'chico')}</div>`).join('') || '<div class="vacio">Sin bienes registrados.</div>'}</div>
+          <div class="fila accion-form" style="margin-top:8px"><select data-arg="tipo">${Object.entries(C.Propiedades.TIPOS).map(([k, t]) => `<option value="${k}">${t.icono} ${esc(t.n)} (${U.cop(t.costoBase)})</option>`).join('')}</select>${UI.botonAccion('comprarBien', {}, 'Comprar')}</div></div>
         <div class="tarjeta"><h3>Trayectoria</h3><div class="timeline">${J.trayectoria.slice().reverse().map(t => `<div class="tl"><span class="tl-f">${U.fmtT(t.t)}</span><span class="tl-t">${esc(t.txt)}</span></div>`).join('')}</div></div>
         <div class="tarjeta"><h3>Historial electoral</h3><div class="lista">${J.historialElectoral.slice().reverse().map(h => `<div class="it"><span>${h.electo ? '✅' : '❌'}</span><div class="cuerpo"><b>${esc(C.Elecciones.CARGOS_CAMPANA[h.cargo] || h.cargo)} ${h.anio}</b><span>${U.n(h.votos)} votos${h.depto ? ' · ' + esc(E.deptos[h.depto].nombre) : ''}</span></div></div>`).join('') || '<div class="vacio">Aún no has sido candidato.</div>'}</div>
           <h3 style="margin-top:12px">Historial legislativo</h3><div class="lista">${J.historialLegislativo.slice().reverse().slice(0, 8).map(h => `<div class="it"><span>${h.resultado === 'ley' ? '📜' : '🗄'}</span><div class="cuerpo"><b style="white-space:normal">${esc(h.titulo)}</b><span>${h.rol} · ${h.resultado === 'ley' ? 'Ley ' + h.ley : esc(h.motivo || 'archivado')}</span></div></div>`).join('') || '<div class="vacio">Sin iniciativas concluidas.</div>'}</div>
           <h3 style="margin-top:12px">Escándalos y reconocimientos</h3><div class="lista">${[...J.escandalos.map(x => ({ ...x, i: '🔎', txt: x.titulo })), ...J.reconocimientos.map(x => ({ ...x, i: '🏅' }))].sort((a, b) => b.t - a.t).map(x => `<div class="it"><span>${x.i}</span><div class="cuerpo"><b style="white-space:normal">${esc(x.txt)}</b><span>${U.fmtT(x.t)}</span></div></div>`).join('') || '<div class="vacio">Hoja de vida limpia y sin distinciones aún.</div>'}</div></div>
       </div>
-      <div class="tarjeta" style="margin-top:14px"><h3>Cambiar de rumbo</h3><div class="fila accion-form"><select data-arg="oficio">${Object.entries(C.Personaje.ORIGENES).filter(([k, o]) => !o.electo).map(([k, o]) => `<option value="${k}">${o.icono} ${o.n}</option>`).join('')}</select>${UI.botonAccion('cambiarOficio', {})}
+      <div class="tarjeta" style="margin-top:14px"><h3>Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3>
+        <div class="grid g3">${J.familia.map(f => {
+          const esHijo = f.rol === 'Hijo' || f.rol === 'Hija';
+          const icono = { Pareja: '💞', Hijo: '👦', Hija: '👧', Madre: '👩‍🦳', Padre: '👨‍🦳' }[f.rol] || '👤';
+          if (!esHijo) return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años</div></div></div></div>`;
+          const adulto = C.Familia.adulto(f);
+          return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años · ${esc(f.educacion || 'Ninguna')}</div></div></div>
+            <div class="tt-f" style="margin-top:6px"><span class="tenue">Relación contigo</span><b>${Math.round(f.relacion)}/100</b></div>
+            ${adulto ? `<div class="tt-f"><span class="tenue">Potencial político</span><b>${C.Familia.potencial(f)}/100</b></div>` : ''}
+            <div class="fila" style="margin-top:8px;gap:4px">${UI.botonAccion('pasarTiempoHijo', { hijo: f.id }, 'Pasar tiempo', 'chico')}${UI.botonAccion('pagarEducacionHijo', { hijo: f.id }, 'Educación', 'chico')}</div></div>`;
+        }).join('') || '<div class="vacio">Aún no tienes hijos.</div>'}</div></div>
+      <div class="tarjeta" style="margin-top:14px"><h3>Cambiar de rumbo</h3><div class="fila accion-form"><select data-arg="oficio">${Object.entries(C.Personaje.ORIGENES).filter(([k, o]) => !o.electo && !o.oculto).map(([k, o]) => `<option value="${k}">${o.icono} ${o.n}</option>`).join('')}</select>${UI.botonAccion('cambiarOficio', {})}
         <select data-arg="partido">${Object.values(E.partidos).filter(p => !p.especial && !p.futuro).map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('afiliarse', {})}</div>
         <p class="tenue" style="font-size:12px">La vida sigue fuera de los cargos: academia, periodismo, gremios u ONG te mantienen vigente para volver a la arena electoral.</p></div>`;
       UI.$('#p-dim', el).onchange = e => { E.ui.dimSeg = e.target.value; C.App.refrescar(); };
+    },
+
+    /* ── Fin de la vida pública del jugador: elegir sucesor o cerrar la partida ── */
+    modalSucesion(datos) {
+      const E = C.E;
+      const candidatos = datos.candidatos.map(id => E.jugador.familia.find(f => f.id === id)).filter(Boolean);
+      const motivoTxt = datos.motivo === 'fallecimiento' ? `${esc(datos.resumen.nombre)} falleció` : `${esc(datos.resumen.nombre)} se retira de la vida pública`;
+      const cuerpo = `<p style="margin-top:0">${motivoTxt} después de ${datos.resumen.anios} años, ${datos.resumen.eleccionesGanadas} elecciones ganadas y ${datos.resumen.leyesAprobadas} leyes aprobadas como ${esc(datos.resumen.cargoFinal.toLowerCase())}.</p>
+        <h3 class="sub-h">¿Quién continúa el legado de la familia?</h3>
+        <div class="grid g2">${candidatos.map(f => `<div class="tarjeta"><div class="fila"><span style="font-size:26px">${f.rol === 'Hija' ? '👧' : '👦'}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.edad} años · ${esc(f.educacion || 'Ninguna')} · potencial ${C.Familia.potencial(f)}/100</div></div></div>
+          <div style="margin-top:8px"><button class="btn chico prim" data-elegir="${f.id}">Continuar con ${esc(f.nombre.split(' ')[0])}</button></div></div>`).join('')}</div>
+        <div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn chico peligro" id="suc-terminar">Terminar la partida aquí</button></div>`;
+      const m = UI.modal({ titulo: 'Fin de una carrera', icono: '👪', cuerpo, sinCerrar: true });
+      m.cuerpo.addEventListener('click', e => {
+        const b = e.target.closest('[data-elegir]');
+        if (b) { C.Acciones.ejecutar('elegirSucesor', { hijo: b.dataset.elegir }); m.cerrar(); C.App.comenzar(); return; }
+        if (e.target.closest('#suc-terminar')) { C.Acciones.ejecutar('terminarPartida', {}); m.cerrar(); C.App.revisarPendientes(); }
+      });
+    },
+    modalFin(datos) {
+      const r = datos.resumen;
+      const motivoTxt = datos.motivo === 'fallecimiento' ? 'falleció' : 'se retiró de la vida pública';
+      const cuerpo = r ? `<p style="margin-top:0">${esc(r.nombre)} ${motivoTxt} después de una carrera de ${r.anios} años.</p>
+        <div class="grid g2">
+          ${Comp.kpi('Cargo más alto', esc(r.cargoFinal))}${Comp.kpi('Elecciones ganadas', r.eleccionesGanadas)}
+          ${Comp.kpi('Leyes aprobadas', r.leyesAprobadas)}${Comp.kpi('Patrimonio final', U.cop(r.patrimonio))}
+        </div>
+        <p class="tenue" style="font-size:12.5px;margin-top:10px">${r.cargosOcupados.length ? 'Ocupó: ' + r.cargosOcupados.join(', ') + '.' : ''} Sin herederos adultos que continúen la carrera política de la familia.</p>` : '<p>La carrera política de la familia llega a su fin.</p>';
+      const cuerpoFinal = cuerpo + `<div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="fin-menu">Volver al menú</button></div>`;
+      const m = UI.modal({ titulo: 'Fin de la partida', icono: '🏁', cuerpo: cuerpoFinal, sinCerrar: true });
+      m.cuerpo.querySelector('#fin-menu').onclick = () => { m.cerrar(); C.E.ui.finPartida = null; C.Pantallas.inicio.render(document.getElementById('app')); };
     }
   };
 })(window.CURUL);

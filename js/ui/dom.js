@@ -71,6 +71,8 @@ window.CURUL = window.CURUL || {};
       if (!opts.sinRefresco) C.App.refrescar();
       if (C.E && C.E.elecciones && C.E.elecciones.primariaPendiente) { const p = C.E.elecciones.primariaPendiente; C.E.elecciones.primariaPendiente = null; C.Pantallas.elecciones.nochePrimaria(p); }
       if (C.E && C.E.elecciones && C.E.elecciones.direccionPendiente) { const p = C.E.elecciones.direccionPendiente; C.E.elecciones.direccionPendiente = null; C.Pantallas.partidos.congresoInterno(p); }
+      if (C.E && C.E.ui && C.E.ui.sucesionPendiente) { const p = C.E.ui.sucesionPendiente; C.Pantallas.personaje.modalSucesion(p); }
+      else if (C.E && C.E.ui && C.E.ui.finPartida) { const p = C.E.ui.finPartida; C.Pantallas.personaje.modalFin(p); }
       return r;
     },
     /* Botón de acción con su costo y disponibilidad */

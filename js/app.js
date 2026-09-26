@@ -130,6 +130,8 @@ window.CURUL = window.CURUL || {};
     },
     revisarPendientes() {
       const E = C.E;
+      if (E.ui.finPartida) { C.Pantallas.personaje.modalFin(E.ui.finPartida); return; }
+      if (E.ui.sucesionPendiente) { C.Pantallas.personaje.modalSucesion(E.ui.sucesionPendiente); return; }
       if (E.eventos.pendientes.length) { App.modalEvento(E.eventos.pendientes[0]); return; }
       if (E.elecciones.primariaPendiente) { const r = E.elecciones.primariaPendiente; E.elecciones.primariaPendiente = null; C.Pantallas.elecciones.nochePrimaria(r); return; }
       if (E.elecciones.direccionPendiente) { const r = E.elecciones.direccionPendiente; E.elecciones.direccionPendiente = null; C.Pantallas.partidos.congresoInterno(r); return; }
