@@ -272,6 +272,15 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   secretaría (su propio voto cuenta como sí, por ser el autor) y, si se aprueba, mejora de verdad
   el indicador del departamento. Partidas guardadas antes de esta entrega se migran igual que las
   de gobernadores/alcaldes (`Estado.migrar`).
+- **Noche electoral candidato a candidato** (`Elecciones.corporacionLocal` reescrita, tabla
+  `tablaLista` en `js/pantallas/elecciones.js`): al presentarte al Senado, la Cámara, una Asamblea
+  o un Concejo, la noche electoral ya no se queda en "no alcanzaste la victoria" — muestra la lista
+  completa de tu partido (o de tu movimiento propio) puesto por puesto, con el nombre y los votos
+  de cada rival, y una etiqueta «Pasa»/«No pasa» junto a cada uno. Para Senado y Cámara reutiliza
+  el ranking por voto preferente que ya existía (`res.senado.listas`/`res.camara.porDepto[].listas`,
+  desde la Fase 1); para Asamblea y Concejo, `corporacionLocal` ahora genera rivales con nombre
+  propio (antes eran sólo pesos anónimos) para poder mostrar la misma tabla. El modal abre
+  directamente en la pestaña (Senado/Cámara) donde compitió el jugador.
 
 ### Notas de la Fase 3
 

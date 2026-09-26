@@ -380,6 +380,10 @@ window.CURUL = window.CURUL || {};
       }
       return res;
     },
+    /* Elección de Asamblea o Concejo cuando el jugador es candidato: igual que en el Congreso, se
+       arma una lista con nombre y apellido (voto preferente) para poder mostrar, boletín a
+       boletín, cuántos votos saca cada candidato y quién pasa y quién no — no sólo el puesto del
+       jugador. */
     corporacionLocal(E, cam) {
       const d = E.deptos[cam.depto];
       const curules = cam.cargo === 'asamblea' ? U.clamp(Math.round(d.poblacion / 150) + 10, 11, 31) : U.clamp(Math.round(d.poblacion / 250) + 13, 13, 45);
@@ -388,12 +392,21 @@ window.CURUL = window.CURUL || {};
       const votos = {}; for (const [p, s] of Object.entries(cuo)) votos[p] = Math.round(validos * s);
       const cur = El.dhondt(votos, curules, validos / curules * 0.5);
       const n = cur[cam.partido] || 0;
-      const nCands = Math.min(curules, n + 4);
-      const pesos = [Math.pow(El.fuerzaJugador(E, d.id), 1.6)];
-      for (let i = 1; i < nCands; i++) pesos.push(Math.pow(U.ri(25, 75) + 10, 1.6) * Math.exp(U.gauss(0, 0.3)));
-      const tp = U.suma(pesos), misVotos = Math.round((votos[cam.partido] || 0) * 0.8 * pesos[0] / tp);
-      const puesto = 1 + pesos.slice(1).filter(w => w > pesos[0]).length;
-      return { cargo: cam.cargo, electo: puesto <= n, votos: misVotos, puesto, depto: d.id, curulesPartido: n, curules, reparto: cur };
+      let lista;
+      if (cam.partido === 'MOV') {
+        // Un movimiento propio no tiene lista: el jugador compite solo por esa cuota.
+        lista = [{ pol: 'J', votos: votos.MOV || 0, puesto: 1, electo: n >= 1 }];
+      } else {
+        const nCands = Math.max(6, Math.min(curules + 4, n + 5));
+        const rivales = Array.from({ length: nCands - 1 }, () => C.Politicos.crear(E, { partido: cam.partido, depto: d.id, cargo: { tipo: 'aspirante', aspira: cam.cargo } }));
+        const cands = [{ pol: 'J', peso: Math.pow(El.fuerzaJugador(E, d.id), 1.6) }]
+          .concat(rivales.map(p => ({ pol: p.id, peso: Math.pow(p.fuerza + p.r.car * 0.3 + p.r.exp * 0.1, 1.6) * Math.exp(U.gauss(0, 0.3)) })));
+        const tp = U.suma(cands.map(c => c.peso)), totPartido = Math.round((votos[cam.partido] || 0) * 0.85);
+        lista = cands.map(c => ({ pol: c.pol, votos: Math.round(totPartido * c.peso / tp) })).sort((a, b) => b.votos - a.votos);
+        lista.forEach((c, i) => { c.puesto = i + 1; c.electo = i < n; });
+      }
+      const mio = lista.find(c => c.pol === 'J');
+      return { cargo: cam.cargo, electo: mio.electo, votos: mio.votos, puesto: mio.puesto, depto: d.id, partido: cam.partido, curulesPartido: n, curules, reparto: cur, lista };
     },
 
     /* ── Turno: ejecuta elecciones que caen esta semana ────── */

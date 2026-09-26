@@ -6,6 +6,15 @@ window.CURUL = window.CURUL || {};
   const colorP = (E, pid) => E.partidos[pid] ? E.partidos[pid].color : pid === 'MOV' ? '#F0D48A' : '#8C96A3';
   const siglaP = (E, pid) => E.partidos[pid] ? E.partidos[pid].sigla : pid === 'MOV' ? 'Mov. propio' : pid === 'BLANCO' ? 'Voto en blanco' : pid;
   const nombreTipo = r => r.tipo === 'congreso' ? `Congreso ${r.anio}` : r.tipo === 'presidencial' ? `Presidencial ${r.anio} · ${r.vuelta === 2 ? '2ª' : '1ª'} vuelta` : `Regionales ${r.anio}`;
+  /* Tabla candidato a candidato de una lista (voto preferente): cuántos votos saca cada uno y
+     quién pasa y quién no, no sólo el puesto del jugador. */
+  const tablaLista = (E, lista, tot) => `<div class="lista">${lista.map(c => `<div class="it ${c.pol === 'J' ? 'sel' : ''}" style="padding:4px 6px">
+      <span class="tenue num" style="width:24px">${c.puesto}</span>
+      <div class="cuerpo"><b style="font-size:12.5px">${esc(Comp.nombrePol(E, c.pol))}${c.pol === 'J' ? ' (tú)' : ''}</b></div>
+      <b class="num" style="width:64px;text-align:right">${U.n(c.votos)}</b>
+      <span class="tenue num" style="width:48px;text-align:right">${tot ? U.d1(c.votos / tot * 100) + '%' : ''}</span>
+      <span class="etq ${c.electo ? 'verde' : 'rojo'}" style="margin-left:8px">${c.electo ? 'Pasa' : 'No pasa'}</span>
+    </div>`).join('')}</div>`;
 
   const campanaActiva = (E) => {
     const cam = E.elecciones.campana, J = E.jugador;
@@ -104,7 +113,7 @@ window.CURUL = window.CURUL || {};
       // Orden de llegada de boletines: las ciudades grandes informan primero
       const retraso = {}; deps.forEach(d => retraso[d] = U.clamp(Math.random() * 6 + (E.deptos[d].poblacion > 1500 ? 0 : 3) + (E.deptos[d].region === 'Amazonía' ? 4 : 0), 0, 12));
       const PASOS = 22;
-      let paso = sinAnimar ? PASOS : 0, vista = r.tipo === 'congreso' ? 'senado' : 'principal', timer = null;
+      let paso = sinAnimar ? PASOS : 0, vista = r.tipo === 'congreso' ? (r.jugador && r.jugador.cargo === 'camara' ? 'camara' : 'senado') : 'principal', timer = null;
       const frac = d => U.clamp((paso - retraso[d]) / 9, 0, 1);
       const m = UI.modal({ titulo: (sinAnimar ? 'Resultados · ' : 'Noche electoral · ') + nombreTipo(r), icono: '🗳', clase: 'ancho noche', cuerpo: '', alCerrar: () => clearTimeout(timer) });
 
@@ -146,9 +155,13 @@ window.CURUL = window.CURUL || {};
           const orden = Object.entries(nac).sort((a, b) => b[1] - a[1]);
           const curFinal = vista === 'senado' ? r.senado.curulesTot : r.camara.curules;
           const curAnt = ant ? (vista === 'senado' ? ant.senado.curulesTot : ant.camara.curules) : null;
+          const jr = r.jugador;
+          const miLista = fin && jr && jr.cargo === vista ? (vista === 'senado' ? (r.senado.listas || {})[jr.partido] : ((r.camara.porDepto[jr.depto] || {}).listas || {})[jr.partido]) : null;
+          const totLista = miLista ? U.suma(miLista.map(c => c.votos)) : 0;
           der = `<div class="seg" id="n-vista"><button data-v="senado" class="${vista === 'senado' ? 'activo' : ''}">Senado</button><button data-v="camara" class="${vista === 'camara' ? 'activo' : ''}">Cámara</button></div>
             <h3 class="sub-h">Votación al Senado ${fin ? '' : '(parcial)'} · umbral 3 %</h3>
             ${G.barrasH(orden.slice(0, 11).map(([p, v]) => ({ etq: siglaP(E, p), v: v / tot * 100, color: p === 'BLANCO' ? '#5d6c85' : colorP(E, p) })), { fmt: v => U.d1(v) + '%', marca: 3, anchoEtq: '84px', max: Math.max(25, orden[0] ? orden[0][1] / tot * 100 : 25) })}
+            ${miLista ? `<h3 class="sub-h" style="margin-top:12px">Tu lista · ${esc(siglaP(E, jr.partido))} ${vista === 'senado' ? '(nacional)' : 'en ' + esc(E.deptos[jr.depto].nombre)}</h3>${tablaLista(E, miLista, totLista)}` : ''}
             ${fin ? `<h3 class="sub-h" style="margin-top:12px">Curules ${vista === 'senado' ? 'del Senado' : 'de la Cámara'}</h3>
               ${C.Hemiciclo.svg(E, vista, { miembros: (vista === 'senado' ? r.senado.electos : [...Object.values(r.camara.porDepto).flatMap(x => x.electos), ...(r.camara.especiales || [])]).map(e => E.politicos[e.pol]).filter(Boolean), altoMax: 250 })}
               <div class="lista">${Object.entries(curFinal).sort((a, b) => b[1] - a[1]).map(([p, n]) => `<div class="it" style="padding:3px 4px"><i class="pto" style="background:${colorP(E, p)}"></i><div class="cuerpo"><b style="font-size:12.5px">${esc(siglaP(E, p))}</b></div><b class="num">${n}</b>${curAnt ? `<span class="num ${n - (curAnt[p] || 0) > 0 ? 'bien' : n - (curAnt[p] || 0) < 0 ? 'mal' : 'tenue'}" style="width:40px;text-align:right">${U.signo(n - (curAnt[p] || 0), 0)}</span>` : ''}</div>`).join('')}</div>` : ''}`;
@@ -157,6 +170,10 @@ window.CURUL = window.CURUL || {};
           der = `<h3 class="sub-h">Resultados ${fin ? 'finales' : 'parciales'}</h3>
             <div class="col">${r.candidatos.map(c => { const pol = c.pol === 'J' ? E.politicos.J : E.politicos[c.pol]; const pct = (nac[c.pol] || 0) / tot * 100; return `<div class="cand"><div class="fila" style="flex-wrap:nowrap">${Comp.avatar(E, pol, 44)}<div style="flex:1;min-width:0"><b>${esc(Comp.nombrePol(E, c.pol))}${c.pol === 'J' ? ' (tú)' : ''}</b><div class="tenue" style="font-size:12px">${Comp.partido(E, c.partido)}</div></div><div class="kpi" style="text-align:right"><span class="v" style="font-size:24px">${U.d1(pct)}%</span><span class="l">${U.n(nac[c.pol] || 0)} votos</span></div></div><div class="barra-h" style="height:10px;margin-top:6px"><i style="width:${pct}%;background:${colorP(E, c.partido)}"></i><b style="position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#fff;opacity:.6"></b></div></div>`; }).join('')}</div>
             ${fin ? `<div class="tarjeta" style="margin-top:12px;text-align:center">${r.ganador ? `<div class="tenue">PRESIDENTE ELECTO</div><h2>${esc(Comp.nombrePol(E, r.ganador))}</h2>` : `<div class="tenue">NINGÚN CANDIDATO SUPERA EL 50 %</div><h2>Segunda vuelta: ${esc(Comp.nombrePol(E, r.segunda[0].pol))} vs. ${esc(Comp.nombrePol(E, r.segunda[1].pol))}</h2>`}</div>` : ''}`;
+        } else if (r.jugador && (r.jugador.cargo === 'asamblea' || r.jugador.cargo === 'concejo') && r.jugador.lista) {
+          const jr = r.jugador, totLista = U.suma(jr.lista.map(c => c.votos));
+          der = `<h3 class="sub-h">Tu lista · ${esc(siglaP(E, jr.partido))} a ${jr.cargo === 'asamblea' ? 'la Asamblea de ' + esc(E.deptos[jr.depto].nombre) : 'el Concejo de ' + esc(E.deptos[jr.depto].capital)}</h3>
+            ${fin ? tablaLista(E, jr.lista, totLista) : `<div class="tenue" style="font-size:12.5px">Resultado disponible al cierre del escrutinio.</div>`}`;
         } else {
           const ganados = U.contar(Object.values(r.porDepto), x => x.candidatos[0].partido);
           der = `<h3 class="sub-h">Gobernaciones ganadas</h3>${G.barrasH(Object.entries(ganados).sort((a, b) => b[1] - a[1]).map(([p, n]) => ({ etq: siglaP(E, p), v: n, color: colorP(E, p) })), { fmt: v => U.n(v), anchoEtq: '84px' })}
