@@ -21,6 +21,7 @@ window.CURUL = window.CURUL || {};
         gobierno: {},
         economia: {},
         presupuesto: {},
+        ministeriosExtra: [],
         opinion: {},
         elecciones: { historico: [], campana: null, proxima: null },
         medios: { lista: [], noticias: [] },

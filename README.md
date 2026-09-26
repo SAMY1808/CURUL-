@@ -6,10 +6,10 @@ funcionando: mapa por capas, hemiciclos con cada curul, votaciones nominales ani
 legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposición y economía.
 
 **Jugar:** abre `index.html` (funciona desde el disco, en GitHub Pages o con cualquier servidor estático).
-En línea: **https://samy1808.github.io/curul-/** (activar GitHub Pages) o de inmediato vía
-**https://cdn.jsdelivr.net/gh/SAMY1808/curul-/index.html**.
+En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
+**https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fase 1 completa + Fase 2 en curso)
+## Qué hay en esta versión (Fases 1 y 2 completas + Fase 3 en curso)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -41,6 +41,16 @@ En línea: **https://samy1808.github.io/curul-/** (activar GitHub Pages) o de in
 - **Medios y eventos**: 14 medios ficticios, noticias, entrevistas; eventos procedurales con decisiones.
 - **Guardado**: múltiples partidas (IndexedDB), autoguardado, exportar/importar `.json`,
   esquema versionado con migraciones.
+- **Fecha de inicio libre (1900-2026)**: elige el año en que empieza tu carrera. Antes de 1991
+  Colombia es bipartidista (sólo liberales y conservadores); entre 1958 y 1970 rige el Frente
+  Nacional, con alternancia presidencial obligatoria y el Congreso repartido en partes iguales
+  entre los dos partidos; gobernadores y alcaldes son designados, no elegidos, hasta 1991.
+- **Ley para crear ministerios**: como presidente puedes proponer un proyecto de ley para crear un
+  ministerio nuevo (nombre, sector y tamaño a tu elección); sigue el trámite legislativo normal y,
+  al sancionarse, entra en funciones con su propio puesto en el presupuesto.
+- **Gobierno local**: si ganas una gobernación o una alcaldía, manejas tu propio gabinete de
+  secretarías, tu presupuesto regional y firmas decretos con efecto inmediato; crear una secretaría
+  nueva necesita el visto bueno de la Asamblea o el Concejo.
 
 ## Arquitectura
 

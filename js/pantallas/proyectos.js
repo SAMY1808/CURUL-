@@ -86,7 +86,7 @@ window.CURUL = window.CURUL || {};
       const deficit = C.Economia.impactoFiscal(p.costo);
       const grupos = U.agrupar(p.efectos, e => e.p);
       const pos = U.clamp(50 + (p.pop + p.presion) * 1.4, 3, 97);
-      const bancadas = Object.values(E.partidos).filter(x => !x.especial).map(pa => ({ pa, pos: p.bancadas[pa.id] || L.posicionBancada(E, pa.id, p) }));
+      const bancadas = Object.values(E.partidos).filter(x => !x.especial && !x.futuro).map(pa => ({ pa, pos: p.bancadas[pa.id] || L.posicionBancada(E, pa.id, p) }));
       return `<div class="grid g3">
         <div class="tarjeta"><h3>Costo fiscal</h3><div class="kpi"><span class="v">${p.costo >= 0 ? '' : '−'}$${U.d1(Math.abs(p.costo))} bill.</span><span class="l">${p.costo >= 0 ? 'gasto anual' : 'recaudo anual'}</span><span class="d ${deficit > 0 ? 'mal' : 'bien'}">${U.signo(deficit, 1)} pp de déficit (% del PIB)</span></div>
           <div style="margin-top:12px">${Comp.ideoBarra(p.eco, p.soc)}<div class="tenue" style="font-size:11.5px;margin-top:4px">Orientación: ${Comp.etiquetaIdeo(p.eco)} · ${p.soc > 25 ? 'conservador' : p.soc < -25 ? 'progresista' : 'moderado'} en lo social</div></div></div>

@@ -68,8 +68,13 @@ window.CURUL = window.CURUL || {};
     },
     nav() {
       const E = C.E;
+      const nav = NAV.slice();
+      if (E.jugador.cargo === 'gobernador' || E.jugador.cargo === 'alcalde') {
+        const i = nav.findIndex(n => n && n[0] === 'gobierno');
+        nav.splice(i + 1, 0, ['local', '🏘', E.jugador.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']);
+      }
       const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '' };
-      document.getElementById('nav').innerHTML = NAV.map(n => n ? `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>` : '<div class="sep"></div>').join('');
+      document.getElementById('nav').innerHTML = nav.map(n => n ? `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>` : '<div class="sep"></div>').join('');
       UI.$$('#nav button').forEach(b => b.onclick = () => App.ir(b.dataset.p));
     },
     ticker() {

@@ -15,6 +15,7 @@ window.CURUL = window.CURUL || {};
       const sem = El.semanasPara(E, ev);
       if (sem > 52) return `Las inscripciones abren un año antes de la elección (faltan ${sem} semanas)`;
       if (sem < 6) return 'Las inscripciones ya cerraron';
+      if ((a.cargo === 'gobernacion' || a.cargo === 'alcaldia') && ev.anio < 1991) return `Antes de 1991 no había voto popular para ese cargo: lo designaba ${a.cargo === 'gobernacion' ? 'el Presidente' : 'el gobernador'}`;
       if (a.cargo === 'presidencia' && U.anio() - J.nac < 30) return 'Se requieren 30 años para ser presidente';
       if (a.cargo === 'senado' && U.anio() - J.nac < 30) return 'Se requieren 30 años para ser senador';
       if (a.cargo === 'presidencia' && J.reconocimiento < 30) return 'Necesitas al menos 30 de reconocimiento nacional';

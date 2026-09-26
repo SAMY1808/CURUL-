@@ -102,5 +102,8 @@ CURUL.DATA.plantillasProyectos = [
     efectos:[{v:'crecimiento',d:0.3,p:'l'},{v:'educacion',d:1,p:'l'},{v:'deficit',d:0.25,p:'m'}] },
   { id:'presupuesto', titulo:'Presupuesto General de la Nación', sector:'presupuesto', tipo:'organica',
     eco:0, soc:0, costo:0, pop:0, apoyan:['Gobierno'], opuestos:[], gobierno:true, anual:true,
-    efectos:[{v:'confianza',d:0.5,p:'i'}] }
+    efectos:[{v:'confianza',d:0.5,p:'i'}] },
+  { id:'nuevoministerio', titulo:'Creación de un nuevo ministerio', sector:'politica', tipo:'ordinaria',
+    eco:0, soc:0, costo:0.4, pop:1, apoyan:['Gobierno'], opuestos:['Hacienda'], gobierno:true,
+    efectos:[{v:'confianza',d:0.2,p:'i'}] }
 ];

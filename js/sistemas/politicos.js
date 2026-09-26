@@ -55,7 +55,7 @@ window.CURUL = window.CURUL || {};
       const def = C.DATA.cargos[c.tipo];
       let t = def ? def.nombre : c.tipo;
       if (c.tipo === 'representante' && c.circ) t += ' · ' + C.Congreso.nombreCirc(c.circ);
-      if (c.tipo === 'ministro' && c.ministerio) t = 'Ministro de ' + C.DATA.ministerios.find(m => m.id === c.ministerio).nombre;
+      if (c.tipo === 'ministro' && c.ministerio) t = 'Ministro de ' + C.Gobierno.todosMinisterios(E).find(m => m.id === c.ministerio).nombre;
       if ((c.tipo === 'gobernador' || c.tipo === 'alcalde') && c.depto) t += ' · ' + (c.tipo === 'alcalde' ? E.deptos[c.depto].capital : E.deptos[c.depto].nombre);
       return t;
     },
@@ -109,7 +109,7 @@ window.CURUL = window.CURUL || {};
       });
       if (!p) return;
       const origen = E.partidos[p.partido];
-      const destinos = Object.values(E.partidos).filter(x => x.id !== p.partido && !x.especial);
+      const destinos = Object.values(E.partidos).filter(x => x.id !== p.partido && !x.especial && !x.futuro);
       const dest = destinos.sort((a, b) => U.distIdeo(p, a) - U.distIdeo(p, b) - (b.popularidad - a.popularidad) * 0.01)[0];
       if (!dest || U.distIdeo(p, dest) > U.distIdeo(p, origen) - 0.05) return;
       if (p.proximoPartido) return;

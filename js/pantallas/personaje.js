@@ -66,7 +66,7 @@ window.CURUL = window.CURUL || {};
           <h3 style="margin-top:12px">Escándalos y reconocimientos</h3><div class="lista">${[...J.escandalos.map(x => ({ ...x, i: '🔎', txt: x.titulo })), ...J.reconocimientos.map(x => ({ ...x, i: '🏅' }))].sort((a, b) => b.t - a.t).map(x => `<div class="it"><span>${x.i}</span><div class="cuerpo"><b style="white-space:normal">${esc(x.txt)}</b><span>${U.fmtT(x.t)}</span></div></div>`).join('') || '<div class="vacio">Hoja de vida limpia y sin distinciones aún.</div>'}</div></div>
       </div>
       <div class="tarjeta" style="margin-top:14px"><h3>Cambiar de rumbo</h3><div class="fila accion-form"><select data-arg="oficio">${Object.entries(C.Personaje.ORIGENES).filter(([k, o]) => !o.electo).map(([k, o]) => `<option value="${k}">${o.icono} ${o.n}</option>`).join('')}</select>${UI.botonAccion('cambiarOficio', {})}
-        <select data-arg="partido">${Object.values(E.partidos).filter(p => !p.especial).map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('afiliarse', {})}</div>
+        <select data-arg="partido">${Object.values(E.partidos).filter(p => !p.especial && !p.futuro).map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('afiliarse', {})}</div>
         <p class="tenue" style="font-size:12px">La vida sigue fuera de los cargos: academia, periodismo, gremios u ONG te mantienen vigente para volver a la arena electoral.</p></div>`;
       UI.$('#p-dim', el).onchange = e => { E.ui.dimSeg = e.target.value; C.App.refrescar(); };
     }

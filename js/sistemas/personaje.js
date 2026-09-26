@@ -15,7 +15,7 @@ window.CURUL = window.CURUL || {};
     ong:          { n: 'Director de ONG', icono: '🌱', desc: 'Cooperación internacional y trabajo territorial.', rec: 6, redes: 5, patrimonio: 90, salario: 8, cargo: 'ong', bonus: { gestion: 4 }, cred: 6 },
     concejal:     { n: 'Concejal', icono: '🏛', desc: 'Ya ocupas una curul en el concejo de tu ciudad.', rec: 12, redes: 6, patrimonio: 140, salario: 12, cargo: 'concejal', electo: true },
     diputado:     { n: 'Diputado', icono: '🏛', desc: 'Miembro de la Asamblea de tu departamento.', rec: 14, redes: 6, patrimonio: 180, salario: 15, cargo: 'diputado', electo: true },
-    representante:{ n: 'Representante a la Cámara', icono: '🟢', desc: 'Recién elegido por tu departamento para 2026-2030.', rec: 24, redes: 7, patrimonio: 420, salario: 48, cargo: 'representante', electo: true, requierePartido: true },
+    representante:{ n: 'Representante a la Cámara', icono: '🟢', desc: 'Recién elegido por tu departamento para el nuevo cuatrienio.', rec: 24, redes: 7, patrimonio: 420, salario: 48, cargo: 'representante', electo: true, requierePartido: true },
     senador:      { n: 'Senador', icono: '🔴', desc: 'Recién elegido en la lista nacional del Senado.', rec: 36, redes: 8, patrimonio: 700, salario: 48, cargo: 'senador', electo: true, requierePartido: true }
   };
   const SALARIOS = { senador: 48, representante: 48, presidente: 45, ministro: 38, gobernador: 30, alcalde: 28, diputado: 15, concejal: 12 };

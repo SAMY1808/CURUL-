@@ -1,21 +1,35 @@
-/* Generación procedural del mundo político a partir de una semilla. */
+/* Generación procedural del mundo político a partir de una semilla y de un año de inicio libre
+   (1900-2026). El Congreso y la Presidencia sólo cambian de manos en años de ciclo (cada 4 años,
+   sincronizados con el calendario moderno hacia atrás y hacia adelante); si el año elegido no es
+   uno de ellos, se simula la instalación del ciclo anterior y se avanza en silencio hasta la fecha
+   pedida, así que el mundo que el jugador encuentra ya tiene una historia real detrás, no un
+   estado fabricado a mano. */
 window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U;
-  const ESCENARIOS = {
-    legislatura: { n: 'Nueva legislatura 2026-2030', desc: 'El Congreso recién instalado y un presidente en luna de miel. Cuatro años por delante.', inicio: '2026-07-20T00:00:00Z', presim: 3 },
-    electoral:   { n: 'Año preelectoral 2029', desc: 'Final de cuatrienio: el gobierno está desgastado y las elecciones de 2030 se acercan.', inicio: '2029-07-16T00:00:00Z', presim: 4, desgaste: true }
-  };
+  const ANIO_MIN = 1900, ANIO_MAX = 2026;
+  /* Año de ciclo (instalación del Congreso) más reciente en o antes de `anio`. */
+  const cicloDe = anio => anio - (((anio - 2026) % 4) + 4) % 4;
 
   const Mundo = {
-    ESCENARIOS,
+    ANIO_MIN, ANIO_MAX, cicloDe,
+    /* Nota histórica breve para la pantalla de creación, según la época elegida. */
+    notaEpoca(anio) {
+      if (anio < 1958) return 'República bipartidista: sólo liberales y conservadores compiten por el poder. Gobernadores y alcaldes son designados, no elegidos.';
+      if (anio < 1974) return 'Frente Nacional: el pacto obliga a alternar la presidencia entre liberales y conservadores, y reparte el Congreso en partes iguales entre los dos partidos.';
+      if (anio < 1991) return 'Bipartidismo tras el Frente Nacional: la competencia entre liberales y conservadores se abre un poco, pero siguen siendo los únicos partidos. Gobernadores y alcaldes siguen siendo designados.';
+      return 'Colombia de la Constitución de 1991: sistema multipartidista, Senado por circunscripción nacional, gobernadores y alcaldes elegidos por voto popular.';
+    },
     generar(cfg) {
-      const esc = ESCENARIOS[cfg.escenario] || ESCENARIOS.legislatura;
+      const anioInicio = U.clamp(Math.round(cfg.anioInicio || 2026), ANIO_MIN, ANIO_MAX);
+      const ciclo = cicloDe(anioInicio);
+      const inicioISO = ciclo + '-07-20T00:00:00Z';
+      const presim = Math.max(3, Math.round((Date.UTC(anioInicio, 6, 20) - Date.UTC(ciclo, 6, 20)) / (7 * 864e5)));
       const semilla = cfg.semilla || Math.floor(Math.random() * 2 ** 31);
-      const E = C.Estado.vacio(semilla, esc.inicio);
+      const E = C.Estado.vacio(semilla, inicioISO);
       C.E = E;
       E.meta.nombrePartida = cfg.jugador.nombre;
-      E.meta.escenario = cfg.escenario;
+      E.meta.anioInicio = anioInicio;
       E.meta.presim = true;
 
       // 1. Territorio
@@ -25,7 +39,7 @@ window.CURUL = window.CURUL || {};
       // 3. Jugador
       C.Personaje.crear(E, cfg.jugador);
       const J = E.jugador;
-      // 4. Gobernadores y alcaldes de capitales
+      // 4. Gobernadores y alcaldes de capitales (designados o elegidos según la época, vía cuotas())
       for (const d of Object.values(E.deptos)) {
         for (const tipo of ['gobernador', 'alcalde']) {
           const cuo = C.Elecciones.cuotas(E, d.id, true);
@@ -35,14 +49,12 @@ window.CURUL = window.CURUL || {};
         }
       }
       if (J.cargo === 'concejal' || J.cargo === 'diputado') J.cargoInfo = { depto: J.residencia };
-      // 5. Elecciones de 2026 (historia inicial)
+      // 5. Elecciones del ciclo de instalación (historia inicial)
       const forzar = J.cargo === 'senador' ? 'senado' : J.cargo === 'representante' ? 'camara' : null;
-      const resC = C.Elecciones.congreso(E, { anio: 2026, forzarJugador: forzar });
-      resC.anio = 2026;
+      const resC = C.Elecciones.congreso(E, { anio: ciclo, forzarJugador: forzar });
       let resP = C.Elecciones.presidencial(E, 1, C.Elecciones.candidatosPresidencia(E));
-      resP.anio = 2026;
       const hist = [resC, resP];
-      if (!resP.ganador) { const r2 = C.Elecciones.presidencial(E, 2, resP.segunda); r2.anio = 2026; r2.anterior = null; hist.push(r2); resP = r2; }
+      if (!resP.ganador) { const r2 = C.Elecciones.presidencial(E, 2, resP.segunda); r2.anterior = null; hist.push(r2); resP = r2; }
       hist.forEach(h => { h.t = 0; h.anterior = null; h.inicial = true; });
       E.elecciones.historico.push(...hist);
       E.gobierno.electo = { pol: resP.ganador, partido: resP.candidatos[0].partido, segundo: resP.candidatos[1] };
@@ -52,7 +64,7 @@ window.CURUL = window.CURUL || {};
       C.Congreso.elegirMesas(E);
       E.congreso.legislatura = 1; E.congreso.sesionAnterior = true;
       C.Partidos.asignarLideres(E);
-      if (forzar) J.historialElectoral.push({ anio: 2026, cargo: forzar === 'senado' ? 'senado' : 'camara', depto: forzar === 'camara' ? J.residencia : null, partido: J.partido, votos: (resC.senado.electos.concat(...Object.values(resC.camara.porDepto).map(x => x.electos)).find(e => e.pol === 'J') || {}).votos || 0, electo: true });
+      if (forzar) J.historialElectoral.push({ anio: ciclo, cargo: forzar === 'senado' ? 'senado' : 'camara', depto: forzar === 'camara' ? J.residencia : null, partido: J.partido, votos: (resC.senado.electos.concat(...Object.values(resC.camara.porDepto).map(x => x.electos)).find(e => e.pol === 'J') || {}).votos || 0, electo: true });
       // 7. Agenda inicial: presupuesto del año siguiente y proyectos de bandera del Gobierno
       C.Presupuesto.init(E);
       C.Presupuesto.radicar(E);
@@ -61,14 +73,8 @@ window.CURUL = window.CURUL || {};
       for (const pl of pls) { const m = C.Gobierno.ministroDe(E, pl.sector); E.gobierno.agenda.push(C.Legislacion.crear(E, { plantilla: pl.id, autor: m && m.id, gobierno: true, eco: pl.eco * 0.6 + pres.eco * 0.4, soc: pl.soc * 0.6 + pres.soc * 0.4 }).id); }
       const congresistas = [...C.Congreso.miembros(E, 'senado'), ...C.Congreso.miembros(E, 'camara')].filter(p => p.id !== 'J');
       for (let i = 0; i < 10; i++) C.Legislacion.radicarIA(E, U.pick(congresistas));
-      // 8. Presimulación silenciosa (el mundo ya está en marcha cuando llega el jugador)
-      for (let i = 0; i < esc.presim; i++) { C.Tiempo.avanzar(); E.eventos.pendientes = []; }
-      if (esc.desgaste) {
-        E.opinion.luna = 0; E.opinion.aprobacionPres = U.rf(34, 42);
-        E.congreso.legislatura = 4;
-        for (const p of Object.values(E.proyectos)) p.legRad = 4;
-        E.economia.deuda += 3; E.economia.deficit += 0.4;
-      }
+      // 8. Presimulación silenciosa hasta el año pedido (el mundo ya tiene una historia real detrás)
+      for (let i = 0; i < presim; i++) { C.Tiempo.avanzar(); E.eventos.pendientes = []; E.elecciones.nochePendiente = null; if ((E.ui.sancionesPendientes || []).length) { for (const id of E.ui.sancionesPendientes) if (E.proyectos[id] && E.proyectos[id].sub === 'decisionPresidente') C.Legislacion.convertirEnLey(E, E.proyectos[id]); E.ui.sancionesPendientes = []; } }
       E.meta.presim = false;
       E.series = {};
       C.Economia.series(E); U.serie('aprobacion', E.opinion.aprobacionPres);

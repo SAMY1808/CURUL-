@@ -30,11 +30,11 @@ window.CURUL = window.CURUL || {};
     EFECTO,
     init(E) {
       const base = {}; let tot = 0;
-      for (const m of C.DATA.ministerios) tot += m.pesoBase;
-      for (const m of C.DATA.ministerios) base[m.id] = m.pesoBase / tot * 100;
+      for (const m of C.Gobierno.todosMinisterios(E)) tot += m.pesoBase;
+      for (const m of C.Gobierno.todosMinisterios(E)) base[m.id] = m.pesoBase / tot * 100;
       const anio = U.anio() + 1;
       const shares = Object.assign({}, base);
-      const porMinisterio = {}; for (const m of C.DATA.ministerios) porMinisterio[m.id] = { pct: shares[m.id], asignado: E.economia.pib * E.economia.gasto / 100 * shares[m.id] / 100 };
+      const porMinisterio = {}; for (const m of C.Gobierno.todosMinisterios(E)) porMinisterio[m.id] = { pct: shares[m.id], asignado: E.economia.pib * E.economia.gasto / 100 * shares[m.id] / 100 };
       E.presupuesto = {
         pesoBase: base, anio, gastoPct: E.economia.gasto,
         vigente: { anio: U.anio(), gastoPct: E.economia.gasto, shares, porMinisterio },
@@ -52,7 +52,7 @@ window.CURUL = window.CURUL || {};
     formular(E) {
       const Pr = E.presupuesto, ideo = P.ideoPresidente(E);
       const shares = {};
-      for (const m of C.DATA.ministerios) {
+      for (const m of C.Gobierno.todosMinisterios(E)) {
         let base = Pr.pesoBase[m.id];
         const linea = SOCIAL.has(m.id) ? 1 : DISCIPLINA.has(m.id) ? -1 : 0;
         const factor = U.clamp(1 + (-ideo.eco / 100) * 0.45 * linea, 0.5, 1.7);
@@ -91,6 +91,20 @@ window.CURUL = window.CURUL || {};
       const Pr = E.presupuesto; if (!Pr || !Pr.vigente) return false;
       return Pr.vigente.shares[minId] < Pr.pesoBase[minId] * 0.75;
     },
+    /* Da de alta un ministerio nuevo (creado por ley): le abre un puesto en el presupuesto
+       tomando `pctInicial` puntos porcentuales del resto, proporcionalmente. */
+    crearMinisterio(E, datos, pctInicial) {
+      const Pr = E.presupuesto, pct = U.clamp(pctInicial || 2, 1, 8), factor = (100 - pct) / 100;
+      E.ministeriosExtra.push(datos);
+      for (const k of Object.keys(Pr.pesoBase)) Pr.pesoBase[k] *= factor;
+      Pr.pesoBase[datos.id] = pct;
+      for (const k of Object.keys(Pr.propuesta)) Pr.propuesta[k] *= factor;
+      Pr.propuesta[datos.id] = pct;
+      for (const k of Object.keys(Pr.vigente.shares)) Pr.vigente.shares[k] *= factor;
+      Pr.vigente.shares[datos.id] = pct;
+      const pib = E.economia.pib;
+      for (const k of Object.keys(Pr.vigente.shares)) Pr.vigente.porMinisterio[k] = { pct: Pr.vigente.shares[k], asignado: pib * Pr.vigente.gastoPct / 100 * Pr.vigente.shares[k] / 100 };
+    },
     /* Refuerzo de emergencia a mitad de año: sube la participación vigente de un ministerio,
        recortando proporcionalmente al resto ('recorte') o financiándolo con más déficit ('credito'). */
     reforzar(E, minId, via) {
@@ -114,7 +128,7 @@ window.CURUL = window.CURUL || {};
       if (Pr.formuladoAnio !== Pr.anio) P.formular(E);
       const vig = Pr.vigente;
       const efectos = [{ v: 'confianza', d: 0.3, p: 'i' }];
-      for (const m of C.DATA.ministerios) {
+      for (const m of C.Gobierno.todosMinisterios(E)) {
         const ef = EFECTO[m.id]; if (!ef) continue;
         const delta = Pr.propuesta[m.id] - vig.shares[m.id];
         if (Math.abs(delta) < 0.3) continue;
@@ -139,7 +153,7 @@ window.CURUL = window.CURUL || {};
       const Pr = E.presupuesto; if (!Pr) return;
       const pib = E.economia.pib, shares = snap.shares;
       const porMinisterio = {};
-      for (const m of C.DATA.ministerios) porMinisterio[m.id] = { pct: shares[m.id], asignado: pib * snap.gastoPct / 100 * shares[m.id] / 100 };
+      for (const m of C.Gobierno.todosMinisterios(E)) porMinisterio[m.id] = { pct: shares[m.id], asignado: pib * snap.gastoPct / 100 * shares[m.id] / 100 };
       Pr.vigente = { anio: snap.anio, gastoPct: snap.gastoPct, shares, porMinisterio };
       Pr.historial.push({ anio: snap.anio, gastoPct: snap.gastoPct, ingresosPct: E.economia.recaudo, pib });
       if (Pr.historial.length > 15) Pr.historial.shift();
@@ -154,7 +168,7 @@ window.CURUL = window.CURUL || {};
       if (hoy.getUTCMonth() === 5 && hoy.getUTCDate() <= 7 && Pr.formuladoAnio !== Pr.anio) P.formular(E);
       if (hoy.getUTCMonth() === 6 && hoy.getUTCDate() >= 20 && hoy.getUTCDate() < 27 && !Pr.enTramite) P.radicar(E);
       // La imagen de cada ministro reacciona lentamente a si su cartera está bien o mal financiada
-      for (const m of C.DATA.ministerios) {
+      for (const m of C.Gobierno.todosMinisterios(E)) {
         const pol = E.politicos[E.gobierno.gabinete[m.id]]; if (!pol) continue;
         const pct = Pr.vigente.shares[m.id] || 0, base = Pr.pesoBase[m.id];
         const adecuacion = U.clamp((pct - base) / base, -0.5, 0.5);

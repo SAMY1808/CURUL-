@@ -11,6 +11,7 @@ window.CURUL = window.CURUL || {};
           id: d.id, nombre: d.nombre, sigla: d.sigla, color: d.color, lema: d.lema,
           eco: d.eco, soc: d.soc, popularidad: d.pop, popBase: d.pop, cohesion: d.cohesion,
           estructura: ESTRUCTURA[d.id] || .4, fuertes: d.fuertes, especial: !!d.especial,
+          fundado: d.fundado || 0, futuro: !!(d.fundado && d.fundado > U.anio()),
           postura: 'independiente',            // gobierno | independiente | oposicion (Estatuto de Oposición)
           facciones: d.facciones.map((f, i) => ({ id: d.id + '-f' + i, nombre: f[0], eco: f[1], soc: f[2], peso: f[3], lider: null, relJ: 0 })),
           lider: null,
@@ -60,8 +61,13 @@ window.CURUL = window.CURUL || {};
     turno(E) {
       const gob = E.gobierno;
       const aprob = E.opinion.aprobacionPres || 45;
+      const anio = U.anio();
       for (const pa of Object.values(E.partidos)) {
-        if (pa.especial) continue;
+        if (pa.futuro && pa.fundado && pa.fundado <= anio) {
+          pa.futuro = false;
+          C.Medios.noticia(E, { tipo: 'partidos', titular: `Se funda el ${pa.nombre} («${pa.lema}»)`, tono: 0 });
+        }
+        if (pa.especial || pa.futuro) continue;
         // Reversión a su base histórica + efecto gobierno/oposición según aprobación
         let objetivo = pa.popBase;
         if (pa.id === gob.partido) objetivo += (aprob - 45) * 0.15;
@@ -73,7 +79,7 @@ window.CURUL = window.CURUL || {};
         for (const f of pa.facciones) f.peso = U.clamp(f.peso + U.gauss(0, 0.3), 5, 90);
         if (pa.relJ) pa.relJ *= 0.997;
       }
-      if (E.fecha.t % 4 === 0) for (const pa of Object.values(E.partidos)) if (!pa.especial) U.serie('pop:' + pa.id, pa.popularidad);
+      if (E.fecha.t % 4 === 0) for (const pa of Object.values(E.partidos)) if (!pa.especial && !pa.futuro) U.serie('pop:' + pa.id, pa.popularidad);
     }
   };
 

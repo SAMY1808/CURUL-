@@ -5,6 +5,8 @@ window.CURUL = window.CURUL || {};
   const U = C.U;
 
   const G = {
+    /* Catálogo de ministerios: los 19 originales más los que se hayan creado por ley en la partida. */
+    todosMinisterios(E) { return C.DATA.ministerios.concat(E.ministeriosExtra || []); },
     /* Posesión de un presidente (IA o jugador) */
     posesionar(E, electo, silencioso) {
       const g = E.gobierno;
@@ -54,7 +56,7 @@ window.CURUL = window.CURUL || {};
       const g = E.gobierno, pp = E.partidos[g.partido];
       const ideoPres = g.presidente === 'J' ? E.jugador.ideologia : (E.politicos[g.presidente] || pp);
       const comp = E.congreso.senado ? C.Congreso.composicion(E, 'senado').porPartido : {};
-      const orden = Object.values(E.partidos).filter(p => !p.especial).sort((a, b) => U.distIdeo(a, ideoPres) - U.distIdeo(b, ideoPres));
+      const orden = Object.values(E.partidos).filter(p => !p.especial && !p.futuro).sort((a, b) => U.distIdeo(a, ideoPres) - U.distIdeo(b, ideoPres));
       g.coalicion = [];
       let asientos = 0; const meta = E.congreso.senado ? C.Congreso.mayoria(E, 'senado') + 6 : 60;
       for (const pa of orden) {
@@ -69,7 +71,7 @@ window.CURUL = window.CURUL || {};
       const g = E.gobierno;
       const comp = E.congreso.senado ? C.Congreso.composicion(E, 'senado').porPartido : {};
       const cuotas = g.coalicion.map(pid => ({ pid, w: (comp[pid] || 1) * (pid === g.partido ? 2.2 : 1) }));
-      for (const m of C.DATA.ministerios) {
+      for (const m of G.todosMinisterios(E)) {
         const tecnocrata = U.chance(0.22);
         const pid = tecnocrata ? null : U.pesado(cuotas, c => c.w).pid;
         G.designar(E, m.id, pid, true);
@@ -85,13 +87,13 @@ window.CURUL = window.CURUL || {};
       m.aprob = U.ri(35, 60);
       C.Politicos.anotar(m, 'Designado ministro');
       if (!silencioso) {
-        const min = C.DATA.ministerios.find(x => x.id === minId);
+        const min = G.todosMinisterios(E).find(x => x.id === minId);
         C.Medios.noticia(E, { tipo: 'gobierno', titular: `${m.nombre} es el nuevo ministro de ${min.nombre}`, tono: 0 });
       }
       return m;
     },
     ministroDe(E, sector) {
-      const min = C.DATA.ministerios.find(m => m.sector === sector) || C.DATA.ministerios[0];
+      const min = G.todosMinisterios(E).find(m => m.sector === sector) || C.DATA.ministerios[0];
       return E.politicos[E.gobierno.gabinete[min.id]];
     },
     /* Estabilidad de la coalición y sus factores */
@@ -100,7 +102,7 @@ window.CURUL = window.CURUL || {};
       const comp = C.Congreso.composicion(E, 'senado').porPartido;
       const ministros = U.contar(Object.values(g.gabinete).map(id => E.politicos[id]).filter(Boolean), m => m.partido || 'TEC');
       const totSeats = U.suma(g.coalicion.map(p => comp[p] || 0)) || 1;
-      const nMin = C.DATA.ministerios.length;
+      const nMin = G.todosMinisterios(E).length;
       const ideoPres = g.presidente === 'J' ? E.jugador.ideologia : E.politicos[g.presidente];
       const aprob = E.opinion.aprobacionPres;
       const prox = C.Elecciones.proxima(E, 'congreso');
@@ -134,7 +136,7 @@ window.CURUL = window.CURUL || {};
       const g = E.gobierno;
       const ids = Object.keys(g.gabinete);
       minId = minId || U.pick(ids);
-      const ministro = E.politicos[g.gabinete[minId]], min = C.DATA.ministerios.find(m => m.id === minId);
+      const ministro = E.politicos[g.gabinete[minId]], min = G.todosMinisterios(E).find(m => m.id === minId);
       if (!ministro) return null;
       const fuerzaC = citante.id === 'J' ? E.jugador.atributos.oratoria + E.jugador.reconocimiento * 0.3 : citante.r.car + citante.r.exp * 0.3;
       const fuerzaM = ministro.r.exp + ministro.r.car * 0.3 + (E.opinion.aprobacionPres - 45);
@@ -228,7 +230,7 @@ window.CURUL = window.CURUL || {};
         },
         ejecutar(E, a) {
           const r = G.mocionCensura(E, a.ministerio);
-          const min = C.DATA.ministerios.find(m => m.id === a.ministerio);
+          const min = G.todosMinisterios(E).find(m => m.id === a.ministerio);
           C.Medios.noticia(E, { tipo: 'control', titular: r.aprobada ? `¡Moción de censura aprobada! Cae el ministro de ${min.nombre}` : `Fracasa la moción de censura contra el ministro de ${min.nombre}`, tono: r.aprobada ? -1 : 1, importante: true, jugador: true });
           C.Opinion.subirRec(E, (r.aprobada ? 10 : 2));
           return { ok: true, msg: r.aprobada ? 'La moción de censura prosperó' : 'La moción de censura fue derrotada', datos: r };
@@ -257,6 +259,20 @@ window.CURUL = window.CURUL || {};
           for (const id of Object.values(g.gabinete)) { const m = E.politicos[id]; if (m) m.aprob = U.clamp((m.aprob || 50) + U.rf(0.3, 1.4), 0, 100); }
           return { ok: true, msg: 'El gabinete se reúne y alinea la agenda de gobierno para las próximas semanas' };
         } });
+      A.registrar({ id: 'proponerLeyMinisterio', nombre: 'Proponer ley: crear un nuevo ministerio', icono: '🏛', grupo: 'gobierno', costo: 2,
+        disponible: E => E.gobierno.presidente === 'J' || 'Sólo el Presidente',
+        ejecutar(E, a) {
+          const nombre = (a.nombre || '').trim();
+          if (!nombre) return { ok: false, msg: 'Dale un nombre al ministerio' };
+          if (G.todosMinisterios(E).some(m => m.nombre.toLowerCase() === ('ministerio de ' + nombre).toLowerCase())) return { ok: false, msg: 'Ya existe un ministerio con ese nombre' };
+          const sector = C.DATA.sectores[a.sector] ? a.sector : 'politica';
+          const pct = { pequeno: 1.5, mediano: 3, grande: 5 }[a.tamano] || 3;
+          const autor = E.politicos[E.gobierno.gabinete.interior];
+          const p = C.Legislacion.crear(E, { plantilla: 'nuevoministerio', autor: autor ? autor.id : null, gobierno: true,
+            origen: E.jugador.camara || 'camara', titulo: `Creación del Ministerio de ${nombre}`, costo: 0.15 * pct });
+          p.crearMinisterio = { id: U.id('min'), nombre: 'Ministerio de ' + nombre, sector, pesoBase: pct, programas: [] };
+          return { ok: true, msg: 'Proyecto radicado: ' + p.numero, proyecto: p.id };
+        } });
     }
   };
 
@@ -268,3 +284,11 @@ window.CURUL = window.CURUL || {};
 /* Balance legislativo del gobierno (alimenta la estabilidad de la coalición) */
 CURUL.Bus.on('ley', p => { const E = CURUL.E; if (p.gobierno && E && !E.meta.presim) E.gobierno.leyesAprobadas = (E.gobierno.leyesAprobadas || 0) + 1; });
 CURUL.Bus.on('proyecto:archivado', p => { const E = CURUL.E; if (p.gobierno && E && !E.meta.presim) E.gobierno.leyesHundidas = (E.gobierno.leyesHundidas || 0) + 1; });
+/* Al sancionarse la ley de creación de un ministerio, se abre su puesto en el presupuesto y se nombra ministro. */
+CURUL.Bus.on('ley', p => {
+  const E = CURUL.E; if (!E || !p.crearMinisterio) return;
+  const datos = p.crearMinisterio;
+  CURUL.Presupuesto.crearMinisterio(E, { id: datos.id, nombre: datos.nombre, sector: datos.sector, pesoBase: datos.pesoBase, programas: datos.programas }, datos.pesoBase);
+  CURUL.Gobierno.designar(E, datos.id, E.gobierno.partido);
+  CURUL.Medios.noticia(E, { tipo: 'gobierno', titular: `Nace el ${datos.nombre}: el Congreso aprueba su creación`, tono: 1, importante: true });
+});

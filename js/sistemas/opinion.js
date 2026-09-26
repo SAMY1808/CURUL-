@@ -88,7 +88,7 @@ window.CURUL = window.CURUL || {};
         aprobacion: U.clamp(E.opinion.aprobacionPres + U.gauss(0, 1.8), 1, 99),
         partidos: {}, jugador: { fav: E.jugador.popularidad + U.gauss(0, 2), rec: E.jugador.reconocimiento + U.gauss(0, 2) }
       };
-      for (const p of Object.values(E.partidos)) if (!p.especial) e.partidos[p.id] = Math.max(0.2, p.popularidad + U.gauss(0, 0.9));
+      for (const p of Object.values(E.partidos)) if (!p.especial && !p.futuro) e.partidos[p.id] = Math.max(0.2, p.popularidad + U.gauss(0, 0.9));
       E.opinion.encuestas.push(e); if (E.opinion.encuestas.length > 60) E.opinion.encuestas.shift();
       E.opinion.ultimaEncuesta = e;
       C.Medios.noticia(E, { tipo: 'encuesta', titular: `Encuesta ${e.firma}: aprobación del presidente en ${U.d1(e.aprobacion)} %`, tono: e.aprobacion > 50 ? 1 : -1 });

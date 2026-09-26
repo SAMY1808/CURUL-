@@ -1,15 +1,17 @@
-/* Creación del personaje: identidad, formación, ideología, trayectoria inicial y escenario. */
+/* Creación del personaje: identidad, formación, época histórica, ideología y trayectoria inicial. */
 window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U, UI = C.UI, esc = U.esc;
   C.Pantallas = C.Pantallas || {};
-  const PASOS = ['Identidad', 'Formación', 'Ideología', 'Trayectoria', 'Escenario'];
+  const PASOS = ['Identidad', 'Formación', 'Época', 'Ideología', 'Trayectoria'];
   const PUNTOS = 30;
 
   const nombreAleatorio = g => {
     const N = C.DATA.nombres;
     return (g === 'f' ? N.m : N.h)[Math.floor(Math.random() * 50)] + ' ' + N.a[Math.floor(Math.random() * N.a.length)] + ' ' + N.a[Math.floor(Math.random() * N.a.length)];
   };
+  /* Partidos que ya existen en el año elegido (PLR y PCN siempre; el resto, desde su fundación). */
+  const partidosDe = anio => C.DATA.partidos.filter(p => !p.especial && (!p.fundado || p.fundado <= anio));
 
   C.Pantallas.creacion = {
     render(el) {
@@ -17,7 +19,7 @@ window.CURUL = window.CURUL || {};
         nombre: nombreAleatorio('f'), genero: 'f', edad: 36, nacimiento: 'BOY', residencia: 'BOG',
         educacion: 'Profesional', profesion: 'Politólogo', atributos: { carisma: 45, oratoria: 45, gestion: 45, negociacion: 45, integridad: 55 },
         intereses: ['educacion', 'salud'], eco: -10, soc: -10, origen: 'activista', partido: 'NC', comision: null,
-        pareja: '', hijos: 0, escenario: 'legislatura', semilla: ''
+        pareja: '', hijos: 0, anioInicio: 2026, semilla: ''
       };
       let paso = 0;
       const deptOpts = sel => C.DATA.departamentos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === sel ? 'selected' : ''}>${esc(d.nombre)}</option>`).join('');
@@ -53,44 +55,57 @@ window.CURUL = window.CURUL || {};
             </div>
           </div>`;
         if (paso === 2) {
-          const cercanos = Object.values(C.DATA.partidos).filter(p => !p.especial).map(p => ({ p, d: U.distIdeo({ eco: cfg.eco, soc: cfg.soc }, p) })).sort((a, b) => a.d - b.d).slice(0, 4);
+          const ciclo = C.Mundo.cicloDe(cfg.anioInicio);
+          cuerpo = `<div class="grid g2">
+            <div>
+              <div class="campo"><label>Año de inicio: <b style="color:var(--oro2);font-size:18px">${cfg.anioInicio}</b></label><input type="range" min="${C.Mundo.ANIO_MIN}" max="${C.Mundo.ANIO_MAX}" step="1" value="${cfg.anioInicio}" id="c-anio"></div>
+              <div class="fila" style="justify-content:space-between;font-size:11.5px;color:var(--tenue)"><span>${C.Mundo.ANIO_MIN}</span><span>${C.Mundo.ANIO_MAX}</span></div>
+              <div class="tarjeta"><h3>Contexto histórico</h3><p style="margin:0">${esc(C.Mundo.notaEpoca(cfg.anioInicio))}</p>
+                ${ciclo !== cfg.anioInicio ? `<p class="tenue" style="font-size:12px;margin-top:8px">El Congreso más reciente en ${cfg.anioInicio} se instaló en <b>${ciclo}</b>; comenzarás poco después, con el mundo ya en marcha.</p>` : ''}</div>
+            </div>
+            <div class="tarjeta"><h3>Partidos que existen en ${cfg.anioInicio}</h3><div class="lista">${partidosDe(cfg.anioInicio).map(p => `<div class="it"><i class="pto" style="background:${p.color}"></i><div class="cuerpo"><b>${esc(p.nombre)}</b><span>«${esc(p.lema)}»</span></div></div>`).join('')}</div>
+              <p class="tenue" style="font-size:12px">Simulación simplificada: los ciclos electorales de 4 años se sincronizan con el calendario moderno incluso antes de 1991, y sólo liberales (PLR) y conservadores (PCN) compiten hasta que nace el resto de partidos.</p></div>
+          </div>`;
+        }
+        if (paso === 3) {
+          const disp = partidosDe(cfg.anioInicio);
+          const cercanos = disp.map(p => ({ p, d: U.distIdeo({ eco: cfg.eco, soc: cfg.soc }, p) })).sort((a, b) => a.d - b.d).slice(0, 4);
           cuerpo = `<div class="grid g2">
             <div class="tarjeta" style="display:flex;justify-content:center"><div id="c-plano" style="width:100%;max-width:360px;cursor:crosshair">${C.Graf.plano([
-              ...C.DATA.partidos.filter(p => !p.especial).map(p => ({ x: p.eco, y: p.soc, color: p.color, r: 5, op: .5, etq: p.sigla, tt: esc(p.nombre) })),
+              ...disp.map(p => ({ x: p.eco, y: p.soc, color: p.color, r: 5, op: .5, etq: p.sigla, tt: esc(p.nombre) })),
               { x: cfg.eco, y: cfg.soc, color: '#FFF3C4', r: 9, borde: '#D9B45A', bw: 3, tt: 'Tú' }], { tam: 360 })}</div></div>
             <div>
               <div class="campo"><label>Eje económico: <b>${C.Comp.etiquetaIdeo(cfg.eco)}</b> (${cfg.eco})</label><input type="range" min="-100" max="100" value="${cfg.eco}" id="c-eco"></div>
               <div class="campo"><label>Eje social: <b>${cfg.soc > 25 ? 'Conservador' : cfg.soc < -25 ? 'Progresista' : 'Moderado'}</b> (${cfg.soc})</label><input type="range" min="-100" max="100" value="${cfg.soc}" id="c-soc"></div>
-              <div class="tarjeta"><h3>Partidos más cercanos</h3><div class="lista">${cercanos.map(({ p, d }) => `<div class="it"><i class="pto" style="background:${p.color}"></i><div class="cuerpo"><b>${esc(p.nombre)}</b><span>«${esc(p.lema)}»</span></div><span class="etq">${Math.round((1 - d) * 100)} % afín</span></div>`).join('')}</div></div>
+              <div class="tarjeta"><h3>Partidos más cercanos en ${cfg.anioInicio}</h3><div class="lista">${cercanos.map(({ p, d }) => `<div class="it"><i class="pto" style="background:${p.color}"></i><div class="cuerpo"><b>${esc(p.nombre)}</b><span>«${esc(p.lema)}»</span></div><span class="etq">${Math.round((1 - d) * 100)} % afín</span></div>`).join('')}</div></div>
               <p class="tenue" style="font-size:12px">Haz clic en el plano para ubicarte. Tu ideología define con quién votan tus instintos, qué regiones te prefieren y qué aliados naturales tendrás.</p>
             </div></div>`;
         }
-        if (paso === 3) {
+        if (paso === 4) {
+          const disp = partidosDe(cfg.anioInicio);
+          if (cfg.partido && !disp.some(p => p.id === cfg.partido)) cfg.partido = null;
           const o = C.Personaje.ORIGENES;
           const req = o[cfg.origen].requierePartido;
+          if (req && !cfg.partido) cfg.partido = disp[0].id;
           cuerpo = `<h3 class="sub-h">¿Desde dónde empiezas?</h3>
             <div class="grid g4 origenes">${Object.entries(o).map(([k, x]) => `<div class="tarjeta clic origen ${cfg.origen === k ? 'sel' : ''}" data-o="${k}"><div style="font-size:24px">${x.icono}</div><b>${x.n}</b><div class="tenue" style="font-size:12px">${x.desc}</div><div class="fila" style="margin-top:6px"><span class="etq">Rec. ${x.rec}</span><span class="etq">${U.cop(x.patrimonio)}</span></div></div>`).join('')}</div>
             <h3 class="sub-h">Partido ${req ? '<span class="etq amar">obligatorio para tu cargo</span>' : ''}</h3>
-            <div class="fila" id="c-part">${req ? '' : `<button class="btn chico ${!cfg.partido ? 'prim' : ''}" data-p="">Sin partido</button>`}${C.DATA.partidos.filter(p => !p.especial).map(p => `<button class="btn chico ${cfg.partido === p.id ? 'prim' : ''}" data-p="${p.id}"><i class="pto" style="background:${p.color}"></i> ${esc(p.sigla)}</button>`).join('')}</div>
+            <div class="fila" id="c-part">${req ? '' : `<button class="btn chico ${!cfg.partido ? 'prim' : ''}" data-p="">Sin partido</button>`}${disp.map(p => `<button class="btn chico ${cfg.partido === p.id ? 'prim' : ''}" data-p="${p.id}"><i class="pto" style="background:${p.color}"></i> ${esc(p.sigla)}</button>`).join('')}</div>
             ${cfg.partido ? `<p class="tenue" style="font-size:12px;margin:6px 0 0">${esc(C.DATA.partidos.find(p => p.id === cfg.partido).nombre)} · afinidad ideológica ${Math.round((1 - U.distIdeo({ eco: cfg.eco, soc: cfg.soc }, C.DATA.partidos.find(p => p.id === cfg.partido))) * 100)} %</p>` : ''}
             <div class="grid g2" style="margin-top:14px">
               ${req ? `<div class="campo"><label>Comisión constitucional preferida</label><select id="c-com"><option value="">Según mis intereses</option>${C.DATA.comisiones.map(c => `<option value="${c.n}" ${cfg.comision == c.n ? 'selected' : ''}>Comisión ${c.nombre} · ${esc(c.tema)}</option>`).join('')}</select></div>` : '<div></div>'}
               <div class="fila" style="align-items:flex-end"><div class="campo" style="flex:1"><label>Pareja (opcional)</label><input id="c-pareja" value="${esc(cfg.pareja)}" placeholder="Nombre"></div><div class="campo"><label>Hijos</label><select id="c-hijos">${[0, 1, 2, 3, 4].map(n => `<option ${cfg.hijos === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div></div>
-            </div>`;
-        }
-        if (paso === 4) {
-          const o = C.Personaje.ORIGENES[cfg.origen];
-          cuerpo = `<div class="grid g2">${Object.entries(C.Mundo.ESCENARIOS).map(([k, e]) => `<div class="tarjeta clic origen ${cfg.escenario === k ? 'sel' : ''}" data-e="${k}"><b style="font-size:16px">${esc(e.n)}</b><p class="tenue">${esc(e.desc)}</p></div>`).join('')}</div>
-            <div class="grid g2" style="margin-top:14px">
-              <div class="tarjeta"><h3>Resumen</h3>
+            </div>
+            <div class="tarjeta" style="margin-top:14px"><h3>Resumen</h3>
+              <div class="grid g3">
                 <div class="tt-f"><span class="tenue">Nombre</span><b>${esc(cfg.nombre)}</b></div>
-                <div class="tt-f"><span class="tenue">Edad</span><b>${cfg.edad} años</b></div>
+                <div class="tt-f"><span class="tenue">Año</span><b>${cfg.anioInicio}</b></div>
                 <div class="tt-f"><span class="tenue">Base</span><b>${esc(C.DATA.departamentos.find(d => d.id === cfg.residencia).nombre)}</b></div>
-                <div class="tt-f"><span class="tenue">Inicio</span><b>${o.n}</b></div>
+                <div class="tt-f"><span class="tenue">Inicio</span><b>${o[cfg.origen].n}</b></div>
                 <div class="tt-f"><span class="tenue">Partido</span><b>${cfg.partido ? esc(C.DATA.partidos.find(p => p.id === cfg.partido).nombre) : 'Independiente'}</b></div>
                 <div class="tt-f"><span class="tenue">Ideología</span><b>${C.Comp.etiquetaIdeo(cfg.eco)} · ${cfg.soc > 25 ? 'conservador' : cfg.soc < -25 ? 'progresista' : 'moderado'}</b></div>
               </div>
-              <div class="campo"><label>Semilla del mundo (opcional)</label><input id="c-seed" value="${esc(cfg.semilla)}" placeholder="Aleatoria"><span class="tenue" style="font-size:12px">La misma semilla genera el mismo país, los mismos políticos y las mismas elecciones de 2026.</span></div>
+              <div class="campo" style="margin-top:10px"><label>Semilla del mundo (opcional)</label><input id="c-seed" value="${esc(cfg.semilla)}" placeholder="Aleatoria"><span class="tenue" style="font-size:12px">La misma semilla genera el mismo país, los mismos políticos y las mismas elecciones.</span></div>
             </div>`;
         }
         el.innerHTML = `<div class="creacion"><div class="crea-cab"><div class="logo">CURUL</div>
@@ -104,7 +119,7 @@ window.CURUL = window.CURUL || {};
         const $ = s => UI.$(s, el);
         $('#c-atras').onclick = () => { if (!paso) C.Pantallas.inicio.render(el); else { paso--; pintar(); } };
         $('#c-sig').onclick = () => {
-          if (paso === 3 && C.Personaje.ORIGENES[cfg.origen].requierePartido && !cfg.partido) return UI.toast('Para empezar como congresista necesitas un partido', 'mal');
+          if (paso === 4 && C.Personaje.ORIGENES[cfg.origen].requierePartido && !cfg.partido) return UI.toast('Para empezar como congresista necesitas un partido', 'mal');
           if (paso === 1 && cfg.intereses.length !== 2) return UI.toast('Elige exactamente dos temas de interés', 'mal');
           if (paso < PASOS.length - 1) { paso++; pintar(); } else comenzar();
         };
@@ -139,6 +154,9 @@ window.CURUL = window.CURUL || {};
           });
         }
         if (paso === 2) {
+          $('#c-anio').oninput = e => { cfg.anioInicio = +e.target.value; pintar(); };
+        }
+        if (paso === 3) {
           $('#c-eco').onchange = e => { cfg.eco = +e.target.value; pintar(); };
           $('#c-soc').onchange = e => { cfg.soc = +e.target.value; pintar(); };
           $('#c-plano svg').addEventListener('click', e => {
@@ -149,25 +167,22 @@ window.CURUL = window.CURUL || {};
             pintar();
           });
         }
-        if (paso === 3) {
-          UI.$$('[data-o]', el).forEach(b => b.onclick = () => { cfg.origen = b.dataset.o; if (C.Personaje.ORIGENES[cfg.origen].requierePartido && !cfg.partido) cfg.partido = 'NC'; pintar(); });
+        if (paso === 4) {
+          UI.$$('[data-o]', el).forEach(b => b.onclick = () => { cfg.origen = b.dataset.o; if (C.Personaje.ORIGENES[cfg.origen].requierePartido && !cfg.partido) cfg.partido = partidosDe(cfg.anioInicio)[0].id; pintar(); });
           UI.$$('#c-part button', el).forEach(b => b.onclick = () => { cfg.partido = b.dataset.p || null; pintar(); });
           const com = $('#c-com'); if (com) com.onchange = e => cfg.comision = e.target.value ? +e.target.value : null;
           $('#c-pareja').oninput = e => cfg.pareja = e.target.value;
           $('#c-hijos').onchange = e => cfg.hijos = +e.target.value;
-        }
-        if (paso === 4) {
-          UI.$$('[data-e]', el).forEach(b => b.onclick = () => { cfg.escenario = b.dataset.e; pintar(); });
           $('#c-seed').oninput = e => cfg.semilla = e.target.value;
         }
       };
 
       const comenzar = () => {
-        el.innerHTML = `<div class="inicio"><div class="inicio-caja"><div class="cargando"></div><h2>Generando la República…</h2><p class="tenue">Elecciones de 2026, instalación del Congreso y posesión presidencial.</p></div></div>`;
+        el.innerHTML = `<div class="inicio"><div class="inicio-caja"><div class="cargando"></div><h2>Generando la República…</h2><p class="tenue">Elecciones de ${C.Mundo.cicloDe(cfg.anioInicio)}, instalación del Congreso y avance hasta ${cfg.anioInicio}.</p></div></div>`;
         setTimeout(() => {
           const semilla = cfg.semilla ? Math.abs([...cfg.semilla].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)) : undefined;
           const jug = Object.assign({}, cfg, { genero: cfg.genero === 'x' ? (Math.random() < 0.5 ? 'f' : 'm') : cfg.genero });
-          C.Mundo.generar({ escenario: cfg.escenario, semilla, jugador: jug });
+          C.Mundo.generar({ anioInicio: cfg.anioInicio, semilla, jugador: jug });
           C.E.meta.slot = null;
           C.Guardado.guardar(null, cfg.nombre);
           C.App.comenzar();

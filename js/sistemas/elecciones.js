@@ -5,6 +5,23 @@ window.CURUL = window.CURUL || {};
   const U = C.U;
 
   const El = {
+    /* Épocas institucionales simplificadas: el sistema electoral moderno (Constitución de 1991)
+       es el único simulado con fidelidad; antes de 1991 el país fue bipartidista (liberales y
+       conservadores) y entre 1958 y 1970 el Frente Nacional obligó a alternar la presidencia y
+       repartir el Congreso en partes iguales entre los dos partidos. */
+    FN_ANIOS: [1958, 1962, 1966, 1970],
+    era(anio) { return anio >= 1991 ? 'moderna' : El.FN_ANIOS.includes(anio) ? 'frenteNacional' : 'bipartidista'; },
+    /* Reparte curules en partes exactamente iguales entre PLR y PCN (paridad del Frente Nacional),
+       usando los votos ya calculados sólo para decidir quién se lleva la curul impar. */
+    paridadFN(cur, votos) {
+      const tot = Object.values(cur).reduce((a, b) => a + b, 0);
+      const mitad = Math.floor(tot / 2);
+      const impar = (votos.PLR || 0) >= (votos.PCN || 0) ? 'PLR' : 'PCN';
+      const otro = impar === 'PLR' ? 'PCN' : 'PLR';
+      for (const k of Object.keys(cur)) delete cur[k];
+      if (tot > 0) { cur[impar] = mitad + (tot % 2); cur[otro] = mitad; }
+      return cur;
+    },
     /* ── Calendario ─────────────────────────────────────────── */
     calendario(E, anios = 5) {
       const out = [], a0 = U.anio();
@@ -43,7 +60,12 @@ window.CURUL = window.CURUL || {};
       const x = (d.incl * 70 - ideo.eco) / 75;
       return 0.5 + Math.exp(-x * x);
     },
-    electores: d => Math.round(d.poblacion * 1000 * 0.74),
+    /* La población y el PIB de data/departamentos.js son de referencia moderna; para no inventar
+       una demografía histórica completa por departamento, sólo el número de electores se escala
+       hacia atrás con una tasa de crecimiento poblacional media (~1.9 %/año), sólo para que las
+       cifras de una elección de 1930 no muestren millones de votos que no pudieron existir. */
+    factorPoblacion(anio) { return anio >= 2018 ? 1 : Math.pow(1.019, anio - 2018); },
+    electores(d) { return Math.round(d.poblacion * 1000 * 0.74 * El.factorPoblacion(U.anio())); },
     participacionBase(E, d, tipo) {
       const base = tipo === 'presidencial' ? 0.55 : tipo === 'regional' ? 0.58 : 0.47;
       const reg = { Caribe: -0.02, Andina: 0.03, Pacífico: -0.05, Amazonía: -0.03, Orinoquía: -0.02, Insular: -0.08 }[d.region] || 0;
@@ -55,7 +77,7 @@ window.CURUL = window.CURUL || {};
       const d = E.deptos[dId], out = {};
       let tot = 0;
       for (const pa of Object.values(E.partidos)) {
-        if (pa.especial) continue;
+        if (pa.especial || pa.futuro) continue;
         let s = pa.popularidad * (pa.fuertes[dId] || 1) * El.afinidad(d, pa) * (1 + d.maq * (pa.estructura - 0.5));
         if (d.gobernador && E.politicos[d.gobernador] && E.politicos[d.gobernador].partido === pa.id) s *= 1.12;
         if (pa.id === 'MIS' && !(pa.fuertes[dId] > 1.5)) s *= 0.25;
@@ -117,7 +139,7 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador, cam = E.elecciones.campana;
       const jugCamara = cam && cam.eleccion === 'congreso' ? cam.cargo : null;   // 'senado' | 'camara'
       const res = { id: U.id('el'), tipo: 'congreso', anio, t: E.fecha.t, porDepto: {}, senado: {}, camara: { porDepto: {}, curules: {} }, jugador: null };
-      const partidos = Object.values(E.partidos).filter(p => !p.especial);
+      const partidos = Object.values(E.partidos).filter(p => !p.especial && !p.futuro);
       const movJ = jugCamara && cam.partido === 'MOV';
 
       // 1. Votación por departamento (Senado: circunscripción nacional; Cámara: departamental)
@@ -139,9 +161,12 @@ window.CURUL = window.CURUL || {};
       }
       res.participacion = votantesTot / electoresTot;
 
-      // 2. Senado: umbral 3 % + cifra repartidora sobre 100 curules nacionales
-      const umbralSen = validosSen * C.DATA.camaras.senado.umbral;
+      // 2. Senado: cifra repartidora sobre 100 curules nacionales. El umbral del 3 % es una
+      // reforma de 2003 (Acto Legislativo 01); antes no existía piso alguno.
+      const era = El.era(anio);
+      const umbralSen = anio >= 2003 ? validosSen * C.DATA.camaras.senado.umbral : 0;
       const curSen = El.dhondt(votosSen, 100, umbralSen);
+      if (era === 'frenteNacional') El.paridadFN(curSen, votosSen);
       if (opts.forzarJugador === 'senado' && !curSen[J.partido]) {
         const mayor = Object.entries(curSen).sort((a, b) => b[1] - a[1])[0];
         curSen[mayor[0]]--; curSen[J.partido] = 1;
@@ -160,8 +185,8 @@ window.CURUL = window.CURUL || {};
         res.senado.electos.push(...ranking.slice(0, n));
         res.senado.listas = res.senado.listas || {}; res.senado.listas[pid] = ranking;
       }
-      // Circunscripción indígena del Senado
-      for (let i = 0; i < 2; i++) {
+      // Circunscripción indígena del Senado (creada por la Constitución de 1991)
+      if (anio >= 1991) for (let i = 0; i < 2; i++) {
         const p = El.candidatoEspecial(E, 'MIS', U.pick(['CAU', 'NAR', 'LAG', 'VAU', 'GUA']), 'senado');
         res.senado.electos.push({ pol: p.id, partido: p.partido, circ: 'IND-SEN', votos: U.ri(30000, 90000) });
       }
@@ -172,8 +197,9 @@ window.CURUL = window.CURUL || {};
         const votos = Object.assign({}, pd.votos);
         if (movJ && jugCamara === 'senado') delete votos.MOV;
         const cociente = pd.validos / d.camara;
-        const umbral = cociente * (d.camara > 2 ? C.DATA.camaras.camara.umbralMayor : C.DATA.camaras.camara.umbralMenor);
+        const umbral = anio >= 1991 ? cociente * (d.camara > 2 ? C.DATA.camaras.camara.umbralMayor : C.DATA.camaras.camara.umbralMenor) : 0;
         const cur = El.dhondt(votos, d.camara, umbral);
+        if (era === 'frenteNacional') El.paridadFN(cur, votos);
         const electos = [];
         // El jugador que empieza como representante tiene garantizada su curul en la generación del mundo
         if (opts.forzarJugador === 'camara' && d.id === J.residencia && !cur[J.partido]) {
@@ -197,9 +223,9 @@ window.CURUL = window.CURUL || {};
         res.camara.porDepto[d.id] = { votos, cociente, umbral, curules: cur, electos, listas };
         for (const [p, n] of Object.entries(cur)) res.camara.curules[p] = (res.camara.curules[p] || 0) + n;
       }
-      // Circunscripciones especiales de la Cámara
+      // Circunscripciones especiales de la Cámara (creadas por la Constitución de 1991 en adelante)
       res.camara.especiales = [];
-      for (const esp of C.DATA.camaras.camara.especiales) {
+      for (const esp of (anio >= 1991 ? C.DATA.camaras.camara.especiales : [])) {
         if (esp.oposicion) continue;
         if (esp.vigencia && anio > esp.vigencia) continue;
         for (let i = 0; i < esp.curules; i++) {
@@ -231,7 +257,7 @@ window.CURUL = window.CURUL || {};
     candidatosPresidencia(E) {
       const cands = [], usados = new Set();
       const J = E.jugador, cam = E.elecciones.campana;
-      const grandes = Object.values(E.partidos).filter(p => !p.especial && p.popularidad >= 3.5).sort((a, b) => b.popularidad - a.popularidad);
+      const grandes = Object.values(E.partidos).filter(p => !p.especial && !p.futuro && p.popularidad >= 3.5).sort((a, b) => b.popularidad - a.popularidad);
       for (const pa of grandes) {
         if (cands.length >= 6) break;
         if (cam && cam.eleccion === 'presidencial' && cam.partido === pa.id) { cands.push({ pol: 'J', partido: pa.id }); usados.add(pa.id); continue; }
@@ -247,8 +273,11 @@ window.CURUL = window.CURUL || {};
       return cands;
     },
     presidencial(E, vuelta, candidatos, previo) {
-      const gob = E.gobierno, aprob = E.opinion.aprobacionPres;
-      const res = { id: U.id('el'), tipo: 'presidencial', vuelta, anio: U.anio(), t: E.fecha.t, candidatos: [], porDepto: {}, jugador: null };
+      const gob = E.gobierno, aprob = E.opinion.aprobacionPres, anioEl = U.anio();
+      const res = { id: U.id('el'), tipo: 'presidencial', vuelta, anio: anioEl, t: E.fecha.t, candidatos: [], porDepto: {}, jugador: null };
+      // Frente Nacional (1958-1970): el pacto obliga a alternar la presidencia entre liberales y
+      // conservadores; ningún otro partido tiene opción real de gobernar en esos comicios.
+      const fnGana = El.FN_ANIOS.includes(anioEl) ? (El.FN_ANIOS.indexOf(anioEl) % 2 === 0 ? 'PLR' : 'PCN') : null;
       const ideoDe = c => c.pol === 'J' ? E.jugador.ideologia : { eco: E.politicos[c.pol].eco, soc: E.politicos[c.pol].soc };
       const fuerza = c => {
         if (c.pol === 'J') return 6 + El.fuerzaJugador(E, null) * 0.35;
@@ -256,7 +285,8 @@ window.CURUL = window.CURUL || {};
         let s = (pa ? pa.popularidad : 3) + p.r.car * 0.12 + p.fuerza * 0.05;
         if (c.partido === gob.partido) s *= U.clamp(aprob / 42, 0.4, 1.6);
         // Suma de partidos afines que adhieren
-        for (const o of Object.values(E.partidos)) if (!o.especial && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
+        for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
+        if (fnGana) s *= c.partido === fnGana ? 2.4 : 0.55;
         return s;
       };
       const base = candidatos.map(c => ({ ...c, f: fuerza(c), ideo: ideoDe(c) }));
@@ -289,10 +319,14 @@ window.CURUL = window.CURUL || {};
       return res;
     },
 
-    /* ── Elecciones regionales (gobernaciones y alcaldías de capitales) ── */
+    /* ── Elecciones regionales (gobernaciones y alcaldías de capitales) ──
+       Antes de 1991 el presidente nombraba a los gobernadores y éstos, a su vez, a los alcaldes:
+       no había voto popular para estos cargos (así fue en Colombia hasta la Constitución de 1991). */
     regional(E) {
-      const res = { id: U.id('el'), tipo: 'regional', anio: U.anio(), t: E.fecha.t, porDepto: {}, alcaldias: {}, jugador: null };
+      const anio = U.anio();
+      const res = { id: U.id('el'), tipo: 'regional', anio, t: E.fecha.t, porDepto: {}, alcaldias: {}, jugador: null };
       const cam = E.elecciones.campana;
+      if (anio < 1991) return El.regionalDesignado(E, res);
       for (const d of Object.values(E.deptos)) {
         for (const tipo of ['gobernacion', 'alcaldia']) {
           const cuo = El.cuotas(E, d.id, true);
@@ -316,6 +350,22 @@ window.CURUL = window.CURUL || {};
       }
       // Corporaciones locales del jugador (asamblea o concejo): lista con candidatos sintéticos
       if (cam && cam.eleccion === 'regional' && (cam.cargo === 'asamblea' || cam.cargo === 'concejo')) res.jugador = El.corporacionLocal(E, cam);
+      return res;
+    },
+    /* Antes de 1991: el presidente designa gobernador; el gobernador designa alcalde. Sin voto
+       popular, así que se fabrica un resultado con la misma forma que una elección para que el
+       resto de la interfaz (mapa, noche electoral) funcione sin cambios. */
+    regionalDesignado(E, res) {
+      const gob = E.gobierno;
+      for (const d of Object.values(E.deptos)) {
+        const pidGob = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro),
+          p => (p.id === gob.partido ? 3 : 1) * (1 - U.distIdeo(p, E.partidos[gob.partido] || p)) + 0.3).id;
+        const polGob = C.Politicos.crear(E, { partido: pidGob, depto: d.id, cargo: { tipo: 'aspirante', aspira: 'gobernacion' } });
+        res.porDepto[d.id] = { candidatos: [{ pol: polGob.id, partido: pidGob, votos: 0, pct: 100 }], validos: 0, participacion: 0, ganador: polGob.id, designado: true };
+        const pidAlc = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro), p => p.id === pidGob ? 3 : 1).id;
+        const polAlc = C.Politicos.crear(E, { partido: pidAlc, depto: d.id, cargo: { tipo: 'aspirante', aspira: 'alcaldia' } });
+        res.alcaldias[d.id] = { candidatos: [{ pol: polAlc.id, partido: pidAlc, votos: 0, pct: 100 }], validos: 0, participacion: 0, ganador: polAlc.id, designado: true };
+      }
       return res;
     },
     corporacionLocal(E, cam) {
@@ -428,7 +478,7 @@ window.CURUL = window.CURUL || {};
           }
         }
       }
-      C.Medios.noticia(E, { tipo: 'regional', titular: 'Se posesionan los nuevos gobernadores y alcaldes del país', tono: 0 });
+      C.Medios.noticia(E, { tipo: 'regional', titular: res.porDepto[Object.keys(res.porDepto)[0]].designado ? 'El Gobierno designa a los nuevos gobernadores, que a su vez nombran a los alcaldes' : 'Se posesionan los gobernadores y alcaldes elegidos por voto popular', tono: 0 });
     },
 
     /* ── Campaña del jugador ───────────────────────────────── */

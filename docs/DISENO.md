@@ -231,9 +231,37 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 |---|---|---|
 | **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **completa** |
 | **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
-| 3 | Gobernaciones, alcaldías, asambleas, concejos con vida propia y presupuesto regional; municipios en el mapa | pendiente |
+| **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios | **en curso (esta entrega)** — falta: asambleas/concejos con vida propia para políticos NPC, municipios individuales en el mapa |
 | 4 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
 | 5 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 3
+
+- **Fecha de inicio libre** (`js/sistemas/mundo.js`): el jugador elige cualquier año entre 1900 y
+  2026; el mundo se genera en el ciclo de instalación del Congreso más reciente (cada 4 años,
+  extendido con aritmética modular hacia atrás y hacia adelante) y se presimula en silencio hasta
+  la fecha pedida, así que la historia que el jugador encuentra es la que realmente ocurrió en la
+  partida, no un estado fabricado a mano. Simplificaciones deliberadas: los ciclos de 4 años se
+  mantienen constantes en toda la línea de tiempo; sólo el número de electores se escala hacia
+  atrás con una tasa de crecimiento poblacional media (`Elecciones.factorPoblacion`), no la
+  población ni el PIB de cada departamento, que siguen siendo de referencia moderna.
+- **Bipartidismo y Frente Nacional** (`Partidos.futuro`, `Elecciones.era`): antes de 1991 sólo
+  compiten el PLR y el PCN (los demás partidos declaran su año de fundación en
+  `data/partidos.js`); el umbral del 3 % del Senado y las circunscripciones especiales, ambos
+  posteriores a 1991, se desactivan; entre 1958 y 1970 la presidencia alterna por ley entre los dos
+  partidos y el Congreso se reparte en partes exactamente iguales (`Elecciones.paridadFN`).
+  Gobernadores y alcaldes son designados (no elegidos) antes de 1991.
+- **Ley para crear ministerios** (acción `proponerLeyMinisterio` en `gobierno.js`): reutiliza
+  íntegramente el trámite legislativo existente; al sancionarse, `Presupuesto.crearMinisterio` le
+  abre un puesto en el presupuesto y se nombra ministro. `E.ministeriosExtra` guarda los creados en
+  la partida; `Gobierno.todosMinisterios(E)` es el catálogo completo que usa el resto del juego.
+- **Gobierno local** (`js/sistemas/gobiernolocal.js`): sólo se simula en profundidad el
+  departamento donde el jugador es gobernador o alcalde (el resto del país sigue teniendo
+  gobernadores y alcaldes NPC, como en las fases anteriores). Reasignar el presupuesto entre
+  secretarías existentes y firmar decretos son potestad ejecutiva directa (sin voto); crear una
+  secretaría nueva sí necesita el visto bueno de la Asamblea o el Concejo, resuelto como una
+  probabilidad según la fuerza política del jugador en la región — una votación real con hemiciclo
+  local queda para cuando existan asambleas y concejos con vida propia (resto de la Fase 3).
 
 ### Notas de la Fase 2
 

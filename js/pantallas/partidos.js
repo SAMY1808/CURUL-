@@ -19,7 +19,7 @@ window.CURUL = window.CURUL || {};
       const sel = params.partido || E.ui.partidoSel || J.partido || C.Congreso.ordenPartidos(E).find(p => !E.partidos[p].especial);
       E.ui.partidoSel = sel;
       const cs = C.Congreso.composicion(E, 'senado').porPartido, cc = C.Congreso.composicion(E, 'camara').porPartido;
-      const lista = Object.values(E.partidos).filter(p => !p.especial).sort((a, b) => b.popularidad - a.popularidad);
+      const lista = Object.values(E.partidos).filter(p => !p.especial && !p.futuro).sort((a, b) => b.popularidad - a.popularidad);
       const pa = E.partidos[sel];
       const miembros = C.Partidos.miembros(E, pa.id);
       const cong = miembros.filter(p => p.cargo && (p.cargo.tipo === 'senador' || p.cargo.tipo === 'representante'));

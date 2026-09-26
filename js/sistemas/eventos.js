@@ -9,7 +9,7 @@ window.CURUL = window.CURUL || {};
     texto(E, s, ctx) {
       return String(s).replace(/\{(\w+)\}/g, (_, k) => {
         if (k === 'depto') return ctx.depto ? E.deptos[ctx.depto].nombre : 'el país';
-        if (k === 'ministerio') return ctx.ministerio ? C.DATA.ministerios.find(m => m.id === ctx.ministerio).nombre : '';
+        if (k === 'ministerio') return ctx.ministerio ? C.Gobierno.todosMinisterios(E).find(m => m.id === ctx.ministerio).nombre : '';
         if (k === 'medio') return ctx.medio ? C.Medios.medio(E, ctx.medio).nombre : 'Un medio';
         if (k === 'partidoJug') return E.partidos[E.jugador.partido] ? E.partidos[E.jugador.partido].nombre : 'tu movimiento';
         return '';
@@ -18,7 +18,7 @@ window.CURUL = window.CURUL || {};
     disparar(E, pl, ctx = {}) {
       if (pl.alcance === 'regional' && !ctx.depto) ctx.depto = U.pesado(Object.values(E.deptos), d => d.poblacion / 1000 + 1).id;
       if (pl.ctxFn) Object.assign(ctx, pl.ctxFn(E) || {});
-      if (/\{ministerio\}/.test(pl.titulo + pl.texto) && !ctx.ministerio) ctx.ministerio = U.pick(C.DATA.ministerios).id;
+      if (/\{ministerio\}/.test(pl.titulo + pl.texto) && !ctx.ministerio) ctx.ministerio = U.pick(C.Gobierno.todosMinisterios(E)).id;
       if (/\{medio\}/.test(pl.titulo + pl.texto) && !ctx.medio) ctx.medio = U.pick(E.medios.lista.filter(m => m.credibilidad > 55)).id;
       const ev = { id: U.id('ev'), plantilla: pl.id, t: E.fecha.t, ctx, titulo: Ev.texto(E, pl.titulo, ctx), texto: Ev.texto(E, pl.texto, ctx), tipo: pl.tipo, icono: pl.icono };
       Ev.aplicarEfecto(E, pl.efecto, ctx);
