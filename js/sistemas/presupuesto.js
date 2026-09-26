@@ -55,8 +55,8 @@ window.CURUL = window.CURUL || {};
       for (const m of C.DATA.ministerios) {
         let base = Pr.pesoBase[m.id];
         const linea = SOCIAL.has(m.id) ? 1 : DISCIPLINA.has(m.id) ? -1 : 0;
-        const factor = U.clamp(1 + (-ideo.eco / 100) * 0.3 * linea, 0.6, 1.5);
-        shares[m.id] = Math.max(0.4, base * factor * Math.exp(U.gauss(0, 0.06)));
+        const factor = U.clamp(1 + (-ideo.eco / 100) * 0.45 * linea, 0.5, 1.7);
+        shares[m.id] = Math.max(0.4, base * factor * Math.exp(U.gauss(0, 0.07)));
       }
       const tot = U.suma(Object.values(shares));
       for (const k of Object.keys(shares)) shares[k] = shares[k] / tot * 100;

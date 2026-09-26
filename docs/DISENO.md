@@ -229,8 +229,25 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **en construcción (esta entrega)** |
-| 2 | Jugador presidente, ministerios completos, presupuesto por sectores, economía profunda, opinión segmentada ampliada, medios con entrevistas, Centro de Oposición completo, coaliciones con estabilidad | base de datos y ganchos listos |
-| 3 | Gobernaciones, alcaldías, asambleas, concejos, municipios en el mapa | |
-| 4 | Diplomacia, mapa mundial, cumbres, crisis internacionales | |
-| 5 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | |
+| **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **completa** |
+| **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
+| 3 | Gobernaciones, alcaldías, asambleas, concejos con vida propia y presupuesto regional; municipios en el mapa | pendiente |
+| 4 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| 5 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 2
+
+- El presupuesto vive en `js/sistemas/presupuesto.js`: `formular()` genera la propuesta del
+  Gobierno según la ideología presidencial (más gasto social con presidentes de izquierda, más
+  disciplina fiscal y defensa con presidentes de derecha); `radicar()` la convierte en un proyecto
+  de ley normal (Comisión Cuarta) que sigue el mismo trámite, cabildeo y votación que cualquier
+  otro; `commit()` la deja vigente al sancionarse o, si el Congreso no la aprueba a tiempo, por el
+  mandato del art. 348 de la Constitución (que el juego aplica literalmente).
+- `Presupuesto.underfunded(minId)` alimenta dos eventos (`crisissectorial`, reacción ciudadana
+  genérica; `crisispresupuestal`, decisión del jugador-presidente entre recortar otro sector o
+  pedir crédito de emergencia). Un ministerio cae en subfinanciación si su participación vigente
+  baja de 75 % de su peso de referencia — alcanzable de forma orgánica con presidentes
+  ideológicamente extremos, y siempre alcanzable si el jugador-presidente decide deliberadamente
+  recortar un sector con los controles de la pestaña Presupuesto.
+- Pendiente natural de la Fase 3: dar a gobernadores y alcaldes un presupuesto y agenda propios
+  (hoy sólo existen como cargos electorales), reutilizando el mismo patrón de `presupuesto.js`.
