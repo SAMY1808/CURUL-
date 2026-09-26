@@ -232,9 +232,37 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **1** | Personaje, mapa, elecciones (Congreso + Presidencia + noche electoral), partidos, Congreso visual (Senado, Cámara, curules, comisiones), proyectos y votaciones con “¿qué pasó?”, dashboard, guardado múltiple | **completa** |
 | **2** | Ministerios con presupuesto propio y programas, **Presupuesto General de la Nación** por sectores (el jugador-presidente lo formula y ajusta; si no aprueba a tiempo, rige el del Gobierno por defecto constitucional), crisis por subfinanciación, Consejo de Ministros, gabinete, coaliciones con estabilidad, Centro de Oposición, economía con efectos rezagados, opinión segmentada, medios con entrevistas | **completa** |
 | **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios; Asambleas Departamentales y Concejos Municipales con miembros elegidos y voto nominal real; capa de los 1122 municipios reales en el mapa | **completa** |
-| **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados | **completa (esta entrega)** |
-| 5 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
-| 6 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados; diputados y concejales con curul propia y ordenanzas/acuerdos; noche electoral candidato a candidato en Senado, Cámara, Asamblea y Concejo | **completa** |
+| **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa (esta entrega)** |
+| 6 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| 7 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 5
+
+- **Dirección del partido** (`Partidos.disputarDireccion`/`Partidos.rivalesDireccion`): el jugador
+  puede disputar la dirección nacional de su partido (el `pa.lider` que antes sólo asignaba la IA
+  al generar el mundo) en un congreso interno contra el director actual y un par de rivales de
+  peso, con el mismo espíritu que una consulta interna — no es un volado, pesa el peso interno y el
+  arrastre de cada uno, con su parte de azar. Perder tiene un enfriamiento de 10 semanas antes de
+  poder insistir. Ganar no cambia nada más por sí solo: abre la puerta a negociar con el Gobierno.
+- **Presionar por un ministerio** (`Gobierno.presionarMinisterio`, botón en el Centro de Gobierno):
+  sólo disponible si el jugador dirige un partido que hace parte de la coalición de gobierno y no
+  es el propio Presidente. La probabilidad de éxito depende de la cuota de curules del partido
+  dentro de la coalición y del peso interno del jugador. Si tiene éxito, el jugador mismo se
+  convierte en **ministro** de la cartera elegida — algo que hasta esta entrega nunca era posible:
+  «ministro» existía como cargo en `C.DATA.cargos` y se comprobaba en varios sitios (`E.jugador.cargo
+  === 'ministro'`), pero ninguna acción llegaba a asignárselo al jugador; `Gobierno.designar` sólo
+  sabía crear un ministro NPC nuevo. `Gobierno.designarJugador` cubre ese hueco (deja vacante su
+  curul si venía del Congreso, como cualquier congresista que asume otro cargo) y tanto
+  `Gobierno.designar` como la posesión de un nuevo presidente devuelven correctamente al jugador a
+  la vida civil si deja de ser ministro, para que no quede un estado a medias.
+- **Mesa de trabajo del ministerio** (`Gobierno.mesaTrabajo`, pantalla `js/pantallas/ministerio.js`,
+  pestaña «Mi ministerio»): sólo visible si el jugador es ministro. Convocar la mesa mejora un poco
+  el promedio nacional del indicador de departamento asociado al sector del ministerio
+  (`Gobierno.EFECTO_SECTOR`: educación, salud, seguridad/paz, infraestructura/vivienda/tecnología,
+  empleo) cuando existe uno, y siempre fortalece algo la imagen del jugador y del Gobierno — un
+  efecto acotado y con azar, pensado para usarse con cierta frecuencia, no para resolver el sector
+  de un plumazo.
 
 ### Notas de la Fase 4
 

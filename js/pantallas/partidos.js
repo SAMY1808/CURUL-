@@ -51,7 +51,8 @@ window.CURUL = window.CURUL || {};
           <div class="grid g3" style="margin-top:14px">
             <div><h3 class="sub-h">Mapa interno del partido</h3>${mapaInterno(E, pa)}</div>
             <div><h3 class="sub-h">Facciones</h3><div class="lista">${pa.facciones.map(f => `<div class="it accion-form"><div class="cuerpo"><b>${esc(f.nombre)}</b><span>Peso ${U.n(f.peso)} · líder ${esc(Comp.nombrePol(E, f.lider))}</span><div class="barra-h" style="margin-top:4px"><i style="width:${f.peso / U.suma(pa.facciones.map(x => x.peso)) * 100}%;background:${pa.color}"></i></div></div><div style="text-align:right">${Comp.relacion(f.relJ)}${J.partido === pa.id ? '<br>' + UI.botonAccion('reunionPartido', { faccion: f.id }, 'Reunión', 'chico') : ''}</div></div>`).join('')}</div>
-              <h3 class="sub-h" style="margin-top:12px">Dirección</h3>${lider ? `<div class="lista"><div class="it clic" data-ficha="${lider.id}">${Comp.avatar(E, lider, 36)}<div class="cuerpo"><b>${esc(lider.nombre)}</b><span>Director nacional · ${esc(C.Politicos.etiquetaCargo(E, lider))}</span></div></div></div>` : ''}
+              <h3 class="sub-h" style="margin-top:12px">Dirección</h3>${lider ? `<div class="lista"><div class="it clic" data-ficha="${lider.id}">${Comp.avatar(E, lider, 36)}<div class="cuerpo"><b>${esc(lider.nombre)}${pa.lider === 'J' ? ' (tú)' : ''}</b><span>Director nacional · ${esc(C.Politicos.etiquetaCargo(E, lider))}</span></div></div></div>` : ''}
+              ${J.partido === pa.id && pa.lider !== 'J' ? `<div style="margin-top:8px">${UI.botonAccion('disputarDireccion', {}, 'Disputar la dirección', 'chico')}</div>` : ''}
               <div class="tt-f" style="margin-top:8px"><span class="tenue">Cohesión de bancada</span><b>${pa.cohesion}/100</b></div>
               <div class="tt-f"><span class="tenue">Maquinaria territorial</span><b>${Math.round(pa.estructura * 100)}/100</b></div>
               <div class="tt-f"><span class="tenue">Finanzas</span><b>${U.cop(pa.finanzas)}</b></div>
@@ -67,6 +68,18 @@ window.CURUL = window.CURUL || {};
         const r = e.target.closest('[data-part]'); if (r) return C.App.ir('partidos', { partido: r.dataset.part });
         const f = e.target.closest('[data-ficha],.curul-mini'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha || f.dataset.pol);
       };
+    },
+
+    /* Resultado de un congreso interno por la dirección del partido: mismo espíritu que la noche
+       de una consulta interna, pero por la dirección completa, no por una candidatura. */
+    congresoInterno(r) {
+      const E = C.E, pa = E.partidos[r.partido];
+      const cuerpo = `<p class="tenue" style="margin-top:0">Congreso interno del ${esc(pa.sigla)} por la dirección nacional.</p>
+        ${G.barrasH(r.candidatos.map(c => ({ etq: c.id === 'J' ? c.nombre + ' (tú)' : c.nombre, v: c.pct, color: c.id === 'J' ? 'var(--oro)' : '#8C96A3' })), { max: 100, fmt: v => U.d1(v) + '%', anchoEtq: '150px' })}
+        <div class="resultado-jugador ${r.gana ? 'ok' : 'no'}" style="margin-top:14px"><div style="font-size:30px">${r.gana ? '🎉' : '📉'}</div><div><b>${r.gana ? '¡Ganas la dirección del partido!' : 'No ganas la dirección'}</b><div class="tenue">${U.d1(r.candidatos.find(c => c.id === 'J').pct)} % de apoyo interno${r.gana ? ' · ya puedes negociar cuota burocrática con el Gobierno' : ''}</div></div></div>
+        <div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="ci-cerrar">Continuar</button></div>`;
+      const m = UI.modal({ titulo: 'Congreso interno · ' + esc(pa.sigla), icono: '🎖', cuerpo, sinCerrar: true });
+      m.cuerpo.querySelector('#ci-cerrar').onclick = () => { m.cerrar(); C.App.refrescar(); C.App.revisarPendientes(); };
     }
   };
 })(window.CURUL);

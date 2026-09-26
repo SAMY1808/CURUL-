@@ -51,7 +51,8 @@ window.CURUL = window.CURUL || {};
       const enSesion = C.Congreso.enSesion(E);
       const prox = C.Elecciones.proxima(E);
       const pips = Array.from({ length: J.agenda.max }, (_, i) => `<span class="pip ${i < J.agenda.puntos ? 'lleno' : ''}"></span>`).join('');
-      const cargo = C.DATA.cargos[J.cargo].nombre + (J.cargoInfo && J.cargoInfo.circ && E.deptos[J.cargoInfo.circ] ? ' · ' + E.deptos[J.cargoInfo.circ].nombre : '');
+      const cargo = C.DATA.cargos[J.cargo].nombre + (J.cargoInfo && J.cargoInfo.circ && E.deptos[J.cargoInfo.circ] ? ' · ' + E.deptos[J.cargoInfo.circ].nombre : '')
+        + (J.cargo === 'ministro' && J.cargoInfo.ministerio ? ' · ' + C.Gobierno.todosMinisterios(E).find(m => m.id === J.cargoInfo.ministerio).nombre : '');
       document.getElementById('barra').innerHTML = `
         <div class="logo">CURUL <small>Colombia</small></div>
         <div class="fecha"><b>${U.fmtFecha(U.hoy())}</b><span>Semana ${E.fecha.t} · ${enSesion ? '<span class="bien">● Congreso en sesiones</span>' : '<span class="tenue">○ Receso legislativo</span>'}${prox ? ' · ' + esc(prox.nombre) + ' en ' + C.Elecciones.semanasPara(E, prox) + ' sem.' : ''}</span></div>
@@ -76,6 +77,10 @@ window.CURUL = window.CURUL || {};
       if (E.jugador.cargo === 'diputado' || E.jugador.cargo === 'concejal') {
         const i = nav.findIndex(n => n && n[0] === 'congreso');
         nav.splice(i + 1, 0, ['corporacion', '🏘', E.jugador.cargo === 'diputado' ? 'Asamblea' : 'Concejo']);
+      }
+      if (E.jugador.cargo === 'ministro') {
+        const i = nav.findIndex(n => n && n[0] === 'gobierno');
+        nav.splice(i + 1, 0, ['ministerio', '🗂', 'Mi ministerio']);
       }
       const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '' };
       document.getElementById('nav').innerHTML = nav.map(n => n ? `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>` : '<div class="sep"></div>').join('');
@@ -127,6 +132,7 @@ window.CURUL = window.CURUL || {};
       const E = C.E;
       if (E.eventos.pendientes.length) { App.modalEvento(E.eventos.pendientes[0]); return; }
       if (E.elecciones.primariaPendiente) { const r = E.elecciones.primariaPendiente; E.elecciones.primariaPendiente = null; C.Pantallas.elecciones.nochePrimaria(r); return; }
+      if (E.elecciones.direccionPendiente) { const r = E.elecciones.direccionPendiente; E.elecciones.direccionPendiente = null; C.Pantallas.partidos.congresoInterno(r); return; }
       if (E.elecciones.nochePendiente) { const id = E.elecciones.nochePendiente; E.elecciones.nochePendiente = null; C.Pantallas.elecciones.noche(id); return; }
       if ((E.ui.sancionesPendientes || []).length) C.Pantallas.proyectos.sancion(E.ui.sancionesPendientes[0]);
     },

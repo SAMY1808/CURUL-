@@ -96,6 +96,32 @@ window.CURUL = window.CURUL || {};
       cand.sort((a, b) => b.pct - a.pct);
       return { cargo, depto, candidatos: cand, gana: cand[0].id === 'J' };
     },
+    /* Disputa de la dirección nacional del partido: el jugador se mide contra el director actual
+       y un par de rivales de peso, en un congreso interno. No es un volado: pesa más quien más
+       peso interno y arrastre reúna, con su dosis de azar — igual que una consulta interna, pero
+       por la dirección del partido completo, no por una candidatura. */
+    rivalesDireccion(E) {
+      const pid = E.jugador.partido, pa = E.partidos[pid];
+      const otros = Pa.miembros(E, pid).filter(p => p.id !== pa.lider);
+      const extra = otros.sort((a, b) => Pa.peso(E, b).nac - Pa.peso(E, a).nac).slice(0, 2);
+      const actual = E.politicos[pa.lider];
+      return actual ? [actual, ...extra] : extra;
+    },
+    disputarDireccion(E) {
+      const J = E.jugador, pid = J.partido, pa = E.partidos[pid];
+      const rivales = Pa.rivalesDireccion(E);
+      const cand = [{ id: 'J', nombre: J.nombre, fuerza: C.Elecciones.fuerzaJugador(E, null) }]
+        .concat(rivales.map(p => ({ id: p.id, nombre: p.nombre, fuerza: p.fuerza })));
+      cand.forEach(c => c.peso = Pa.peso(E, c.id === 'J' ? E.politicos.J : E.politicos[c.id]).nac);
+      const pesos = cand.map(c => Math.pow(c.peso * 0.65 + c.fuerza * 0.25 + 5, 1.5) * Math.exp(U.gauss(0, 0.25)));
+      const tot = U.suma(pesos);
+      cand.forEach((c, i) => c.pct = pesos[i] / tot * 100);
+      cand.sort((a, b) => b.pct - a.pct);
+      const gana = cand[0].id === 'J';
+      if (gana) { pa.lider = 'J'; pa.relJ = Math.max(pa.relJ, 35); }
+      else pa.direccionNegada = { t: E.fecha.t };
+      return { partido: pid, candidatos: cand, gana };
+    },
     /* Probabilidad de que el partido otorgue aval al jugador para un cargo */
     probAval(E, pid, cargo) {
       const pa = E.partidos[pid], J = E.jugador; if (!pa) return 0;
@@ -129,9 +155,26 @@ window.CURUL = window.CURUL || {};
         if (pa.relJ) pa.relJ *= 0.997;
       }
       if (E.fecha.t % 4 === 0) for (const pa of Object.values(E.partidos)) if (!pa.especial && !pa.futuro) U.serie('pop:' + pa.id, pa.popularidad);
+    },
+
+    registrarAcciones() {
+      C.Acciones.registrar({ id: 'disputarDireccion', nombre: 'Disputar la dirección del partido', icono: '🎖', grupo: 'partidos', costo: 3,
+        disponible(E) {
+          const J = E.jugador, pa = E.partidos[J.partido];
+          if (!pa) return 'Sin partido';
+          if (pa.lider === 'J') return 'Ya eres el director del partido';
+          if (pa.direccionNegada && E.fecha.t - pa.direccionNegada.t < 10) return `El partido ya te lo negó: podrás insistir en ${10 - (E.fecha.t - pa.direccionNegada.t)} semanas`;
+          return true;
+        },
+        ejecutar(E) {
+          const r = Pa.disputarDireccion(E);
+          E.elecciones.direccionPendiente = r;
+          return { ok: true, msg: r.gana ? `Ganas la dirección del ${E.partidos[r.partido].sigla}` : `No ganas la dirección del ${E.partidos[r.partido].sigla}`, exito: r.gana };
+        } });
     }
   };
 
   C.Partidos = Pa;
   C.Tiempo.registrar('partidos', Pa, 30);
+  Pa.registrarAcciones();
 })(window.CURUL);

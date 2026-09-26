@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 4 completas)
+## Qué hay en esta versión (Fases 1 a 5 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -68,6 +68,11 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   Concejo, tienes tu propia curul (real, dentro del hemiciclo) y una pestaña para radicar
   ordenanzas o acuerdos sobre salud, educación, infraestructura o seguridad, con una votación
   nominal real de tus colegas.
+- **Dirección del partido y cuota burocrática**: puedes disputar la dirección nacional de tu
+  partido en un congreso interno real; si la ganas y tu partido hace parte de la coalición de
+  gobierno, puedes presionar por un ministerio para ti mismo. Consiguiéndolo te conviertes en
+  ministro (por primera vez jugable, no sólo un cargo de político NPC) y desbloqueas tu propia
+  **mesa de trabajo** del ministerio para avanzar la agenda del sector.
 
 ## Arquitectura
 

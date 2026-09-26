@@ -21,7 +21,9 @@ window.CURUL = window.CURUL || {};
           <div class="fila accion-form" style="margin-top:8px;flex-wrap:nowrap"><input data-arg="nombre" placeholder="Nombre del nuevo ministerio (sin «Ministerio de»)" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
             <select data-arg="sector">${Object.entries(C.DATA.sectores).map(([k, s]) => `<option value="${k}">${s.icono} ${esc(s.nombre)}</option>`).join('')}</select>
             <select data-arg="tamano"><option value="pequeno">Pequeño</option><option value="mediano" selected>Mediano</option><option value="grande">Grande</option></select>
-            ${UI.botonAccion('proponerLeyMinisterio', {})}</div>` : ''}</div>
+            ${UI.botonAccion('proponerLeyMinisterio', {})}</div>` : ''}
+          ${J.partido && E.partidos[J.partido] && E.partidos[J.partido].lider === 'J' && g.presidente !== 'J' && g.coalicion.includes(J.partido) ? `<div class="fila accion-form" style="margin-top:10px;flex-wrap:nowrap"><span class="tenue" style="font-size:12px">Como director del ${esc(E.partidos[J.partido].sigla)}, puedes exigir un ministerio para ti:</span></div>
+            <div class="fila accion-form" style="margin-top:6px"><select data-arg="ministerio">${C.Gobierno.todosMinisterios(E).map(m => `<option value="${m.id}">${esc(m.nombre)}${E.politicos[g.gabinete[m.id]] && E.politicos[g.gabinete[m.id]].partido === J.partido ? ' (ya es tuyo)' : ''}</option>`).join('')}</select>${UI.botonAccion('presionarMinisterio', {})}</div>` : ''}</div>
       </div>
       <div class="col">
         <div class="tarjeta"><div class="t-cab"><h3>Coalición de gobierno</h3><span class="etq ${est.total > 60 ? 'verde' : est.total > 40 ? 'amar' : 'rojo'}">Estabilidad ${Math.round(est.total)}%</span></div>

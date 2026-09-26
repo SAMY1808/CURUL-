@@ -14,6 +14,7 @@ window.CURUL = window.CURUL || {};
       for (const id of Object.values(g.gabinete || {})) { const m = E.politicos[id]; if (m && m.cargo && m.cargo.tipo === 'ministro') m.cargo = null; }
       if (g.presidente && E.politicos[g.presidente] && g.presidente !== 'J') { const pr = E.politicos[g.presidente]; pr.cargo = { tipo: 'expresidente' }; C.Politicos.anotar(pr, 'Termina su mandato presidencial'); }
       if (g.presidente === 'J') C.Personaje.dejarCargo(E, 'Termina el mandato presidencial');
+      else if (E.jugador.cargo === 'ministro') C.Personaje.dejarCargo(E, 'Termina su periodo como ministro al posesionarse un nuevo Gobierno');
       const partido = electo.partido === 'MOV' ? (E.jugador.partido || 'IND') : electo.partido;
       E.gobierno = {
         presidente: electo.pol, partido, vice: null, coalicion: [], gabinete: {}, desde: E.fecha.t,
@@ -79,8 +80,8 @@ window.CURUL = window.CURUL || {};
     },
     designar(E, minId, pid, silencioso) {
       const g = E.gobierno;
-      const ant = E.politicos[g.gabinete[minId]];
-      if (ant) { ant.cargo = null; C.Politicos.anotar(ant, 'Sale del Ministerio'); }
+      if (g.gabinete[minId] === 'J') { C.Personaje.dejarCargo(E, 'Deja el Ministerio'); }
+      else { const ant = E.politicos[g.gabinete[minId]]; if (ant) { ant.cargo = null; C.Politicos.anotar(ant, 'Sale del Ministerio'); } }
       const m = C.Politicos.crear(E, { partido: pid || null, eco: pid ? undefined : (E.partidos[g.partido] ? E.partidos[g.partido].eco * 0.6 : 0), soc: pid ? undefined : 0, cargo: { tipo: 'ministro', ministerio: minId }, r: { exp: U.ri(45, 95) } });
       if (!pid) m.profesion = 'Tecnócrata';
       g.gabinete[minId] = m.id;
@@ -95,6 +96,67 @@ window.CURUL = window.CURUL || {};
     ministroDe(E, sector) {
       const min = G.todosMinisterios(E).find(m => m.sector === sector) || C.DATA.ministerios[0];
       return E.politicos[E.gobierno.gabinete[min.id]];
+    },
+    /* Instala al JUGADOR como ministro de una cartera (hasta ahora "ministro" sólo existía como
+       cargo de político NPC). Si venía de una curul, la deja vacante, como cualquier congresista
+       que asume un cargo distinto. */
+    designarJugador(E, minId) {
+      const g = E.gobierno, J = E.jugador;
+      if (J.cargo === 'senador' || J.cargo === 'representante') G.vacante(E, E.politicos.J);
+      const ant = E.politicos[g.gabinete[minId]];
+      if (ant) { ant.cargo = null; C.Politicos.anotar(ant, 'Sale del Ministerio'); }
+      g.gabinete[minId] = 'J';
+      C.Personaje.asumirCargo(E, 'ministro', { ministerio: minId });
+      const min = G.todosMinisterios(E).find(x => x.id === minId);
+      C.Medios.noticia(E, { tipo: 'gobierno', titular: `${J.nombre} es el nuevo ministro de ${min.nombre}`, tono: 1, importante: true, jugador: true });
+      return E.politicos.J;
+    },
+    /* Presión de la dirección del partido por cuota burocrática: si el jugador dirige un partido
+       de la coalición de gobierno, puede exigir un ministerio concreto para sí — según el peso de
+       su partido en el Congreso y su propio peso interno, con su parte real de negociación (no
+       garantizada). */
+    presionarMinisterio(E, minId) {
+      const J = E.jugador, pid = J.partido, pa = E.partidos[pid], g = E.gobierno;
+      const comp = E.congreso.senado ? C.Congreso.composicion(E, 'senado').porPartido : {};
+      const totCoal = U.suma(g.coalicion.map(p => comp[p] || 0)) || 1;
+      const cuota = (comp[pid] || 0) / totCoal;
+      const peso = C.Partidos.peso(E, E.politicos.J).nac;
+      const prob = U.clamp(0.12 + cuota * 0.85 + peso / 260 + (pa.relJ || 0) / 300, 0.04, 0.88);
+      const exito = U.chance(prob);
+      const min = G.todosMinisterios(E).find(m => m.id === minId);
+      pa.presionUlt = E.fecha.t;
+      if (exito) {
+        const antPartido = (E.politicos[g.gabinete[minId]] || {}).partido;
+        G.designarJugador(E, minId);
+        if (antPartido && antPartido !== pid && g.coalicion.includes(antPartido) && E.partidos[antPartido]) E.partidos[antPartido].relJ = U.clamp(E.partidos[antPartido].relJ - 4, -100, 100);
+      } else {
+        pa.relJ = U.clamp(pa.relJ - 2, -100, 100);
+        C.Medios.noticia(E, { tipo: 'gobierno', titular: `El Gobierno no cede el Ministerio de ${min.nombre} al ${pa.sigla}`, tono: -1, jugador: true });
+      }
+      return { exito, prob, ministerio: minId };
+    },
+    /* Mesa de trabajo del ministerio: convoca a actores del sector y avanza su agenda. Efecto
+       acotado y con algo de azar sobre el indicador del departamento asociado al sector (si tiene
+       uno) y sobre la imagen del jugador — pensada para usarse con cierta frecuencia, no para
+       resolver el sector de un plumazo. */
+    EFECTO_SECTOR: { educacion: 'educacion', salud: 'salud', seguridad: 'seguridad', paz: 'seguridad', infraestructura: 'infraestructura', vivienda: 'infraestructura', tecnologia: 'infraestructura', empleo: 'desempleo' },
+    mesaTrabajo(E, minId) {
+      const min = G.todosMinisterios(E).find(m => m.id === minId);
+      const campo = G.EFECTO_SECTOR[min.sector];
+      const signo = min.sector === 'empleo' ? -1 : 1;
+      const magnitud = campo ? U.rf(0.3, 0.8) : 0;
+      if (campo) for (const d of Object.values(E.deptos)) d[campo] = U.clamp(d[campo] + signo * magnitud * U.rf(0.4, 1.4), 1, 99);
+      const J = E.jugador;
+      J.rep.competencia = U.clamp(J.rep.competencia + 0.4, 0, 100);
+      C.Opinion.subirRec(E, 0.4);
+      E.opinion.aprobacionPres = U.clamp(E.opinion.aprobacionPres + U.rf(-0.1, 0.5), 0, 100);
+      const g = E.gobierno; g.mesasMinisterio = g.mesasMinisterio || {};
+      const hist = (g.mesasMinisterio[minId] = g.mesasMinisterio[minId] || []);
+      hist.unshift({ t: E.fecha.t, campo, magnitud: campo ? signo * magnitud : 0 });
+      if (hist.length > 12) hist.pop();
+      C.Politicos.anotar(E.politicos.J, `Convoca la mesa de trabajo del Ministerio de ${min.nombre}`);
+      C.Medios.noticia(E, { tipo: 'gobierno', titular: `El Ministerio de ${min.nombre} convoca una mesa de trabajo con el sector`, tono: 1, jugador: true });
+      return { campo, magnitud: campo ? signo * magnitud : 0 };
     },
     /* Estabilidad de la coalición y sus factores */
     estabilidad(E) {
@@ -272,6 +334,29 @@ window.CURUL = window.CURUL || {};
             origen: E.jugador.camara || 'camara', titulo: `Creación del Ministerio de ${nombre}`, costo: 0.15 * pct });
           p.crearMinisterio = { id: U.id('min'), nombre: 'Ministerio de ' + nombre, sector, pesoBase: pct, programas: [] };
           return { ok: true, msg: 'Proyecto radicado: ' + p.numero, proyecto: p.id };
+        } });
+      A.registrar({ id: 'presionarMinisterio', nombre: 'Presionar por un ministerio', icono: '💼', grupo: 'partidos', costo: 3,
+        disponible(E, a) {
+          const J = E.jugador, pa = E.partidos[J.partido];
+          if (!pa) return 'Sin partido';
+          if (pa.lider !== 'J') return 'Debes dirigir tu partido';
+          if (J.cargo === 'presidente') return 'Ya eres Presidente';
+          if (!E.gobierno.coalicion.includes(J.partido)) return 'Tu partido no está en la coalición de gobierno';
+          if (pa.presionUlt != null && E.fecha.t - pa.presionUlt < 10) return `Ya negociaste hace poco: podrás insistir en ${10 - (E.fecha.t - pa.presionUlt)} semanas`;
+          if (!a.ministerio || !E.gobierno.gabinete[a.ministerio]) return 'Elige un ministerio';
+          return true;
+        },
+        ejecutar(E, a) {
+          const min = G.todosMinisterios(E).find(m => m.id === a.ministerio);
+          const r = G.presionarMinisterio(E, a.ministerio);
+          return { ok: true, msg: r.exito ? `Consigues el Ministerio de ${min.nombre}` : `El Gobierno no cede el Ministerio de ${min.nombre} (probabilidad era ${Math.round(r.prob * 100)}%)`, exito: r.exito };
+        } });
+      A.registrar({ id: 'convocarMesa', nombre: 'Convocar mesa de trabajo', icono: '🗂', grupo: 'gobierno', costo: 1,
+        disponible: E => E.jugador.cargo === 'ministro' || 'Sólo el ministro del ramo',
+        ejecutar(E) {
+          const minId = E.jugador.cargoInfo.ministerio;
+          const r = G.mesaTrabajo(E, minId);
+          return { ok: true, msg: r.campo ? `Mesa de trabajo realizada: ${U.signo(r.magnitud, 1)} en ${r.campo} (promedio nacional)` : 'Mesa de trabajo realizada: fortalece tu imagen y la del Gobierno' };
         } });
     }
   };

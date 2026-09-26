@@ -64,7 +64,8 @@ window.CURUL = window.CURUL || {};
         eco: J.ideologia.eco, soc: J.ideologia.soc, esJugador: true, intereses: J.intereses,
         r: { amb: 90, dis: 50, pra: 50, car: J.atributos.carisma, int: J.atributos.integridad, exp: J.rep.experiencia },
         fuerza: Math.round(C.Elecciones ? 30 + J.reconocimiento * 0.5 : 40), profesion: J.profesion,
-        cargo: J.cargo === 'senador' || J.cargo === 'representante' ? { tipo: J.cargo, camara: J.camara, circ: J.cargoInfo.circ, curul: J.cargoInfo.curul, comision: J.comision } : (J.cargo ? { tipo: J.cargo } : null)
+        cargo: J.cargo === 'senador' || J.cargo === 'representante' ? { tipo: J.cargo, camara: J.camara, circ: J.cargoInfo.circ, curul: J.cargoInfo.curul, comision: J.comision }
+          : J.cargo === 'ministro' ? { tipo: 'ministro', ministerio: J.cargoInfo.ministerio } : (J.cargo ? { tipo: J.cargo } : null)
       });
       E.politicos.J = p;
     },
