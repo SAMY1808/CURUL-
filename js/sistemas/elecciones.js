@@ -158,11 +158,20 @@ window.CURUL = window.CURUL || {};
       const nivel = camara === 'senado' ? 'nac' : 'dep';
       const aspirantes = [];
       for (const p of Object.values(E.politicos)) {
-        if (!es(p) || !p.cargo || p.cargo.tipo !== 'aspirante') continue;
-        if (camara === 'senado' && p.cargo.aspira === 'senado') aspirantes.push(p);
-        if (camara === 'camara' && p.cargo.aspira === 'camara' && p.depto === dId) aspirantes.push(p);
+        if (!es(p) || !p.cargo) continue;
+        if (p.cargo.tipo === 'aspirante') {
+          if (camara === 'senado' && p.cargo.aspira === 'senado') aspirantes.push(p);
+          if (camara === 'camara' && p.cargo.aspira === 'camara' && p.depto === dId) aspirantes.push(p);
+        } else if (camara === 'senado' && p.cargo.tipo === 'representante' && !p.aspiraOtro
+          && p.aspiraAnuncio && p.aspiraAnuncio.destino === 'senador') {
+          // Un representante que ya anunció ambición al Senado se lanza de verdad: deja su curul
+          // de Cámara y compite como aspirante nacional, en vez de generar uno sintético aparte.
+          p.aspiraOtro = 'senado';
+          aspirantes.push(p);
+        }
       }
-      aspirantes.sort((a, b) => C.Partidos.peso(E, b)[nivel] - C.Partidos.peso(E, a)[nivel]);
+      const ambSenado = p => p.aspiraAnuncio && p.aspiraAnuncio.destino === 'senador' ? 20 : 0;
+      aspirantes.sort((a, b) => (C.Partidos.peso(E, b)[nivel] + ambSenado(b)) - (C.Partidos.peso(E, a)[nivel] + ambSenado(a)));
       for (const p of aspirantes) { if (lista.length >= cupo) break; lista.push(p); }
       while (lista.length < cupo) lista.push(C.Politicos.crear(E, { partido: pid, depto: dId || undefined, cargo: { tipo: 'aspirante', aspira: camara } }));
       for (const p of lista) if (p.proximoPartido) { p.partido = p.proximoPartido; delete p.proximoPartido; }
@@ -379,7 +388,16 @@ window.CURUL = window.CURUL || {};
         for (const tipo of ['gobernacion', 'alcaldia']) {
           const cuo = El.cuotas(E, d.id, true);
           const top = Object.entries(cuo).filter(([p]) => p !== 'BLANCO').sort((a, b) => b[1] - a[1]).slice(0, U.ri(3, 4));
-          const cands = top.map(([pid, s]) => ({ pol: C.Politicos.crear(E, { partido: pid, depto: d.id, cargo: { tipo: 'aspirante', aspira: tipo } }).id, partido: pid, s }));
+          // Si un diputado/concejal de la colectividad ya anunció ambición a este cargo, se lanza
+          // de verdad con ese nombre (y una prima de fuerza) en vez de fabricar un aspirante nuevo.
+          const destinoAmb = tipo === 'gobernacion' ? 'gobernador' : 'alcalde';
+          const origenAmb = tipo === 'gobernacion' ? 'diputado' : 'concejal';
+          const cands = top.map(([pid, s]) => {
+            const named = Object.values(E.politicos).find(p => p.activo && p.id !== 'J' && p.partido === pid && p.depto === d.id
+              && p.cargo && p.cargo.tipo === origenAmb && !p.aspiraOtro && p.aspiraAnuncio && p.aspiraAnuncio.destino === destinoAmb);
+            if (named) { named.aspiraOtro = tipo; return { pol: named.id, partido: pid, s: s * 1.25 }; }
+            return { pol: C.Politicos.crear(E, { partido: pid, depto: d.id, cargo: { tipo: 'aspirante', aspira: tipo } }).id, partido: pid, s };
+          });
           if (cam && cam.eleccion === 'regional' && cam.cargo === tipo && cam.depto === d.id) {
             // Si el jugador ganó la consulta interna de su partido, es el único candidato de esa
             // colectividad (no compite consigo mismo contra otro nombre de su propio partido).

@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 11 completas)
+## Qué hay en esta versión (Fases 1 a 12 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -147,6 +147,17 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Orden público más equilibrado**: la respuesta institucional ahora reacciona sola con más
   fuerza cuanto mejor esté la seguridad del país, así que una partida larga sin intervenir no deja
   que los grupos armados se tomen el mapa.
+- **Ambición NPC con efecto electoral real**: cuando un representante anuncia que aspira al Senado,
+  o un diputado/concejal anuncia que aspira a la gobernación o la alcaldía, esa ambición ya decide
+  candidaturas de verdad en la siguiente elección, con su propio nombre y una prima de fuerza, en
+  vez de quedarse en un simple anuncio de prensa.
+- **Dinastías políticas**: cuando un político NPC notable (expresidente, exministro, exgobernador,
+  exsenador o con una carrera larga) se retira o pierde su curul por escándalo, hay una probabilidad
+  de que un hijo herede parte de su arrastre electoral y se estrene en política con el mismo
+  apellido.
+- **Salón de la Fama**: nueva pantalla con los expresidentes de la partida, un ranking de los
+  políticos NPC más destacados (cargo más alto, años de servicio, leyes aprobadas), las dinastías
+  políticas que hayan surgido y el historial completo de partidos fundados y disueltos.
 
 ## Arquitectura
 

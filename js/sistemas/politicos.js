@@ -72,8 +72,18 @@ window.CURUL = window.CURUL || {};
         if (!p.activo || p.id === 'J') continue;
         // La relación con el jugador vuelve lentamente a neutral
         if (p.relJ) p.relJ = Math.round(p.relJ * 0.995 * 100) / 100;
+        // Historial acumulado: qué cargos ha ocupado alguna vez y cuántos años en total, para
+        // saber más adelante quién es "notable" (dinastías, Salón de la Fama).
+        if (p.cargo) {
+          p.honores = p.honores || {};
+          p.honores[p.cargo.tipo] = true;
+          if (nuevoAnio) p.aniosServicio = (p.aniosServicio || 0) + 1;
+        }
         // Retiro por edad (evaluado una vez al año, si no ocupa un cargo)
-        if (nuevoAnio && !p.cargo && P.edad(p) > 72 && U_.chance(0.3)) { p.activo = false; P.anotar(p, 'Se retira de la vida pública'); }
+        if (nuevoAnio && !p.cargo && P.edad(p) > 72 && U_.chance(0.3)) {
+          p.activo = false; P.anotar(p, 'Se retira de la vida pública');
+          P.posibleDinastia(E, p);
+        }
       }
 
       // Congresistas presentan proyectos, hacen control político o declaraciones
@@ -143,7 +153,36 @@ window.CURUL = window.CURUL || {};
         C.Gobierno.vacante(E, p);
         p.activo = false; p.cargo = null;
         C.Medios.noticia(E, { tipo: 'escandalo', titular: `${p.nombre} renuncia a su curul en medio del escándalo`, tono: -1, importante: true });
+        P.posibleDinastia(E, p);
       }
+    },
+
+    /* ── Dinastías políticas ──
+       Cuando un político NPC notable (con honores de cargo alto o una carrera larga) sale de la
+       vida pública, hay una posibilidad de que un hijo herede parte de su arrastre electoral y se
+       estrene en política con el mismo apellido — un eco simplificado, sin diálogo propio, del
+       sistema de Familia del jugador (Fase 6). */
+    HONORES_ALTOS: ['presidente', 'expresidente', 'gobernador', 'senador', 'ministro'],
+    notable(p) { const h = p.honores || {}; return P.HONORES_ALTOS.some(t => h[t]) || (p.aniosServicio || 0) >= 8; },
+    posibleDinastia(E, p) {
+      if (p.heredero || !P.notable(p) || !U.chance(0.35)) return;
+      const N = C.DATA.nombres;
+      const genero = U.chance(0.5) ? 'f' : 'm';
+      const apellido = p.nombre.trim().split(' ').slice(-1)[0];
+      const nombre = U.pick(genero === 'f' ? N.m : N.h) + ' ' + apellido;
+      const heredero = P.crear(E, {
+        nombre, genero, edad: U.ri(28, 40),
+        partido: E.partidos[p.partido] && !E.partidos[p.partido].disuelto ? p.partido : null,
+        depto: p.depto,
+        eco: U.clamp(p.eco + U.gauss(0, 10), -100, 100),
+        soc: U.clamp(p.soc + U.gauss(0, 10), -100, 100),
+        cargo: { tipo: 'aspirante', aspira: 'camara' }
+      });
+      heredero.fuerza = U.clamp(Math.round(p.fuerza * 0.45 + U.ri(5, 15)), 15, 70);
+      heredero.dinastia = { padre: p.id, padreNombre: p.nombre, apellido };
+      p.heredero = heredero.id;
+      C.Medios.noticia(E, { tipo: 'partidos', titular: `${nombre}, de la familia ${apellido}, se estrena en política tras la salida de ${p.nombre}`, tono: 1 });
+      P.anotar(p, `Su hijo/a ${nombre} entra en política`);
     },
 
     transfuguismo(E) {

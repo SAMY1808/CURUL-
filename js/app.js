@@ -6,7 +6,7 @@ window.CURUL = window.CURUL || {};
   const NAV = [
     ['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa'], ['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos'],
     ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'],
-    ['medios', '📰', 'Medios'], ['personaje', '👤', 'Mi carrera'], null, ['partidas', '💾', 'Partidas']
+    ['medios', '📰', 'Medios'], ['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama'], null, ['partidas', '💾', 'Partidas']
   ];
 
   const App = {

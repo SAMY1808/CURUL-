@@ -239,8 +239,8 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
 | **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa** |
 | **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa** |
-| **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa (esta entrega)** |
-| 12 | Cientos de políticos con carreras independientes a gran escala (más allá de lo ya cubierto en la Fase 11), décadas de simulación | pendiente |
+| **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa** |
+| **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa (esta entrega)** |
 
 ### Notas de la Fase 8
 
@@ -284,6 +284,39 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   Relaciones Exteriores, su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier
   ministerio) mejora la relación con los países destacados peor calificados en vez de un indicador
   departamental.
+
+### Notas de la Fase 12
+
+- **Progresión de carrera real** (`elecciones.js`): la ambición que un político NPC anuncia
+  (`Politicos.anuncioAmbicion`, Fase 11e) ya sólo tenía efecto electoral real en la Presidencia
+  (`candidatosPresidencia`). Ahora también decide de verdad candidaturas más abajo en el escalafón:
+  en `formarLista`, un representante con `aspiraAnuncio.destino === 'senador'` entra al pool de
+  aspirantes al Senado de su partido (con una prima de peso interno análoga a `ambPres`) en vez de
+  competir sólo contra aspirantes sintéticos, y deja su curul de Cámara (`aspiraOtro = 'senado'`);
+  en `regional`, si un diputado o concejal de la colectividad ya anunció ambición a gobernación o
+  alcaldía (`destino === 'gobernador'`/`'alcalde'`) en ese mismo departamento, se lanza con su
+  propio nombre y una prima de fuerza (`s * 1.25`) en vez de fabricarse un aspirante nuevo sin
+  historia. El efecto es narrativo tanto como mecánico: "Fulano, que venía aspirando a la
+  gobernación, finalmente se lanza" en vez de un candidato genérico sin trayectoria previa.
+- **Dinastías políticas NPC** (`politicos.js`, funciones `notable`/`posibleDinastia`): cada político
+  activo acumula un historial permanente de los cargos que ha ocupado alguna vez (`p.honores`) y los
+  años totales en cargo (`p.aniosServicio`), independiente de qué cargo tenga hoy. Cuando un
+  político "notable" (llegó a la Presidencia, una gobernación, el Senado, un ministerio, o acumuló
+  8+ años en cargos) sale de la vida pública —por retiro de edad o por una renuncia forzada por
+  escándalo— hay un 35% de probabilidad de que un hijo herede parte de su arrastre electoral
+  (`fuerza * 0.45` más un extra aleatorio) y se estrene en política con el mismo apellido, anotado
+  en `heredero.dinastia = { padre, padreNombre, apellido }`. Es un eco simplificado, sin diálogo
+  propio, del sistema de Familia del jugador (Fase 6): no hay elección de sucesor ni resumen de fin
+  de partida, sólo un nuevo aspirante que aparece en el ecosistema político con una prima de fuerza
+  y una nota de prensa.
+- **Salón de la Fama / Archivo Histórico** (`js/pantallas/historia.js`, nueva pantalla): reúne en
+  una sola vista, sin ninguna acción jugable, los expresidentes de la partida (jugador incluido, vía
+  `J.ocupados`, y NPC vía `p.honores.presidente`/`expresidente`), un ranking de los políticos NPC
+  más destacados (por el cargo más alto que llegaron a ocupar, años de servicio y leyes aprobadas
+  como autor — `stats.aprobados`, ya existente desde antes de esta fase), las dinastías políticas
+  nacidas de `posibleDinastia` (más el propio legado del jugador si heredó la carrera de un
+  personaje anterior, `J.legado`), y el historial completo de partidos fundados y disueltos
+  (reutiliza `pa.fundado`/`pa.disuelto`/`pa.disueltoT` de la Fase 11e, sin datos nuevos).
 
 ### Corrección posterior a la Fase 11: botones deshabilitados por depender de un `<select>`
 
