@@ -56,6 +56,33 @@ window.CURUL = window.CURUL || {};
       for (const k of Object.keys(res)) if (!res[k]) delete res[k];
       return res;
     },
+    /* Listas conjuntas reales de coalición: cuando el jugador hace campaña como cabeza de una
+       coalición preelectoral para Senado o Cámara, su partido y los de sus aliados comparten una
+       sola lista frente a cifra repartidora (compiten como un solo bloque contra el resto de
+       partidos), y luego los escaños que gana ese bloque se reparten entre los miembros con una
+       segunda cifra repartidora sobre sus votos propios — el mismo mecanismo, aplicado dos veces. */
+    poolCoalicion(E, cargo, depto) {
+      const cam = E.elecciones.campana;
+      if (!cam || cam.eleccion !== 'congreso' || cam.cargo !== cargo || !cam.coalicion || !cam.coalicion.length) return null;
+      if (cargo === 'camara' && cam.depto !== depto) return null;
+      return { poolPid: E.jugador.partido, miembros: [E.jugador.partido, ...cam.coalicion.map(c => c.partido)] };
+    },
+    votosConPool(votos, pool) {
+      if (!pool) return votos;
+      const out = Object.assign({}, votos);
+      let suma = 0;
+      for (const pid of pool.miembros) { suma += out[pid] || 0; if (pid !== pool.poolPid) delete out[pid]; }
+      out[pool.poolPid] = suma;
+      return out;
+    },
+    subApportionCoalicion(cur, votosOriginal, pool) {
+      if (!pool || !cur[pool.poolPid]) return;
+      const n = cur[pool.poolPid];
+      delete cur[pool.poolPid];
+      const subVotos = {}; for (const pid of pool.miembros) subVotos[pid] = votosOriginal[pid] || 0;
+      const subCur = El.dhondt(subVotos, n, 0);
+      for (const [pid, k] of Object.entries(subCur)) cur[pid] = (cur[pid] || 0) + k;
+    },
     afinidad(d, ideo) {   // afinidad de un departamento con una posición económica
       const x = (d.incl * 70 - ideo.eco) / 75;
       return 0.5 + Math.exp(-x * x);
@@ -176,7 +203,9 @@ window.CURUL = window.CURUL || {};
       const era = El.era(anio);
       const umbralSenPct = E.constitucion ? C.Constitucion.valor(E, 'umbralSenado') : C.DATA.camaras.senado.umbral;
       const umbralSen = anio >= 2003 ? validosSen * umbralSenPct : 0;
-      const curSen = El.dhondt(votosSen, 100, umbralSen);
+      const poolSen = El.poolCoalicion(E, 'senado', null);
+      const curSen = El.dhondt(El.votosConPool(votosSen, poolSen), 100, umbralSen);
+      El.subApportionCoalicion(curSen, votosSen, poolSen);
       if (era === 'frenteNacional') El.paridadFN(curSen, votosSen);
       if (opts.forzarJugador === 'senado' && !curSen[J.partido]) {
         const mayor = Object.entries(curSen).sort((a, b) => b[1] - a[1])[0];
@@ -209,7 +238,9 @@ window.CURUL = window.CURUL || {};
         if (movJ && jugCamara === 'senado') delete votos.MOV;
         const cociente = pd.validos / d.camara;
         const umbral = anio >= 1991 ? cociente * (d.camara > 2 ? C.DATA.camaras.camara.umbralMayor : C.DATA.camaras.camara.umbralMenor) : 0;
-        const cur = El.dhondt(votos, d.camara, umbral);
+        const poolCam = El.poolCoalicion(E, 'camara', d.id);
+        const cur = El.dhondt(El.votosConPool(votos, poolCam), d.camara, umbral);
+        El.subApportionCoalicion(cur, votos, poolCam);
         if (era === 'frenteNacional') El.paridadFN(cur, votos);
         const electos = [];
         // El jugador que empieza como representante tiene garantizada su curul en la generación del mundo
@@ -275,7 +306,8 @@ window.CURUL = window.CURUL || {};
         // Partidos pequeños pueden adherir a un candidato afín en lugar de postular
         if (pa.popularidad < 6 && cands.some(c => U.distIdeo(E.partidos[c.partido] || J.ideologia, pa) < 0.18) && U.chance(0.7)) continue;
         const aspirantes = Object.values(E.politicos).filter(p => p.activo && p.partido === pa.id && p.id !== 'J' && El.edadOK(p) && (!p.cargo || p.cargo.tipo !== 'presidente'));
-        const cand = aspirantes.sort((a, b) => (b.r.car + b.r.amb + b.fuerza + (b.id === pa.lider ? 30 : 0)) - (a.r.car + a.r.amb + a.fuerza + (a.id === pa.lider ? 30 : 0)))[0];
+        const ambPres = p => p.aspiraAnuncio && p.aspiraAnuncio.destino === 'presidencia' ? 20 : 0;
+        const cand = aspirantes.sort((a, b) => (b.r.car + b.r.amb + b.fuerza + (b.id === pa.lider ? 30 : 0) + ambPres(b)) - (a.r.car + a.r.amb + a.fuerza + (a.id === pa.lider ? 30 : 0) + ambPres(a)))[0];
         if (!cand) continue;
         cand.aspiraOtro = 'presidencia';
         cands.push({ pol: cand.id, partido: pa.id }); usados.add(pa.id);
@@ -283,23 +315,28 @@ window.CURUL = window.CURUL || {};
       if (cam && cam.eleccion === 'presidencial' && cam.partido === 'MOV') cands.push({ pol: 'J', partido: 'MOV' });
       return cands;
     },
+    /* Fuerza de un candidato presidencial (jugador o NPC), reutilizada tanto por la elección real
+       como por la proyección de encuestas en tiempo real durante campaña. */
+    fnGanaAnio(anioEl) { return El.FN_ANIOS.includes(anioEl) ? (El.FN_ANIOS.indexOf(anioEl) % 2 === 0 ? 'PLR' : 'PCN') : null; },
+    ideoCandidato(E, c) { return c.pol === 'J' ? E.jugador.ideologia : { eco: E.politicos[c.pol].eco, soc: E.politicos[c.pol].soc }; },
+    fuerzaCandidatoPresidencial(E, c, fnGana) {
+      const gob = E.gobierno, aprob = E.opinion.aprobacionPres;
+      if (c.pol === 'J') return 6 + El.fuerzaJugador(E, null) * 0.35;
+      const p = E.politicos[c.pol], pa = E.partidos[c.partido];
+      let s = (pa ? pa.popularidad : 3) + p.r.car * 0.12 + p.fuerza * 0.05;
+      if (c.partido === gob.partido) s *= U.clamp(aprob / 42, 0.4, 1.6);
+      for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
+      if (fnGana) s *= c.partido === fnGana ? 2.4 : 0.55;
+      return s;
+    },
     presidencial(E, vuelta, candidatos, previo) {
       const gob = E.gobierno, aprob = E.opinion.aprobacionPres, anioEl = U.anio();
       const res = { id: U.id('el'), tipo: 'presidencial', vuelta, anio: anioEl, t: E.fecha.t, candidatos: [], porDepto: {}, jugador: null };
       // Frente Nacional (1958-1970): el pacto obliga a alternar la presidencia entre liberales y
       // conservadores; ningún otro partido tiene opción real de gobernar en esos comicios.
-      const fnGana = El.FN_ANIOS.includes(anioEl) ? (El.FN_ANIOS.indexOf(anioEl) % 2 === 0 ? 'PLR' : 'PCN') : null;
-      const ideoDe = c => c.pol === 'J' ? E.jugador.ideologia : { eco: E.politicos[c.pol].eco, soc: E.politicos[c.pol].soc };
-      const fuerza = c => {
-        if (c.pol === 'J') return 6 + El.fuerzaJugador(E, null) * 0.35;
-        const p = E.politicos[c.pol], pa = E.partidos[c.partido];
-        let s = (pa ? pa.popularidad : 3) + p.r.car * 0.12 + p.fuerza * 0.05;
-        if (c.partido === gob.partido) s *= U.clamp(aprob / 42, 0.4, 1.6);
-        // Suma de partidos afines que adhieren
-        for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
-        if (fnGana) s *= c.partido === fnGana ? 2.4 : 0.55;
-        return s;
-      };
+      const fnGana = El.fnGanaAnio(anioEl);
+      const ideoDe = c => El.ideoCandidato(E, c);
+      const fuerza = c => El.fuerzaCandidatoPresidencial(E, c, fnGana);
       const base = candidatos.map(c => ({ ...c, f: fuerza(c), ideo: ideoDe(c) }));
       let el = 0, vt = 0;
       const tot = {};
@@ -550,7 +587,28 @@ window.CURUL = window.CURUL || {};
       if (cam.firmas != null && cam.firmas < 100) cam.firmas = Math.min(100, cam.firmas + 6 + cam.voluntarios / 60);
       cam.voluntarios = Math.round(cam.voluntarios * 1.01 + cam.estructura * 0.2);
       // Encuesta de seguimiento cada 4 semanas
-      if ((E.fecha.t - cam.inicio) % 4 === 0) cam.encuestas.push({ t: E.fecha.t, ...El.proyeccion(E, !cam.equipo.encuestador) });
+      if ((E.fecha.t - cam.inicio) % 4 === 0) {
+        cam.encuestas.push({ t: E.fecha.t, ...El.proyeccion(E, !cam.equipo.encuestador) });
+        if (cam.cargo === 'presidencia') {
+          cam.carrera = cam.carrera || [];
+          cam.carrera.push({ t: E.fecha.t, candidatos: El.carreraPresidencial(E) });
+          if (cam.carrera.length > 30) cam.carrera.shift();
+        }
+      }
+    },
+    /* "Carrera de caballos": intención de voto estimada de cada candidato presidencial real de
+       la elección en curso, actualizada junto con las encuestas de seguimiento de la campaña. */
+    carreraPresidencial(E) {
+      const anioEl = U.anio(), fnGana = El.fnGanaAnio(anioEl);
+      const cands = El.candidatosPresidencia(E).map(c => ({
+        pol: c.pol, partido: c.partido,
+        nombre: c.pol === 'J' ? E.jugador.nombre : E.politicos[c.pol].nombre,
+        f: El.fuerzaCandidatoPresidencial(E, c, fnGana) * Math.exp(U.gauss(0, 0.15))
+      }));
+      const tot = U.suma(cands.map(c => c.f)) || 1;
+      cands.forEach(c => { c.pct = c.f / tot * 100; delete c.f; });
+      cands.sort((a, b) => b.pct - a.pct);
+      return cands;
     },
     /* Proyección de la campaña del jugador: intención de voto, probabilidad de ganar */
     proyeccion(E, conRuido = true) {

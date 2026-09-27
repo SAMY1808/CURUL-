@@ -99,6 +99,51 @@ window.CURUL = window.CURUL || {};
         if (semanasFalta > 16 && semanasFalta < 30 && U.chance(0.15)) P.transfuguismo(E);
       }
       if (hoy.getUTCMonth() === 0 && hoy.getUTCDate() <= 7) for (const p of pols) if (p.cargo && p.cargo.tipo === 'aspirante') p.fuerza = U.clamp(p.fuerza + U.ri(-3, 3), 10, 90);
+      if (U.chance(0.05)) P.anuncioAmbicion(E);
+      if (U.chance(0.035)) P.escandaloPropio(E);
+    },
+    /* Ambición propia: un político con cargo y mucha ambición anuncia que aspira a un cargo
+       superior en el próximo ciclo. Si otro de su mismo partido ya anunció lo mismo, nace una
+       rivalidad entre ambos (con su propio desgaste de relación). */
+    ESCALON: { concejal: 'alcalde', diputado: 'gobernador', representante: 'senador', alcalde: 'gobernador', gobernador: 'presidencia', senador: 'presidencia' },
+    anuncioAmbicion(E) {
+      const cands = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && P.ESCALON[p.cargo.tipo] && !p.aspiraAnuncio && p.r.amb > 68);
+      const p = U.pesado(cands, x => x.r.amb * x.r.amb);
+      if (!p) return;
+      const destino = P.ESCALON[p.cargo.tipo];
+      p.aspiraAnuncio = { destino, t: E.fecha.t };
+      const rival = p.partido ? Object.values(E.politicos).find(o => o.activo && o.id !== p.id && o.partido === p.partido && o.aspiraAnuncio && o.aspiraAnuncio.destino === destino && !o.rivalCon && !p.rivalCon) : null;
+      if (rival) {
+        p.rivalCon = rival.id; rival.rivalCon = p.id;
+        p.relJ = U.clamp((p.relJ || 0) - 3, -100, 100); rival.relJ = U.clamp((rival.relJ || 0) - 3, -100, 100);
+        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} y ${rival.nombre} chocan por la candidatura del ${E.partidos[p.partido].sigla} a ${C.DATA.cargos[destino].nombre}`, tono: 0, importante: true });
+        P.anotar(p, `Rivalidad con ${rival.nombre} por ${C.DATA.cargos[destino].nombre}`);
+        P.anotar(rival, `Rivalidad con ${p.nombre} por ${C.DATA.cargos[destino].nombre}`);
+      } else {
+        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} deja ver su ambición: aspira a ${C.DATA.cargos[destino].nombre}`, tono: 0 });
+        P.anotar(p, `Anuncia aspiraciones a ${C.DATA.cargos[destino].nombre}`);
+      }
+    },
+    /* Escándalos propios de los políticos NPC (no sólo del jugador): más probable cuanto menos
+       íntegro es el político (rasgo `r.int`, hasta ahora sin uso). Reutiliza Gobierno.vacante
+       para la sucesión de curul si el escándalo le cuesta el cargo. */
+    ESCANDALOS: ['un contrato cuestionado', 'presunto tráfico de influencias', 'gastos irregulares de campaña', 'nepotismo en su equipo', 'un viaje pagado por un contratista'],
+    escandaloPropio(E) {
+      const cands = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo);
+      const p = U.pesado(cands, x => Math.max(1, 100 - x.r.int));
+      if (!p) return;
+      const grave = U.chance(0.22);
+      const motivo = U.pick(P.ESCANDALOS);
+      p.fuerza = U.clamp(p.fuerza - U.ri(3, 10), 5, 100);
+      if (p.partido && E.partidos[p.partido]) E.partidos[p.partido].popularidad = U.clamp(E.partidos[p.partido].popularidad - U.rf(0.05, 0.25), 0.3, 45);
+      E.opinion.escandalos += 0.1;
+      C.Medios.noticia(E, { tipo: 'escandalo', titular: `Sale a la luz ${motivo} de ${p.nombre}${grave ? ': la Fiscalía anuncia que investigará' : ''}`, tono: -1, importante: grave });
+      P.anotar(p, `Escándalo: ${motivo}`);
+      if (grave && (p.cargo.tipo === 'senador' || p.cargo.tipo === 'representante') && U.chance(0.3)) {
+        C.Gobierno.vacante(E, p);
+        p.activo = false; p.cargo = null;
+        C.Medios.noticia(E, { tipo: 'escandalo', titular: `${p.nombre} renuncia a su curul en medio del escándalo`, tono: -1, importante: true });
+      }
     },
 
     transfuguismo(E) {

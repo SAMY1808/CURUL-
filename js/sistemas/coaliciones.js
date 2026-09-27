@@ -102,7 +102,6 @@ window.CURUL = window.CURUL || {};
         GL.designarSecretario(E, depto, organo, secId, c.partido);
         C.Medios.noticia(E, { tipo: 'regional', titular: `El ${E.partidos[c.partido].sigla} recibe una secretaría, tal como se pactó en campaña`, tono: 1 });
       }
-      for (const c of cam.coalicion) if (c.ofrecimiento === 'comite') E.partidos[c.partido].relJ = U.clamp((E.partidos[c.partido].relJ || 0) + 6, -100, 100);
     },
 
     registrarAcciones() {

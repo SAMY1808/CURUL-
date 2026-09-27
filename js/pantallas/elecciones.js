@@ -46,6 +46,13 @@ window.CURUL = window.CURUL || {};
         <div class="fila accion-form" style="margin-top:8px"><select data-arg="depto">${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === (cam.depto || J.residencia) ? 'selected' : ''}>${esc(d.nombre)}</option>`).join('')}</select>${UI.botonAccion('mitin', { depto: cam.depto || J.residencia })}${UI.botonAccion('recorrer', { depto: cam.depto || J.residencia })}${UI.botonAccion('reunionLideres', { depto: cam.depto || J.residencia }, 'Líderes')}</div>
         <div style="margin-top:12px">${UI.botonAccion('retirarCandidatura', {}, 'Retirar candidatura', 'chico peligro')}</div></div>
       <div class="tarjeta"><h3>Encuestas de seguimiento</h3>${enc.length ? G.linea([{ nombre: 'Intención de voto', color: '#D9B45A', datos: enc }], { alto: 170, min: 0, unidad: '%', area: true }) : '<div class="vacio">La primera encuesta llegará en unas semanas (o contrata una).</div>'}
+        ${cam.cargo === 'presidencia' && cam.carrera && cam.carrera.length ? (() => {
+          const ultima = cam.carrera[cam.carrera.length - 1].candidatos;
+          const colores = ['#D9B45A', '#6CC4F5', '#E0559A', '#5DB85A', '#E8812A', '#A15BD1'];
+          const series = ultima.map((c, i) => ({ nombre: (c.pol === 'J' ? '★ ' : '') + esc(siglaP(E, c.partido)), color: c.pol === 'J' ? '#D9B45A' : colores[(i + 1) % colores.length], datos: cam.carrera.map(snap => { const x = snap.candidatos.find(x => x.pol === c.pol); return [snap.t, x ? x.pct : 0]; }) }));
+          return `<h3 style="margin-top:14px">Carrera de caballos</h3>${G.linea(series, { alto: 190, min: 0, unidad: '%' })}
+            <div class="lista" style="margin-top:6px">${ultima.map(c => `<div class="it" style="padding:3px 4px"><span class="pto" style="background:${colorP(E, c.partido)}"></span><div class="cuerpo" style="font-size:12.5px">${c.pol === 'J' ? '<b>' + esc(c.nombre) + ' (tú)</b>' : esc(c.nombre)} · ${esc(siglaP(E, c.partido))}</div><b class="num">${U.d1(c.pct)}%</b></div>`).join('')}</div>`;
+        })() : ''}
         <div class="lista" style="margin-top:8px">${cam.actividades.slice(-6).reverse().map(a => `<div class="it"><span class="tenue num" style="font-size:11px;width:70px">${U.fmtT(a.t)}</span><div class="cuerpo" style="font-size:12.5px">${{ recorrido: '🚌 Recorrido', evento: '🎪 Evento', lideres: '🗣 Reunión con líderes', publicidad: '📺 Pauta', debate: '⚔ Debate' }[a.tipo] || a.tipo}${a.depto ? ' en ' + esc(E.deptos[a.depto].nombre) : ''}${a.canal ? ' ' + a.canal : ''}</div></div>`).join('')}</div></div>
     </div>`;
   };

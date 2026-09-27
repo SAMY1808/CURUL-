@@ -163,6 +163,48 @@ window.CURUL = window.CURUL || {};
       C.Personaje.sincronizar(E);
       return E.partidos[id];
     },
+    /* Disolución de un partido chiquito y sostenido en las últimas: reutiliza el mismo campo
+       `futuro` que ya filtran elecciones, coaliciones y gobierno en todas partes del motor, así
+       que un partido disuelto desaparece de la vida política sin tocar ese código. */
+    disolver(E, pa) {
+      pa.futuro = true; pa.disuelto = true; pa.disueltoT = E.fecha.t;
+      for (const p of Object.values(E.politicos)) if (p.partido === pa.id && p.activo) p.partido = null;
+      C.Medios.noticia(E, { tipo: 'partidos', titular: `El ${pa.sigla} se disuelve tras años de votación marginal`, tono: -1, importante: true });
+    },
+    NOMBRES_NUEVOS: [
+      ['Movimiento Nueva Fuerza', 'Renovar la política desde las regiones'],
+      ['Partido Unidad Ciudadana', 'La gente primero'],
+      ['Colombia en Marcha', 'Un país que no se detiene'],
+      ['Frente Progresista', 'Justicia social con los pies en la tierra'],
+      ['Alianza Verde y Social', 'Ambiente, equidad y futuro'],
+      ['Movimiento Independiente', 'Ni de izquierda ni de derecha: de la gente'],
+      ['Partido de la Reconstrucción', 'Volver a empezar, juntos'],
+      ['Fuerza Ciudadana', 'El poder vuelve a la calle']
+    ],
+    /* Fundación de un partido nuevo iniciada por un político NPC (no el jugador): mismo espíritu
+       que Partidos.iniciarFundacion/nacer, pero de una sola vez — un NPC no lleva una campaña de
+       recolección de firmas visible para el jugador, así que nace directamente. */
+    fundacionNPC(E) {
+      const cands = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.partido && p.r.amb > 82 && (p.relJ || 0) < -12 && p.fuerza > 55 && p.cargo);
+      const p = U.pesado(cands, x => x.r.amb * (60 - Math.max(-60, x.relJ || 0)));
+      if (!p) return;
+      const origen = E.partidos[p.partido];
+      const [nombre, lema] = U.pick(Pa.NOMBRES_NUEVOS);
+      const sigla = nombre.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 5);
+      const id = Pa.idDisponible(E, sigla);
+      E.partidos[id] = {
+        id, nombre, sigla, color: '#' + U.ri(0x333333, 0xdddddd).toString(16), lema,
+        eco: U.clamp(p.eco + U.gauss(0, 8), -100, 100), soc: U.clamp(p.soc + U.gauss(0, 8), -100, 100),
+        popularidad: U.clamp(1 + p.fuerza / 30, 1, 5), popBase: U.clamp(1 + p.fuerza / 30, 1, 5),
+        cohesion: 65, estructura: 0.1, fuertes: {}, especial: false, fundado: U.anio(), futuro: false,
+        postura: 'independiente', facciones: [{ id: id + '-f0', nombre: 'Fundadores', eco: p.eco, soc: p.soc, peso: 100, lider: p.id, relJ: 100 }],
+        lider: p.id, militantes: Math.round(1500 + p.fuerza * 200), finanzas: Math.round(150 + p.fuerza * 8), relJ: 0, hist: []
+      };
+      if (origen) origen.relJ = U.clamp((origen.relJ || 0) - 8, -100, 100);
+      p.partido = id;
+      C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} rompe con el ${origen ? origen.sigla : 'su partido'} y funda el ${nombre} («${lema}»)`, tono: 0, importante: true });
+      C.Politicos.anotar(p, `Funda el ${nombre}`);
+    },
     turno(E) {
       const gob = E.gobierno;
       const aprob = E.opinion.aprobacionPres || 45;
@@ -173,7 +215,7 @@ window.CURUL = window.CURUL || {};
         if (J.fundacion.firmas >= J.fundacion.meta) Pa.nacer(E);
       }
       for (const pa of Object.values(E.partidos)) {
-        if (pa.futuro && pa.fundado && pa.fundado <= anio) {
+        if (pa.futuro && !pa.disuelto && pa.fundado && pa.fundado <= anio) {
           pa.futuro = false;
           C.Medios.noticia(E, { tipo: 'partidos', titular: `Se funda el ${pa.nombre} («${pa.lema}»)`, tono: 0 });
         }
@@ -188,8 +230,17 @@ window.CURUL = window.CURUL || {};
         // Las facciones ganan o pierden peso lentamente
         for (const f of pa.facciones) f.peso = U.clamp(f.peso + U.gauss(0, 0.3), 5, 90);
         if (pa.relJ) pa.relJ *= 0.997;
+        // Un partido chiquito que lleva más de un año en las últimas puede disolverse; nunca el
+        // del jugador ni el de gobierno, para no romper esas dependencias del motor.
+        if (pa.popularidad < 0.8 && pa.id !== J.partido && pa.id !== gob.partido) {
+          pa.bajaDesde = pa.bajaDesde || E.fecha.t;
+          if (E.fecha.t - pa.bajaDesde > 60 && U.chance(0.015)) Pa.disolver(E, pa);
+        } else pa.bajaDesde = null;
       }
       if (E.fecha.t % 4 === 0) for (const pa of Object.values(E.partidos)) if (!pa.especial && !pa.futuro) U.serie('pop:' + pa.id, pa.popularidad);
+      // Un político NPC muy ambicioso, mal avenido con su partido y con peso propio puede
+      // fundar uno nuevo — el mismo mecanismo que Partidos.nacer, pero iniciado por un NPC.
+      if (U.chance(0.006)) Pa.fundacionNPC(E);
     },
 
     registrarAcciones() {

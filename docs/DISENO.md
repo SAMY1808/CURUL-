@@ -238,8 +238,9 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa** |
 | **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
 | **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa** |
-| **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa (esta entrega)** |
-| 11 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa** |
+| **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa (esta entrega)** |
+| 12 | Cientos de políticos con carreras independientes a gran escala (más allá de lo ya cubierto en la Fase 11), décadas de simulación | pendiente |
 
 ### Notas de la Fase 8
 
@@ -283,6 +284,58 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   Relaciones Exteriores, su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier
   ministerio) mejora la relación con los países destacados peor calificados en vez de un indicador
   departamental.
+
+### Notas de la Fase 11
+
+- **Balance de orden público** (`ordenpublico.js`): la recuperación territorial de la Fuerza
+  Pública ya no dependía sólo de que el jugador debilitara a un grupo por debajo de `fuerza < 28`
+  — ahora su probabilidad depende de `fuerzaInstitucional(E)` frente a la del grupo, así que
+  incluso sin ofensivas del jugador el Estado empuja hacia atrás con más frecuencia cuanto más
+  fuerte es en seguridad promedio nacional. Además hay un tope duro de 6 departamentos por grupo y
+  la expansión se satura a medida que se acerca a él. Probado en 4 semillas distintas sin ninguna
+  intervención del jugador durante 504 semanas: el total combinado de departamentos bajo control
+  armado se mantuvo entre 6 y 11, muy lejos del descontrol de hasta ~20 que se observaba antes.
+- **Listas conjuntas reales** (`Elecciones.poolCoalicion`/`votosConPool`/`subApportionCoalicion`):
+  cuando el jugador hace campaña como cabeza de una coalición para Senado o Cámara, su partido y
+  los de sus aliados compiten como un solo bloque frente a cifra repartidora nacional (o
+  departamental, para Cámara) contra el resto de partidos, y los escaños que gana ese bloque se
+  reparten entre los miembros con una segunda cifra repartidora sobre sus votos propios — el mismo
+  algoritmo `dhondt`, aplicado dos veces. Verificado con un caso extremo (un partido sin ninguna
+  curul propia aliado con el más grande): el total combinado del bloque subió de 16 a 18 curules
+  frente a competir por separado, el efecto real que se buscaba.
+- **Redes sociales** (`js/sistemas/redes.js`, nuevo): un canal propio con un medidor de
+  "viralidad" que decae solo con el tiempo. Publicar es una apuesta: si sale bien, sube el
+  reconocimiento en proporción a la viralidad acumulada; si sale mal, cae la viralidad, la
+  credibilidad y queda registrada como un escándalo más del jugador — más riesgo y más alcance
+  directo que la pauta o la entrevista tradicional.
+- **Carrera de caballos** (`Elecciones.carreraPresidencial`): durante una campaña presidencial, la
+  encuesta de seguimiento que ya existía (cada 4 semanas) ahora también calcula la intención de
+  voto de los candidatos reales de esa elección (los mismos que arma `candidatosPresidencia`),
+  reutilizando la fórmula de fuerza de la elección real (`fuerzaCandidatoPresidencial`, extraída
+  del cálculo que antes vivía sólo dentro de `presidencial()`). Se grafica como una línea por
+  candidato en la pantalla de campaña.
+- **Políticos NPC con ambición y rivalidades** (`Politicos.anuncioAmbicion`): un político con
+  cargo y mucha ambición (`r.amb`) puede anunciar aspiraciones a un cargo superior; si otro de su
+  mismo partido ya aspiraba a lo mismo, nace una rivalidad mutua (con su propio desgaste de
+  relación) en vez de una simple coincidencia. La aspiración a la presidencia además pesa de
+  verdad en `candidatosPresidencia`: un aspirante que ya lo anunció tiene ventaja real sobre uno
+  que no.
+- **Escándalos propios** (`Politicos.escandaloPropio`): antes sólo el jugador podía protagonizar un
+  escándalo; ahora cualquier político con cargo puede, con una probabilidad que depende del rasgo
+  `r.int` (definido desde el inicio del proyecto pero nunca antes usado en ningún cálculo). Un
+  escándalo grave puede costarle la curul a un congresista, reutilizando `Gobierno.vacante` para la
+  sucesión — el mismo mecanismo que cuando un congresista asume otro cargo.
+- **Partidos que nacen y mueren** (`Partidos.disolver`/`fundacionNPC`): un partido chiquito y
+  sostenido en las últimas por más de un año se disuelve (`pa.disuelto = true`, reutilizando el
+  campo `futuro` que ya filtran elecciones, coaliciones, gobierno y diplomacia en todo el motor,
+  así que desaparece de la vida política sin tocar ese código en ningún otro archivo); nunca se
+  disuelve el partido del jugador ni el de gobierno. Un político NPC muy ambicioso, con mala
+  relación con su partido y peso propio puede fundar uno nuevo de la nada, con un catálogo curado
+  de ocho nombres/lemas genéricos — el mismo mecanismo que `Partidos.nacer` para el jugador, pero
+  de una sola vez (un NPC no lleva una campaña de firmas visible). Se encontró y corrigió un bug
+  real durante las pruebas: el chequeo que funda automáticamente un partido `futuro` programado
+  (`pa.fundado <= año`) revivía por accidente un partido recién disuelto en el turno siguiente,
+  porque su `fundado` original ya estaba en el pasado; el chequeo ahora exige además `!pa.disuelto`.
 
 ### Notas de la Fase 10
 

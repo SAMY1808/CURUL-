@@ -23,6 +23,9 @@ window.CURUL = window.CURUL || {};
               for (const m of medios) { const x = 10 + (m.linea + 100) / 200 * (W - 20), y = H - 22 - m.audiencia / 50 * (H - 40); s += `<circle cx="${x}" cy="${y}" r="${4 + m.credibilidad / 12}" fill="${m.relJ > 10 ? '#26B59A' : m.relJ < -10 ? '#E8812A' : '#6f86b3'}" fill-opacity=".8" stroke="#0A111D" stroke-width="2"${UI.tt(`<b>${esc(m.nombre)}</b><br>${esc(m.tipo)} · audiencia ${m.audiencia}<br>Credibilidad ${m.credibilidad}<br>Relación contigo ${Math.round(m.relJ)}`)}/><text x="${x}" y="${y - 9 - m.credibilidad / 12}" text-anchor="middle" style="font-size:9.5px">${esc(m.nombre.split(' ').slice(-1)[0])}</text>`; }
               return s + '</svg>'; })()}
             <div class="tenue" style="font-size:12px">Altura = audiencia · tamaño = credibilidad · línea dorada = tu posición.</div></div>
+          <div class="tarjeta"><div class="t-cab"><h3>Redes sociales</h3>${UI.botonAccion('publicarRedes', {}, 'Publicar')}</div>
+            ${G.medidor(E.redes.viralidad, { tam: 90, etq: 'VIRALIDAD' })}
+            <div class="tenue" style="font-size:12px;margin-top:6px">${E.redes.publicaciones} publicaciones · ${E.redes.cancelaciones} ola(s) de críticas</div></div>
           <div class="tarjeta"><h3>Conceder entrevista</h3><div class="lista">${medios.map(m => `<div class="it"><span style="font-size:18px">${m.icono}</span><div class="cuerpo"><b>${esc(m.nombre)}</b><span>${esc(m.tipo)}${m.region ? ' · ' + esc(m.region) : ''} · ${Math.abs(m.linea - J.ideologia.eco) > 60 ? '<span class="mal">hostil a tus ideas</span>' : Math.abs(m.linea - J.ideologia.eco) < 30 ? '<span class="bien">afín</span>' : 'neutral'}</span></div>${UI.botonAccion('entrevista', { medio: m.id }, 'Entrevista', 'chico')}</div>`).join('')}</div></div>
         </div></div>`;
       UI.$('#m-f', el).onchange = e => { E.ui.filtroNot = e.target.value; C.App.refrescar(); };

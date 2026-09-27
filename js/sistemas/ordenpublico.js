@@ -58,13 +58,21 @@ window.CURUL = window.CURUL || {};
           C.Medios.noticia(E, { tipo: 'ordenpublico', titular: `Las ${g.sigla} atacan en ${d.nombre}`, tono: -1, importante: U.chance(0.25) });
         }
         if (E.fecha.t % 8 === 0) {
-          if (st.control.length && st.fuerza < 28 && U.chance(0.3)) {
+          /* La respuesta institucional recupera territorio con más frecuencia cuanto más fuerte
+             es el Estado frente al grupo (no sólo cuando el grupo ya está casi vencido), y el
+             crecimiento territorial se satura a medida que controla más departamentos — así una
+             partida larga sin ofensivas ni mesas de paz del jugador no deja que un grupo se coma
+             el país entero. */
+          const fi = OP.fuerzaInstitucional(E);
+          const probRecuperar = U.clamp(0.04 + (fi - st.fuerza) / 220, 0.02, 0.35);
+          const MAX_CONTROL = 6;
+          if (st.control.length && U.chance(probRecuperar)) {
             const salida = U.pick(st.control);
             st.control = st.control.filter(x => x !== salida);
             E.deptos[salida].seguridad = U.clamp(E.deptos[salida].seguridad + 6, 1, 99);
             C.Medios.noticia(E, { tipo: 'ordenpublico', titular: `La Fuerza Pública recupera el control en ${E.deptos[salida].nombre}, antes en poder de las ${g.sigla}`, tono: 1 });
             if (!st.control.length && !U.chance(0.5)) st.activo = false;
-          } else if (st.fuerza > 62 && U.chance(0.15)) {
+          } else if (st.fuerza > 62 && st.control.length < MAX_CONTROL && U.chance(0.15 * (1 - st.control.length / MAX_CONTROL))) {
             const ocupados = new Set(GRUPOS.flatMap(x => OP_.grupos[x.id].control));
             const cand = Object.values(E.deptos).filter(d => d.seguridad < 55 && !ocupados.has(d.id));
             if (cand.length) { const nuevo = U.pick(cand).id; st.control.push(nuevo); C.Medios.noticia(E, { tipo: 'ordenpublico', titular: `Las ${g.sigla} amplían su presencia hacia ${E.deptos[nuevo].nombre}`, tono: -1 }); }

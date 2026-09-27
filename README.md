@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 10 completas)
+## Qué hay en esta versión (Fases 1 a 11 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -134,6 +134,19 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   política, fin del conflicto, drogas ilícitas, víctimas) negociados uno a uno, después verificación
   internacional, y por último una implementación post-acuerdo con riesgo real de que surjan
   disidencias si el Gobierno no sigue invirtiendo en cumplirlo.
+- **Listas conjuntas reales en el Congreso**: una coalición para Senado o Cámara ya no es sólo un
+  gesto — tu partido y los de tus aliados compiten como un solo bloque frente a cifra repartidora,
+  y los escaños que gana ese bloque se reparten después entre los aliados según sus propios votos.
+- **Redes sociales**: un canal propio con un medidor de viralidad; publicar es una apuesta —si sale
+  bien, tu reconocimiento se dispara; si sale mal, una ola de críticas te pasa factura.
+- **Carrera de caballos**: durante una campaña presidencial, ve semana a semana cómo le va a cada
+  candidato real de esa elección, no sólo a ti.
+- **Políticos con vida propia**: los NPC ahora anuncian aspiraciones a cargos superiores (y pueden
+  chocar entre ellos por la misma candidatura), protagonizan sus propios escándalos, y los partidos
+  chiquitos y sin votos pueden disolverse mientras un político muy ambicioso funda uno nuevo.
+- **Orden público más equilibrado**: la respuesta institucional ahora reacciona sola con más
+  fuerza cuanto mejor esté la seguridad del país, así que una partida larga sin intervenir no deja
+  que los grupos armados se tomen el mapa.
 
 ## Arquitectura
 

@@ -41,7 +41,13 @@ window.CURUL = window.CURUL || {};
         const res = El.inscribir(E, a.cargo, a.depto, 'coalicion');
         const cam = E.elecciones.campana;
         cam.coalicion = r.aliados;
-        if (a.cargo === 'senado' || a.cargo === 'camara') cam.cabezaLista = true;
+        if (a.cargo === 'senado' || a.cargo === 'camara') {
+          cam.cabezaLista = true;
+          // Los aliados de una lista conjunta ya ganan curules propias por su cuota real de
+          // votos (ver Elecciones.poolCoalicion); "apoyo en comisión" es además un gesto de
+          // buena relación por ir en la misma lista.
+          for (const c of cam.coalicion) if (c.ofrecimiento === 'comite' && E.partidos[c.partido]) E.partidos[c.partido].relJ = U.clamp((E.partidos[c.partido].relJ || 0) + 6, -100, 100);
+        }
         C.Coaliciones.limpiar(E, a.cargo, a.depto || null);
         return res;
       }
