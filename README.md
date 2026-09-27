@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 15 completas)
+## Qué hay en esta versión (Fases 1 a 16 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -174,6 +174,10 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Lo mismo en tu Asamblea o Concejo**: si eres diputado o concejal, la primera sesión de tu propia
   corporación abre la misma elección de mesa directiva (aval del partido o de forma autónoma), con
   tu peso interno departamental en juego.
+- **La mesa directiva pesa de verdad**: si presides el Senado o la Cámara, puedes adelantar o
+  aplazar en el orden del día cualquier proyecto en trámite en tu cámara, sea tuyo o no. Y si el
+  Gobierno necesita que su propio proyecto avance justo en la cámara que presides, negocias cambios
+  con más fuerza de la que tendrías sin la mesa.
 
 ## Arquitectura
 

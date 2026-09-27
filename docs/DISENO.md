@@ -243,7 +243,33 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa** |
 | **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa** |
 | **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa** |
-| **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa (esta entrega)** |
+| **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa** |
+| **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa (esta entrega)** |
+
+### Notas de la Fase 16
+
+- **Poder de agenda de la mesa directiva** (`js/sistemas/legislacion.js`, `L.adelantar`/`L.aplazar`):
+  antes, ser presidente del Senado o la Cámara (Fase 14) o de una Asamblea/Concejo (Fase 15) era un
+  título con peso interno pero sin ninguna palanca legislativa real. Ahora, sobre cualquier proyecto
+  en trámite en la cámara que se preside —no sólo los propios—, el jugador puede **adelantarlo**
+  (`adelantarProyectoMesa`: pone `p.esperaHasta = E.fecha.t`, listo para entrar al orden del día la
+  próxima semana) o **aplazarlo** (`aplazarProyectoMesa`: empuja `p.esperaHasta` tres semanas hacia
+  adelante). Ambas manipulan directamente el mismo campo que ya usaba `calcularOrdenDelDia` (la cola
+  real de proyectos listos para votarse, `p.sub === 'agenda'`), así que no es un sistema paralelo:
+  es el mismo motor de agenda que existía desde antes, con una palanca nueva encima. La disponibilidad
+  se valida con el nuevo `Congreso.esMesaDe(E, cam)`, que sólo es cierto si `E.congreso[cam].mesa.
+  presidente === 'J'`.
+- **Palanca de negociación con el Ejecutivo** (`negociarBancada`): cuando el proyecto es del Gobierno
+  (`p.gobierno`) y el jugador preside la cámara donde tramita, negociar con una bancada suma +15
+  puntos de probabilidad de éxito — presidir la cámara donde el Gobierno necesita que su propio
+  proyecto avance es una posición real de fuerza para pedirle cambios a cambio del apoyo. Es un
+  ajuste de una línea sobre la fórmula de probabilidad ya existente, no una mecánica nueva de
+  negociación: se mantiene todo lo demás (afinidad ideológica, relación con la bancada, negociación
+  del jugador) exactamente igual.
+- Este poder aplica igual sobre proyectos de una Asamblea/Concejo? No: el sistema de ordenanzas y
+  acuerdos locales (`Corporaciones.proponer`) es una votación de un solo turno, sin orden del día ni
+  cola de espera — no hay nada que adelantar o aplazar ahí. El poder de agenda de esta fase es
+  exclusivo del Congreso, donde sí existe un trámite por etapas con semanas de espera entre ellas.
 
 ### Notas de la Fase 15
 

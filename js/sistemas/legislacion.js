@@ -53,6 +53,18 @@ window.CURUL = window.CURUL || {};
       return p.autor && E.politicos[p.autor] ? E.politicos[p.autor].nombre : 'Autor desconocido';
     },
     hist(E, p, txt, tipo) { p.historial.push({ t: E.fecha.t, txt, tipo: tipo || 'info' }); },
+    /* ── Poder de agenda de la mesa directiva ──────────────────
+       Presidir el Senado o la Cámara no es solo un título: controla qué entra al orden del día.
+       Sólo aplica sobre proyectos que ya están "en espera de agenda" (p.sub === 'agenda'), la
+       cola real que arma calcularOrdenDelDia cada semana. */
+    adelantar(E, p) {
+      p.esperaHasta = E.fecha.t;
+      L.hist(E, p, `${E.jugador.nombre}, como presidente ${C.Congreso.delCamara(L.camaraDeEtapa(p))}, adelanta el proyecto en el orden del día`, 'info');
+    },
+    aplazar(E, p, semanas) {
+      p.esperaHasta = Math.max(p.esperaHasta || E.fecha.t, E.fecha.t + 1) + semanas;
+      L.hist(E, p, `${E.jugador.nombre}, como presidente ${C.Congreso.delCamara(L.camaraDeEtapa(p))}, aplaza el proyecto ${semanas} semanas en el orden del día`, 'info');
+    },
     etapaActual: p => p.etapas[p.etapa],
     infoEtapa: p => T().etapas[p.etapas[p.etapa]],
     camaraDeEtapa(p, etapaId) {
@@ -448,7 +460,10 @@ window.CURUL = window.CURUL || {};
         disponible: (E, a) => { if (!proyActivo(E, a)) return 'Proyecto no disponible'; if (!E.partidos[a.partido]) return 'Elige una bancada'; if (!esCongresista(E) && !esGobierno(E)) return 'Debes ser congresista o del Gobierno'; return true; },
         ejecutar(E, a) {
           const p = E.proyectos[a.proyecto], pa = E.partidos[a.partido], J = E.jugador;
-          const prob = U.clamp(0.3 + J.atributos.negociacion / 200 + pa.relJ / 150 - U.distIdeo(pa, p) * 0.5 + (J.partido === pa.id ? 0.25 : 0), 0.05, 0.9);
+          // Presidir la cámara donde tramita un proyecto del Gobierno es una palanca real frente
+          // al Ejecutivo: negocias cambios a su propio proyecto desde una posición de fuerza.
+          const esMesaGobierno = p.gobierno && C.Congreso.esMesaDe(E, L.camaraDeEtapa(p));
+          const prob = U.clamp(0.3 + J.atributos.negociacion / 200 + pa.relJ / 150 - U.distIdeo(pa, p) * 0.5 + (J.partido === pa.id ? 0.25 : 0) + (esMesaGobierno ? 0.15 : 0), 0.05, 0.92);
           if (U.chance(prob)) {
             p.acuerdos[pa.id] = (p.acuerdos[pa.id] || 0) + 14;
             // La contraparte exige acercar el texto a su posición
@@ -520,6 +535,14 @@ window.CURUL = window.CURUL || {};
           E.politicos.J && E.politicos.J.stats.intervenciones++;
           return { ok: true, msg: calidad > 3 ? 'Intervención brillante: mueves a varios indecisos' : calidad > 1 ? 'Intervención sólida' : 'Intervención discreta, poco eco en el recinto' };
         } });
+
+      const esMesaDelProyecto = (E, a) => { const p = proyActivo(E, a); if (!p) return 'Proyecto no disponible'; const cam = L.camaraDeEtapa(p); if (!cam) return 'El proyecto no está en trámite en ninguna cámara'; return C.Congreso.esMesaDe(E, cam) ? true : 'Sólo el presidente de esa cámara puede hacerlo'; };
+      A.registrar({ id: 'adelantarProyectoMesa', nombre: 'Adelantar en el orden del día', icono: '⏩', grupo: 'legislativo', costo: 1,
+        disponible(E, a) { const r = esMesaDelProyecto(E, a); if (r !== true) return r; const p = proyActivo(E, a); return p.sub === 'agenda' ? true : 'El proyecto no está a la espera de agenda'; },
+        ejecutar(E, a) { const p = E.proyectos[a.proyecto]; L.adelantar(E, p); return { ok: true, msg: `Adelantas «${p.titulo}» en el orden del día` }; } });
+      A.registrar({ id: 'aplazarProyectoMesa', nombre: 'Aplazar en el orden del día', icono: '⏸', grupo: 'legislativo', costo: 1,
+        disponible: esMesaDelProyecto,
+        ejecutar(E, a) { const p = E.proyectos[a.proyecto]; L.aplazar(E, p, 3); return { ok: true, msg: `Aplazas «${p.titulo}» tres semanas en el orden del día` }; } });
     }
   };
 

@@ -8,6 +8,9 @@ window.CURUL = window.CURUL || {};
     CAMARAS,
     nombreCamara: c => c === 'senado' ? 'Senado' : 'Cámara',
     delCamara: c => c === 'senado' ? 'del Senado' : 'de la Cámara',
+    /* ¿El jugador preside esa cámara? Base de los poderes reales de la mesa directiva sobre el
+       orden del día (adelantar/aplazar proyectos) y la negociación con el Ejecutivo. */
+    esMesaDe(E, cam) { const K = E.congreso[cam]; return !!(K && K.mesa && K.mesa.presidente === 'J'); },
     nombreCirc(circ) {
       if (circ === 'NAC') return 'Nacional';
       const d = C.E.deptos[circ]; if (d) return d.nombre;
