@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 7 completas)
+## Qué hay en esta versión (Fases 1 a 8 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -98,6 +98,22 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   varios partidos) para escoger un candidato único de la coalición a Presidencia, Gobernación,
   Alcaldía o Congreso. Ganar la consulta te vuelve el candidato de todos los aliados; ganar la
   elección después cumple lo pactado —tus aliados reciben el ministerio o la secretaría prometida—.
+- **Reelección presidencial histórica**: la reelección inmediata está prohibida salvo entre 2005 y
+  2015 (como ocurrió realmente en Colombia), y sólo se permite una vez.
+- **Aprobación por tema**: además de la aprobación general, cada encuesta mide qué tan bien te ven
+  en seguridad, economía, salud y lucha contra la corrupción.
+- **Corrupción**: financia tu campaña por fuera del tope legal o reparte cupos burocráticos y obras
+  a una bancada a cambio de apoyo (mermelada) — más barato y más rápido que negociar de buena fe,
+  pero deja un rastro.
+- **Sistema judicial**: ese rastro puede convertirse en una investigación real de la Fiscalía, con
+  sus propias etapas; puedes contratar defensa legal para ralentizarla. Una condena hace perder la
+  investidura o, en los casos más graves, termina la carrera política por completo.
+- **Orden público**: tres grupos armados ficticios controlan territorio de fondo y atacan de vez en
+  cuando. Como presidente puedes ordenar ofensivas militares para debilitarlos o abrir una mesa de
+  negociación y ceder concesiones hasta lograr un acuerdo de paz real.
+- **Diplomacia**: cinco países ficticios con relaciones bilaterales propias; como presidente puedes
+  convocar cumbres o firmar tratados de comercio, cooperación o defensa. Si ocupas el Ministerio de
+  Relaciones Exteriores, su mesa de trabajo mejora la relación con los países peor calificados.
 
 ## Arquitectura
 

@@ -41,7 +41,7 @@ window.CURUL = window.CURUL || {};
       </div></div>
     <div class="grid g2" style="margin-top:14px">
       <div class="tarjeta"><h3>Actividades de campaña</h3>
-        <div class="fila">${UI.botonAccion('recaudar', {})}${UI.botonAccion('voluntarios', {})}${UI.botonAccion('encuestaPropia', {})}${UI.botonAccion('debate', {})}</div>
+        <div class="fila">${UI.botonAccion('recaudar', {})}${UI.botonAccion('financiacionIrregular', {}, 'Financiación irregular', 'chico riesgo')}${UI.botonAccion('voluntarios', {})}${UI.botonAccion('encuestaPropia', {})}${UI.botonAccion('debate', {})}</div>
         <div class="fila accion-form" style="margin-top:8px"><select data-arg="canal"><option value="tv">Televisión ($60 M)</option><option value="radio">Radio ($20 M)</option><option value="digital">Digital ($12 M)</option></select>${UI.botonAccion('publicidad', { canal: 'tv' })}</div>
         <div class="fila accion-form" style="margin-top:8px"><select data-arg="depto">${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === (cam.depto || J.residencia) ? 'selected' : ''}>${esc(d.nombre)}</option>`).join('')}</select>${UI.botonAccion('mitin', { depto: cam.depto || J.residencia })}${UI.botonAccion('recorrer', { depto: cam.depto || J.residencia })}${UI.botonAccion('reunionLideres', { depto: cam.depto || J.residencia }, 'Líderes')}</div>
         <div style="margin-top:12px">${UI.botonAccion('retirarCandidatura', {}, 'Retirar candidatura', 'chico peligro')}</div></div>

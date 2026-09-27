@@ -19,6 +19,9 @@ window.CURUL = window.CURUL || {};
       if (a.cargo === 'presidencia' && U.anio() - J.nac < 30) return 'Se requieren 30 años para ser presidente';
       if (a.cargo === 'senado' && U.anio() - J.nac < 30) return 'Se requieren 30 años para ser senador';
       if (a.cargo === 'presidencia' && J.reconocimiento < 30) return 'Necesitas al menos 30 de reconocimiento nacional';
+      if (a.cargo === 'presidencia' && J.cargo === 'presidente' && !C.Gobierno.puedeReelegirseInmediato(E)) {
+        return U.anio() >= 2005 && U.anio() < 2015 ? 'Ya usaste tu reelección inmediata: no puedes ir por un tercer período consecutivo' : 'La Constitución no permite la reelección presidencial inmediata en esta época';
+      }
       if (a.via !== 'firmas' && !E.partidos[J.partido]) return 'Sin partido: inscríbete por firmas';
       if (a.via !== 'firmas' && J.avalNegado && J.avalNegado.partido === J.partido && E.fecha.t - J.avalNegado.t < 8) return `Tu partido te negó el aval hace poco: podrás insistir en ${8 - (E.fecha.t - J.avalNegado.t)} semanas (o ve por firmas)`;
       if (a.via === 'coalicion' && !C.Coaliciones.aliados(E, a.cargo, a.depto || null).length) return 'Ningún partido se ha aliado todavía para esta elección';
@@ -74,6 +77,20 @@ window.CURUL = window.CURUL || {};
       const real = Math.min(monto, cabe);
       cam.recaudado += real; cam.caja += real;
       return { ok: true, msg: real < monto ? `Recaudas ${U.cop(real)}: alcanzaste el tope legal de gastos` : `Recaudas ${U.cop(real)} entre donantes` };
+    } });
+
+  /* Financiación irregular: dinero por fuera del tope legal (contratistas, testaferros, dineros
+     no declarados). Da caja sin límite del tope, pero deja un rastro que alimenta el riesgo de
+     una investigación de la Fiscalía o la Procuraduría más adelante (ver sistema judicial). */
+  A.registrar({ id: 'financiacionIrregular', nombre: 'Financiación irregular', icono: '🕵', grupo: 'campana', costo: 1, disponible: enCampana,
+    ejecutar(E) {
+      const cam = E.elecciones.campana, J = E.jugador;
+      const monto = Math.round((25 + J.redes * 10) * f(E) * (cam.cargo === 'presidencia' ? 8 : cam.cargo === 'senado' || cam.cargo === 'gobernacion' ? 2.5 : 1) * U.rf(0.8, 1.4));
+      cam.caja += monto; cam.irregular = (cam.irregular || 0) + monto;
+      J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(3, 6), 0, 100);
+      E.opinion.corrupcionAcum = (E.opinion.corrupcionAcum || 0) + 0.4;
+      J.rep.transparencia = U.clamp(J.rep.transparencia - U.rf(1, 3), 0, 100);
+      return { ok: true, msg: `Consigues ${U.cop(monto)} por fuera del tope legal, sin dejar factura` };
     } });
 
   A.registrar({ id: 'contratar', nombre: 'Contratar equipo', icono: '👔', grupo: 'campana', costo: 0, disponible: enCampana,

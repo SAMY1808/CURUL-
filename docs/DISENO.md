@@ -235,9 +235,51 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados; diputados y concejales con curul propia y ordenanzas/acuerdos; noche electoral candidato a candidato en Senado, Cámara, Asamblea y Concejo | **completa** |
 | **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa** |
 | **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa** |
-| **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa (esta entrega)** |
-| 8 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa** |
+| **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
 | 9 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 8
+
+- **Reelección presidencial histórica** (`Gobierno.puedeReelegirseInmediato`): la reelección
+  inmediata está prohibida por defecto (Constitución de 1886 y texto original de la de 1991), salvo
+  entre 2005 y 2015 (Acto Legislativo 02 de 2004, derogado por el Acto Legislativo 02 de 2015), y
+  sólo una vez (`E.gobierno.reeleccionUsada`). El bloqueo se aplica únicamente al jugador: un
+  presidente NPC nunca vuelve a aparecer entre los candidatos de `candidatosPresidencia` porque ya
+  se filtra a quien ocupa el cargo, así que la IA nunca intenta reelegirse.
+- **Encuestas segmentadas por tema** (`Opinion.TEMAS`/`objetivoTema`/`aprobTemas`): además de la
+  aprobación general, cada semana converge una aprobación en seguridad, economía, salud y lucha
+  contra la corrupción, cada una hacia un objetivo calculado a partir de indicadores reales del
+  juego (seguridad y salud por departamento, desempleo/inflación/crecimiento, y un acumulado de
+  corrupción). Se muestran como barras en el Centro de Gobierno y viajan también en cada encuesta
+  (`Opinion.encuesta`).
+- **Corrupción interna** (`campana.js` acción `financiacionIrregular`, `gobierno.js` acción
+  `mermelada`): financiar una campaña por fuera del tope legal da caja sin límite, y repartir cupos
+  burocráticos y obras a una bancada sube su relación más barato que negociar de buena fe — ambas
+  sin necesidad de coalición formal. Las dos suben `J.riesgoJudicial` y `E.opinion.corrupcionAcum`,
+  que alimentan el nuevo sistema judicial y la aprobación temática de corrupción respectivamente.
+- **Sistema judicial** (`js/sistemas/judicial.js`, nuevo): con suficiente `riesgoJudicial`
+  acumulado (financiación irregular, mermelada, escándalos de patrimonio…), la Fiscalía puede abrir
+  una investigación que avanza semana a semana por tres etapas (indagación preliminar, imputación,
+  juicio) — puedes contratar defensa legal (acción `defensaLegal`) para ralentizarla. Al resolverse,
+  una condena no grave hace perder la investidura (`Personaje.dejarCargo`, igual que cualquier
+  cambio de cargo) y una condena grave termina la carrera política por completo, reutilizando
+  exactamente el mismo mecanismo de fin de partida que el retiro o el fallecimiento
+  (`Familia.finDeCarrera`).
+- **Orden público** (`js/sistemas/ordenpublico.js`, nuevo): tres grupos armados ficticios (una
+  guerrilla, un grupo paramilitar y una organización narcotraficante) controlan de fondo un puñado
+  de departamentos con baja seguridad, atacan ocasionalmente bajando el indicador local, y ganan o
+  pierden territorio despacio según su fuerza. Como presidente tienes un rol activo: ordenar una
+  ofensiva militar (probabilidad según la fuerza institucional del país frente a la del grupo) o
+  abrir una mesa de negociación de paz y ceder concesiones para acelerarla — sostenida el tiempo
+  suficiente, termina en un acuerdo de paz con efecto real sobre la seguridad de esos departamentos.
+- **Diplomacia** (`js/sistemas/diplomacia.js`, nuevo): cinco países ficticios con una relación
+  bilateral que deriva lentamente según la afinidad ideológica con el Gobierno. Sólo como
+  presidente puedes convocar una cumbre bilateral o firmar un tratado (comercio, cooperación o
+  defensa) con efectos reales y acotados (crecimiento económico, educación o seguridad
+  departamental según el tipo). Si además ocupas tú mismo el Ministerio de Relaciones Exteriores,
+  su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier ministerio) mejora la
+  relación con los dos países peor calificados en vez de un indicador departamental.
 
 ### Notas de la Fase 7
 

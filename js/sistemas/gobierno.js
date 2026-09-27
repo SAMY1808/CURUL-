@@ -7,9 +7,18 @@ window.CURUL = window.CURUL || {};
   const G = {
     /* Catálogo de ministerios: los 19 originales más los que se hayan creado por ley en la partida. */
     todosMinisterios(E) { return C.DATA.ministerios.concat(E.ministeriosExtra || []); },
+    /* Reelección presidencial inmediata: prohibida bajo la Constitución de 1886 y en el texto
+       original de la de 1991; permitida por una sola vez entre el Acto Legislativo 02 de 2004 y
+       su derogatoria por el Acto Legislativo 02 de 2015. */
+    puedeReelegirseInmediato(E) {
+      const anio = U.anio();
+      if (anio < 2005 || anio >= 2015) return false;
+      return !E.gobierno.reeleccionUsada;
+    },
     /* Posesión de un presidente (IA o jugador) */
     posesionar(E, electo, silencioso) {
       const g = E.gobierno;
+      const esReeleccion = g.presidente === electo.pol && g.presidente != null;
       // El gabinete saliente vuelve a la vida privada
       for (const id of Object.values(g.gabinete || {})) { const m = E.politicos[id]; if (m && m.cargo && m.cargo.tipo === 'ministro') m.cargo = null; }
       if (g.presidente && E.politicos[g.presidente] && g.presidente !== 'J') { const pr = E.politicos[g.presidente]; pr.cargo = { tipo: 'expresidente' }; C.Politicos.anotar(pr, 'Termina su mandato presidencial'); }
@@ -21,6 +30,7 @@ window.CURUL = window.CURUL || {};
         electo: null, agenda: [], ultimoProyecto: E.fecha.t, historialGabinete: [], estabilidadHist: []
       };
       const g2 = E.gobierno;
+      if (esReeleccion) g2.reeleccionUsada = true;
       if (electo.pol === 'J') C.Personaje.asumirCargo(E, 'presidente', {});
       else {
         const pr = E.politicos[electo.pol];
@@ -142,6 +152,7 @@ window.CURUL = window.CURUL || {};
     EFECTO_SECTOR: { educacion: 'educacion', salud: 'salud', seguridad: 'seguridad', paz: 'seguridad', infraestructura: 'infraestructura', vivienda: 'infraestructura', tecnologia: 'infraestructura', empleo: 'desempleo' },
     mesaTrabajo(E, minId) {
       const min = G.todosMinisterios(E).find(m => m.id === minId);
+      if (min.sector === 'exteriores' && C.Diplomacia) return C.Diplomacia.mesaExteriores(E);
       const campo = G.EFECTO_SECTOR[min.sector];
       const signo = min.sector === 'empleo' ? -1 : 1;
       const magnitud = campo ? U.rf(0.3, 0.8) : 0;
@@ -311,6 +322,20 @@ window.CURUL = window.CURUL || {};
           const libre = Object.keys(E.gobierno.gabinete).find(k => { const m = E.politicos[E.gobierno.gabinete[k]]; return m && m.partido === E.gobierno.partido; });
           if (libre) G.designar(E, libre, pa.id);
           return { ok: true, msg: `El ${pa.sigla} entra a la coalición de gobierno` };
+        } });
+      /* Mermelada: cupos burocráticos y obras regionales a cambio de apoyo legislativo de una
+         bancada, por fuera de cualquier pacto de coalición formal. Sube la relación con el
+         partido de forma más barata y confiable que negociar de buena fe, pero deja huella. */
+      A.registrar({ id: 'mermelada', nombre: 'Repartir mermelada', icono: '🍯', grupo: 'gobierno', costo: 2,
+        disponible: (E, a) => E.gobierno.presidente !== 'J' ? 'Sólo el Presidente' : (E.partidos[a.partido] ? true : 'Elige un partido'),
+        ejecutar(E, a) {
+          const pa = E.partidos[a.partido];
+          pa.relJ = U.clamp(pa.relJ + U.rf(6, 11), -100, 100);
+          E.jugador.riesgoJudicial = U.clamp((E.jugador.riesgoJudicial || 0) + U.rf(2, 4), 0, 100);
+          E.opinion.corrupcionAcum = (E.opinion.corrupcionAcum || 0) + 0.3;
+          E.jugador.rep.transparencia = U.clamp(E.jugador.rep.transparencia - U.rf(0.5, 1.5), 0, 100);
+          C.Congreso.log(E, 'gobierno', `El Gobierno refuerza cupos y obras con la bancada del ${pa.sigla}`);
+          return { ok: true, msg: `El ${pa.sigla} recibe cupos burocráticos y obras a cambio de respaldo` };
         } });
       A.registrar({ id: 'consejoMinistros', nombre: 'Consejo de ministros', icono: '🗂', grupo: 'gobierno', costo: 1,
         disponible: E => E.gobierno.presidente === 'J' || 'Sólo el Presidente',

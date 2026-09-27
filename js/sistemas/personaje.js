@@ -41,7 +41,7 @@ window.CURUL = window.CURUL || {};
         camara: null, comision: null, comisionPreferida: cfg.comision || null,
         partido: cfg.partido || null, postura: null, intereses: cfg.intereses || ['educacion', 'salud'],
         trayectoria: [], historialElectoral: [], historialLegislativo: [], escandalos: [], reconocimientos: [], debates: [],
-        agenda: { puntos: 5, max: 5, hechas: [] }, votos: {}, ocupados: [o.cargo],
+        agenda: { puntos: 5, max: 5, hechas: [] }, votos: {}, ocupados: [o.cargo], riesgoJudicial: 0,
         imagen: { seg: Object.assign({}, o.seg || {}), dep: {}, rec: {} }
       };
       if (cfg.pareja) J.familia.push({ rol: 'Pareja', nombre: cfg.pareja, edad: cfg.edad + U.ri(-4, 4) });

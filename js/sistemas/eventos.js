@@ -72,7 +72,7 @@ window.CURUL = window.CURUL || {};
         const gana = U.chance(0.15 + J.reconocimiento / 250 + J.atributos.carisma / 400);
         if (gana) { E.partidos[J.partido].liderJugador = true; J.reconocimientos.push({ t: E.fecha.t, txt: 'Elegido director del ' + E.partidos[J.partido].sigla }); cambios.push(['director', 1]); }
       }
-      if (pl.tipo === 'escándalo' && pl.alcance === 'jugador') J.escandalos.push({ t: E.fecha.t, titulo: ev.titulo, respuesta: op.t });
+      if (pl.tipo === 'escándalo' && pl.alcance === 'jugador') { J.escandalos.push({ t: E.fecha.t, titulo: ev.titulo, respuesta: op.t }); J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(2, 5), 0, 100); }
       ev.cambios = cambios;
       C.Bus.emit('evento:resuelto', ev);
       return { ev, op, cambios };

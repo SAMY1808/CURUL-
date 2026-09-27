@@ -11,11 +11,22 @@ window.CURUL = window.CURUL || {};
     sector:[ ['formales','Empleo formal',10,0,.42], ['informales','Informales',-15,15,.46], ['estudiantes','Estudiantes',-25,-35,.12] ]
   };
   const DIM = { edad: 'Edad', nivel: 'Nivel socioeconómico', educ: 'Nivel educativo', zona: 'Urbano / rural', sector: 'Sector laboral' };
+  const TEMAS = { seguridad: 'Seguridad', economia: 'Economía', salud: 'Salud', corrupcion: 'Lucha contra la corrupción' };
 
   const O = {
-    SEGMENTOS, DIM,
+    SEGMENTOS, DIM, TEMAS,
     init(E) {
-      E.opinion = { aprobacionPres: 52, luna: 26, escandalos: 0, encuestas: [], ultimaEncuesta: null };
+      E.opinion = { aprobacionPres: 52, luna: 26, escandalos: 0, corrupcionAcum: 0, encuestas: [], ultimaEncuesta: null,
+        aprobTemas: { seguridad: 50, economia: 50, salud: 50, corrupcion: 50 } };
+    },
+    /* Objetivo hacia el que converge la aprobación de cada tema, según los indicadores que le dan sustento. */
+    objetivoTema(E, tema) {
+      const Ev = E.economia;
+      if (tema === 'seguridad') return U.prom(Object.values(E.deptos).map(d => d.seguridad));
+      if (tema === 'economia') return U.clamp(50 - (Ev.desempleo - 9.5) * 2.2 - (Ev.inflacion - 4) * 2 + (Ev.crecimiento - 2.5) * 3.5, 3, 95);
+      if (tema === 'salud') return U.prom(Object.values(E.deptos).map(d => d.salud));
+      if (tema === 'corrupcion') return U.clamp(58 - E.opinion.escandalos * 6 - (E.opinion.corrupcionAcum || 0) * 3, 3, 92);
+      return 50;
     },
     /* Favorabilidad (0-100) del jugador en un segmento */
     favSegmento(E, segId) {
@@ -68,6 +79,13 @@ window.CURUL = window.CURUL || {};
       O_.aprobacionPres += (objetivo - O_.aprobacionPres) * 0.04 + U.gauss(0, 0.35);
       O_.aprobacionPres = U.clamp(O_.aprobacionPres, 5, 90);
       U.serie('aprobacion', O_.aprobacionPres);
+      O_.corrupcionAcum = Math.max(0, (O_.corrupcionAcum || 0) - 0.02);
+      for (const tema of Object.keys(TEMAS)) {
+        const obj = O.objetivoTema(E, tema);
+        O_.aprobTemas[tema] += (obj - O_.aprobTemas[tema]) * 0.05 + U.gauss(0, 0.4);
+        O_.aprobTemas[tema] = U.clamp(O_.aprobTemas[tema], 3, 95);
+        U.serie('aprobTema:' + tema, O_.aprobTemas[tema]);
+      }
 
       // Imagen del jugador: el reconocimiento se erosiona si no hay actividad pública
       const J = E.jugador;
@@ -86,6 +104,7 @@ window.CURUL = window.CURUL || {};
       const e = {
         t: E.fecha.t, firma: U.pick(firmas), margen: U.d1(U.rf(2.2, 3.4)),
         aprobacion: U.clamp(E.opinion.aprobacionPres + U.gauss(0, 1.8), 1, 99),
+        temas: Object.fromEntries(Object.keys(TEMAS).map(t => [t, U.clamp(E.opinion.aprobTemas[t] + U.gauss(0, 1.5), 1, 99)])),
         partidos: {}, jugador: { fav: E.jugador.popularidad + U.gauss(0, 2), rec: E.jugador.reconocimiento + U.gauss(0, 2) }
       };
       for (const p of Object.values(E.partidos)) if (!p.especial && !p.futuro) e.partidos[p.id] = Math.max(0.2, p.popularidad + U.gauss(0, 0.9));
