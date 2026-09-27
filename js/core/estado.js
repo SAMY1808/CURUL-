@@ -56,7 +56,7 @@ window.CURUL = window.CURUL || {};
       if (!E.opinion.aprobTemas) { E.opinion.aprobTemas = { seguridad: 50, economia: 50, salud: 50, corrupcion: 50 }; E.opinion.corrupcionAcum = 0; }
       if (E.jugador.riesgoJudicial == null) E.jugador.riesgoJudicial = 0;
       if (C.OrdenPublico && (!E.ordenPublico || !E.ordenPublico.grupos)) { const prev = C.E; C.E = E; C.OrdenPublico.init(E); C.E = prev; }
-      if (C.Diplomacia && (!E.diplomacia || !E.diplomacia.paises)) { const prev = C.E; C.E = E; C.Diplomacia.init(E); C.E = prev; }
+      if (C.Diplomacia && (!E.diplomacia || !E.diplomacia.organismos)) { const prev = C.E; C.E = E; C.Diplomacia.init(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

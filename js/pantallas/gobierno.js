@@ -43,9 +43,24 @@ window.CURUL = window.CURUL || {};
             ${st.negociacion ? `<span class="tenue">Mesa de paz: ${Math.round(st.negociacion.avance)}% avance</span>` : ''}</div>
             ${g.presidente === 'J' ? (st.negociacion ? `${UI.botonAccion('concesionPaz', { grupo: gr.id }, 'Ceder en la mesa', 'chico')}` : `${UI.botonAccion('ofensivaMilitar', { grupo: gr.id }, 'Ofensiva', 'chico peligro')}${UI.botonAccion('mesaPaz', { grupo: gr.id }, 'Abrir diálogo', 'chico')}`) : ''}</div>`;
         }).join('') || '<div class="vacio">Sin grupos armados activos.</div>'}</div></div>
-        <div class="tarjeta"><h3>Diplomacia</h3>${G.barrasH(C.Diplomacia.PAISES.map(p => ({ etq: p.nombre, v: Math.round(E.diplomacia.paises[p.id].relacion), color: E.diplomacia.paises[p.id].relacion > 55 ? 'var(--bien)' : E.diplomacia.paises[p.id].relacion > 35 ? 'var(--alerta)' : 'var(--mal)', tt: E.diplomacia.paises[p.id].tratados.map(t => C.Diplomacia.TRATADOS[t]).join(', ') || 'Sin tratados vigentes' })), { marca: 50, max: 100, fmt: v => v + '%', anchoEtq: '150px' })}
-          ${g.presidente === 'J' ? `<div class="fila accion-form" style="margin-top:8px"><select data-arg="pais">${C.Diplomacia.PAISES.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('cumbreBilateral', {})}</div>
-          <div class="fila accion-form" style="margin-top:6px"><select data-arg="pais">${C.Diplomacia.PAISES.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select><select data-arg="tipo">${Object.entries(C.Diplomacia.TRATADOS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('firmarTratado', {})}</div>` : ''}</div>
+        <div class="tarjeta"><h3>Diplomacia</h3>
+          <div class="tenue" style="font-size:11px;letter-spacing:.1em;margin-bottom:4px">RELACIONES DESTACADAS</div>
+          ${G.barrasH(C.Diplomacia.destacados().map(p => ({ etq: p.nombre, v: Math.round(E.diplomacia.paises[p.id].relacion), color: E.diplomacia.paises[p.id].relacion > 55 ? 'var(--bien)' : E.diplomacia.paises[p.id].relacion > 35 ? 'var(--alerta)' : 'var(--mal)', tt: E.diplomacia.paises[p.id].tratados.map(t => C.Diplomacia.TRATADOS[t]).join(', ') || 'Sin tratados vigentes' })), { marca: 50, max: 100, fmt: v => v + '%', anchoEtq: '150px' })}
+          ${(() => {
+            const porRegion = U.agrupar(C.Diplomacia.paises(), p => p.region);
+            const opcionesPaises = Object.entries(porRegion).map(([reg, ps]) => `<optgroup label="${esc(reg)}">${ps.map(p => `<option value="${p.id}">${esc(p.nombre)} (${Math.round(E.diplomacia.paises[p.id].relacion)}%)</option>`).join('')}</optgroup>`).join('');
+            return g.presidente === 'J' ? `<div class="tenue" style="font-size:11px;letter-spacing:.1em;margin:10px 0 4px">BUSCAR UN PAÍS (escribe para filtrar)</div>
+              <div class="fila accion-form"><select data-arg="pais" style="max-width:220px">${opcionesPaises}</select>${UI.botonAccion('cumbreBilateral', {})}</div>
+              <div class="fila accion-form" style="margin-top:6px"><select data-arg="pais" style="max-width:220px">${opcionesPaises}</select><select data-arg="tipo">${Object.entries(C.Diplomacia.TRATADOS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('firmarTratado', {})}</div>` : '';
+          })()}
+          <div class="tenue" style="font-size:11px;letter-spacing:.1em;margin:12px 0 4px">ORGANISMOS MULTILATERALES</div>
+          <div class="lista">${C.Diplomacia.organismos().map(o => {
+            const st = E.diplomacia.organismos[o.id];
+            return `<div class="it"><div class="cuerpo"><b>${esc(o.sigla)}</b><span class="tenue">${esc(o.nombre)}${o.nota ? ' · ' + esc(o.nota) : ''}${st.postulacion ? ` · postulación en curso (${Math.round(st.postulacion.avance)}%)` : ''}</span></div>
+              <span class="etq ${st.miembro ? 'verde' : ''}">${st.miembro ? 'Miembro' : 'No es miembro'}</span>
+              ${g.presidente === 'J' && !st.miembro && o.puedeUnirse ? UI.botonAccion('ingresarOrganismo', { organismo: o.id }, 'Solicitar ingreso', 'chico') : ''}
+              ${g.presidente === 'J' && st.miembro && o.puedeRetirarse ? UI.botonAccion('retirarseOrganismo', { organismo: o.id }, 'Retirarse', 'chico peligro') : ''}</div>`;
+          }).join('')}</div></div>
       </div></div>`;
   };
 

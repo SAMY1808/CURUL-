@@ -237,7 +237,8 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa** |
 | **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa** |
 | **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
-| 9 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa (esta entrega)** |
+| 10 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
 
 ### Notas de la Fase 8
 
@@ -273,13 +274,38 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   ofensiva militar (probabilidad según la fuerza institucional del país frente a la del grupo) o
   abrir una mesa de negociación de paz y ceder concesiones para acelerarla — sostenida el tiempo
   suficiente, termina en un acuerdo de paz con efecto real sobre la seguridad de esos departamentos.
-- **Diplomacia** (`js/sistemas/diplomacia.js`, nuevo): cinco países ficticios con una relación
-  bilateral que deriva lentamente según la afinidad ideológica con el Gobierno. Sólo como
-  presidente puedes convocar una cumbre bilateral o firmar un tratado (comercio, cooperación o
-  defensa) con efectos reales y acotados (crecimiento económico, educación o seguridad
-  departamental según el tipo). Si además ocupas tú mismo el Ministerio de Relaciones Exteriores,
-  su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier ministerio) mejora la
-  relación con los dos países peor calificados en vez de un indicador departamental.
+- **Diplomacia** (`js/sistemas/diplomacia.js`): al día siguiente de esta entrega, los países dejaron
+  de ser ficticios — ver "Notas de la Fase 9" para el reemplazo por los 193 países reales y los
+  organismos multilaterales. Sólo como presidente puedes convocar una cumbre bilateral o firmar un
+  tratado (comercio, cooperación o defensa) con efectos reales y acotados (crecimiento económico,
+  educación o seguridad departamental según el tipo). Si además ocupas tú mismo el Ministerio de
+  Relaciones Exteriores, su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier
+  ministerio) mejora la relación con los países destacados peor calificados en vez de un indicador
+  departamental.
+
+### Notas de la Fase 9
+
+- **Países reales** (`data/paises.js`): los cinco países ficticios de la Fase 8 se reemplazaron por
+  los 193 reales — los 192 miembros de la ONU distintos de Colombia, más Kosovo (que Colombia
+  reconoce). `CURUL.DATA.paisesDestacados` cura una relación inicial e inclinación ideológica
+  realistas sólo para los vecinos (Venezuela, Ecuador, Perú, Panamá, Brasil), las potencias
+  (Estados Unidos, China, Rusia) y algunos socios relevantes (España, México, Cuba, Nicaragua,
+  Alemania, Francia, Reino Unido, Corea del Sur, Israel); el resto arranca en un valor genérico por
+  región (`BASE_REGION` en `diplomacia.js`) y sólo deriva con una tendencia suave hacia esa línea
+  base, sin ideología propia que lo mueva — cuidar la relación con los 193 uno por uno habría sido
+  desproporcionado frente al valor de juego. La interfaz muestra siempre las relaciones destacadas
+  como barras, y añade un selector agrupado por región (con `<optgroup>`, que además filtra al
+  escribir en cualquier navegador) para llegar a cualquiera de los 193 con una cumbre o un tratado.
+- **Organismos multilaterales reales** (`data/organismos.js`, nuevo): la lista incluye tanto los que
+  Colombia integra hoy (ONU, OEA, CAN, Alianza del Pacífico, CELAC, ALADI, OCDE) como algunos de los
+  que no hace parte (Mercosur —donde sí es Estado Asociado—, UNASUR —de donde se retiró en 2018—,
+  BRICS, CARICOM) y dos deliberadamente inalcanzables para que quede claro que no todo es jugable
+  (la Unión Europea y la Liga Árabe, sin elegibilidad geográfica) o irreversible por una sola acción
+  (la ONU, de la que no se puede salir con un clic; la OTAN, de la que Colombia es Socio Global sin
+  ser miembro pleno y sin ruta de ingreso). Acciones nuevas `ingresarOrganismo` (abre una
+  postulación que avanza semana a semana y se resuelve con una probabilidad propia de cada
+  organismo, mismo patrón de "postulación pendiente" que las coaliciones o las investigaciones
+  judiciales) y `retirarseOrganismo` (inmediata, con su propio costo de aprobación y de imagen).
 
 ### Notas de la Fase 7
 

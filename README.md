@@ -111,9 +111,15 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Orden público**: tres grupos armados ficticios controlan territorio de fondo y atacan de vez en
   cuando. Como presidente puedes ordenar ofensivas militares para debilitarlos o abrir una mesa de
   negociación y ceder concesiones hasta lograr un acuerdo de paz real.
-- **Diplomacia**: cinco países ficticios con relaciones bilaterales propias; como presidente puedes
-  convocar cumbres o firmar tratados de comercio, cooperación o defensa. Si ocupas el Ministerio de
-  Relaciones Exteriores, su mesa de trabajo mejora la relación con los países peor calificados.
+- **Diplomacia con los 193 países reales**: los 192 miembros de la ONU distintos de Colombia, más
+  Kosovo, cada uno con su propia relación bilateral (curada para vecinos y potencias, genérica por
+  región para el resto); como presidente puedes convocar cumbres o firmar tratados de comercio,
+  cooperación o defensa con cualquiera de ellos. Si ocupas el Ministerio de Relaciones Exteriores,
+  su mesa de trabajo mejora la relación con los países destacados peor calificados.
+- **Organismos multilaterales reales**: los que Colombia integra hoy (ONU, OEA, CAN, Alianza del
+  Pacífico, CELAC, ALADI, OCDE) y algunos de los que no hace parte (Mercosur, UNASUR, BRICS,
+  CARICOM); puedes solicitar el ingreso a estos últimos o retirarte de los primeros, con sus
+  propias consecuencias.
 
 ## Arquitectura
 
