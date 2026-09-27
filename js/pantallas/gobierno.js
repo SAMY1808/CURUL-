@@ -4,22 +4,48 @@ window.CURUL = window.CURUL || {};
   const U = C.U, UI = C.UI, esc = U.esc, G = C.Graf, Comp = C.Comp;
   C.Pantallas = C.Pantallas || {};
 
+  /* Bandeja de pendientes: lo que necesita una decisión tuya hoy, en un solo vistazo, en vez de
+     tener que revisar cada tarjeta del Centro de Gobierno una por una. */
+  const pendientesHoy = (E) => {
+    const g = E.gobierno, out = [];
+    if (g.presidente !== 'J') return out;
+    const ministros = Object.values(g.gabinete).map(id => E.politicos[id]).filter(Boolean);
+    const conCrisis = ministros.filter(m => m.crisisActiva).length;
+    const conPropuesta = ministros.filter(m => m.iniciativa && m.iniciativa.estado === 'propuesta').length;
+    if (conCrisis) out.push(['⚠', `${conCrisis} ministro(s) con una crisis propia sin resolver`, 'consejo']);
+    if (conPropuesta) out.push(['🗂', `${conPropuesta} ministro(s) esperan tu respaldo para una iniciativa`, 'consejo']);
+    const K_ = E.constitucion;
+    if (K_.referendo) out.push(['📜', `Referendo en curso: apoyo ${Math.round(K_.referendo.apoyo)}%`, 'centro']);
+    if (K_.constituyente) out.push(['📜', 'Asamblea Nacional Constituyente en marcha', 'centro']);
+    for (const gr of C.OrdenPublico.GRUPOS) {
+      const st = E.ordenPublico.grupos[gr.id];
+      if (st.negociacion && st.negociacion.fase === 'agenda') out.push(['🕊', `Mesa de paz con ${gr.sigla}: agenda pendiente de acordar`, 'centro']);
+    }
+    return out;
+  };
+
   const centroGobierno = (E) => {
     const g = E.gobierno, J = E.jugador;
     const pres = g.presidente === 'J' ? E.politicos.J : E.politicos[g.presidente];
     const vice = E.politicos[g.vice];
     const est = C.Gobierno.estabilidad(E);
     const agenda = g.agenda.map(id => E.proyectos[id]).filter(Boolean).slice(-8).reverse();
+    const pend = pendientesHoy(E);
+    const ministros = Object.values(g.gabinete).map(id => E.politicos[id]).filter(Boolean);
+    ministros.forEach(m => C.Gabinete.asegurar(m));
+    const gestionProm = ministros.length ? Math.round(U.prom(ministros.map(m => m.gestion))) : 0;
     return `<div class="grid g-dash">
       <div class="col">
+        ${pend.length ? `<div class="tarjeta"><h3>📋 Pendientes de hoy</h3><div class="lista">${pend.map(([i, t, tab]) => `<div class="it clic" data-ir-tab="${tab}"><span style="font-size:18px">${i}</span><div class="cuerpo" style="font-size:12.5px">${esc(t)}</div></div>`).join('')}</div></div>` : ''}
         <div class="tarjeta presidente"><div class="fila" style="flex-wrap:nowrap">${Comp.avatar(E, pres, 86)}<div style="flex:1;min-width:0"><div class="tenue" style="font-size:11px;letter-spacing:.14em">PRESIDENTE DE LA REPÚBLICA</div><h2 style="font-size:26px">${esc(pres.nombre)}</h2>
           <div class="fila">${Comp.partido(E, g.partido, true)}<span class="tenue">desde ${U.fmtT(g.desde, false)}</span></div>${vice ? `<div class="tenue" style="font-size:12px;margin-top:4px">Vicepresidencia: ${esc(vice.nombre)}</div>` : ''}</div>
           ${G.medidor(E.opinion.aprobacionPres, { tam: 130, etq: 'APROBACIÓN' })}</div>
           ${G.linea([{ nombre: 'Aprobación', color: '#D9B45A', datos: E.series.aprobacion || [] }], { alto: 130, min: 0, max: 100, ref: 50, unidad: '%', area: true })}
           <h3 style="margin-top:10px">Aprobación por tema</h3>
           ${G.barrasH(Object.entries(C.Opinion.TEMAS).map(([id, n]) => ({ etq: n, v: Math.round(E.opinion.aprobTemas[id]), color: E.opinion.aprobTemas[id] > 50 ? 'var(--bien)' : E.opinion.aprobTemas[id] > 35 ? 'var(--alerta)' : 'var(--mal)' })), { marca: 50, max: 100, fmt: v => v + '%' })}</div>
-        <div class="tarjeta"><h3>Consejo de ministros</h3><div class="gabinete">${C.Gobierno.todosMinisterios(E).map(mi => { const m = E.politicos[g.gabinete[mi.id]]; if (!m) return ''; return `<div class="ministro clic" data-ficha="${m.id}"${UI.tt(`<b>${esc(m.nombre)}</b><br>Ministerio de ${esc(mi.nombre)}<br>${m.partido ? esc(E.partidos[m.partido].nombre) : 'Tecnócrata sin partido'}<br>Imagen: ${Math.round(m.aprob || 50)} %`)}>${Comp.avatar(E, m, 38)}<div><b>${esc(mi.nombre.split(',')[0].split(' y ')[0])}</b><span>${esc(C.Politicos.nombreCorto(m))}</span><span class="sigla" style="font-size:10.5px"><i class="pto" style="background:${m.partido ? E.partidos[m.partido].color : '#8C96A3'};width:8px;height:8px"></i>${m.partido ? esc(E.partidos[m.partido].sigla) : 'Técnico'}</span></div><i class="imagen-min" style="background:${(m.aprob || 50) > 50 ? 'var(--bien)' : (m.aprob || 50) > 35 ? 'var(--alerta)' : 'var(--mal)'}"></i></div>`; }).join('')}</div>
-          ${g.presidente === 'J' ? `<div class="fila accion-form" style="margin-top:10px"><select data-arg="ministerio">${C.Gobierno.todosMinisterios(E).map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join('')}</select><select data-arg="partido"><option value="">Tecnócrata</option>${g.coalicion.map(p => `<option value="${p}">${esc(E.partidos[p].sigla)}</option>`).join('')}</select>${UI.botonAccion('cambiarMinistro', {})}${UI.botonAccion('consejoMinistros', {})}</div>
+        <div class="tarjeta"><div class="t-cab"><h3>Gabinete</h3><button class="btn chico" data-ir-tab="consejo">Ver Consejo de Ministros →</button></div>
+          <div class="fila" style="gap:14px;font-size:12.5px;margin-bottom:8px"><span>Gestión promedio <b class="num">${gestionProm}</b></span><span>Con crisis abierta <b class="num ${ministros.some(m => m.crisisActiva) ? 'mal' : ''}">${ministros.filter(m => m.crisisActiva).length}</b></span><span>Con iniciativa en marcha <b class="num">${ministros.filter(m => m.iniciativa && m.iniciativa.estado === 'en_curso').length}</b></span></div>
+          ${g.presidente === 'J' ? `<div class="fila accion-form" style="margin-top:6px"><select data-arg="ministerio">${C.Gobierno.todosMinisterios(E).map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join('')}</select><select data-arg="partido"><option value="">Tecnócrata</option>${g.coalicion.map(p => `<option value="${p}">${esc(E.partidos[p].sigla)}</option>`).join('')}</select>${UI.botonAccion('cambiarMinistro', {})}${UI.botonAccion('consejoMinistros', {})}</div>
           <div class="fila accion-form" style="margin-top:8px;flex-wrap:nowrap"><input data-arg="nombre" placeholder="Nombre del nuevo ministerio (sin «Ministerio de»)" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
             <select data-arg="sector">${Object.entries(C.DATA.sectores).map(([k, s]) => `<option value="${k}">${s.icono} ${esc(s.nombre)}</option>`).join('')}</select>
             <select data-arg="tamano"><option value="pequeno">Pequeño</option><option value="mediano" selected>Mediano</option><option value="grande">Grande</option></select>
@@ -199,18 +225,53 @@ window.CURUL = window.CURUL || {};
       <div class="tarjeta" style="margin-top:14px"><h3>Historia del presupuesto</h3>${Pr.historial.length ? `<table class="tabla"><thead><tr><th>Año</th><th>Gasto</th><th>Ingresos</th><th>Déficit resultante</th></tr></thead><tbody>${Pr.historial.slice().reverse().map(h => `<tr><td>${h.anio}</td><td class="num">${U.d1(h.gastoPct)}%</td><td class="num">${U.d1(h.ingresosPct)}%</td><td class="num ${h.gastoPct - h.ingresosPct > 4 ? 'mal' : 'bien'}">${U.signo(h.gastoPct - h.ingresosPct, 1)} pp</td></tr>`).join('')}</tbody></table>` : '<div class="vacio">Aún no se ha cerrado un ciclo presupuestal completo.</div>'}</div>`;
   };
 
+  /* Consejo de ministros: gestión, iniciativas propuestas o en marcha (basadas en los programas
+     propios de cada ministerio) y crisis personales de cada ministro — el detalle que antes vivía
+     apretado dentro del Centro de Gobierno. */
+  const consejoMinistros = (E) => {
+    const g = E.gobierno, esPres = g.presidente === 'J';
+    return `<div class="sub" style="margin:-4px 0 12px">Cada ministro gestiona su cartera por su cuenta: propone iniciativas de su sector, las saca adelante o no según su gestión, y puede protagonizar sus propias crisis.</div>
+      <div class="grid g3">${C.Gobierno.todosMinisterios(E).map(mi => {
+        const m = E.politicos[g.gabinete[mi.id]]; if (!m) return '';
+        C.Gabinete.asegurar(m);
+        const gestionColor = m.gestion > 65 ? 'var(--bien)' : m.gestion > 40 ? 'var(--alerta)' : 'var(--mal)';
+        let cuerpo;
+        if (m.crisisActiva) {
+          cuerpo = `<div style="font-size:12px;margin-top:8px" class="mal">⚠ ${esc(m.crisisActiva.motivo)}${m.crisisActiva.grave ? ' · <b>caso grave</b>' : ''}</div>
+            ${esPres ? `<div class="fila" style="margin-top:6px;gap:6px">${UI.botonAccion('respaldarMinistroCrisis', { ministerio: mi.id }, 'Respaldar', 'chico')}${UI.botonAccion('destituirMinistroCrisis', { ministerio: mi.id }, 'Destituir', 'chico peligro')}</div>` : ''}`;
+        } else if (m.iniciativa && m.iniciativa.estado === 'propuesta') {
+          cuerpo = `<div class="tenue" style="font-size:12px;margin-top:8px">Propone impulsar: <b style="color:var(--texto)">${esc(m.iniciativa.programa)}</b></div>
+            ${esPres ? `<div class="fila" style="margin-top:6px;gap:6px">${UI.botonAccion('aceptarIniciativaMinistro', { ministerio: mi.id }, 'Respaldar', 'chico')}${UI.botonAccion('rechazarIniciativaMinistro', { ministerio: mi.id }, 'Rechazar', 'chico')}</div>` : ''}`;
+        } else if (m.iniciativa && m.iniciativa.estado === 'en_curso') {
+          const pct = Math.round((1 - m.iniciativa.semanas / m.iniciativa.semanasTot) * 100);
+          cuerpo = `<div class="tenue" style="font-size:12px;margin-top:8px">En marcha: <b style="color:var(--texto)">${esc(m.iniciativa.programa)}</b> · ${m.iniciativa.semanas} sem. restantes</div>
+            <div class="barra-h" style="margin-top:5px"><i style="width:${pct}%;background:var(--oro)"></i></div>`;
+        } else {
+          cuerpo = `<div class="tenue" style="font-size:12px;margin-top:8px">Sin iniciativas en marcha por ahora.</div>`;
+        }
+        return `<div class="tarjeta"><div class="fila" style="flex-wrap:nowrap;align-items:center;gap:8px">${Comp.avatar(E, m, 40)}<div style="flex:1;min-width:0" data-ficha="${m.id}" class="clic"><b>${esc(m.nombre)}</b><div class="tenue" style="font-size:11.5px">${esc(mi.nombre)}${m.partido && E.partidos[m.partido] ? ' · ' + esc(E.partidos[m.partido].sigla) : ' · Tecnócrata'}</div></div></div>
+          <div class="fila" style="margin-top:8px;gap:14px;font-size:11.5px">
+            <span>Gestión <b class="num" style="color:${gestionColor}">${Math.round(m.gestion)}</b></span>
+            <span>Imagen <b class="num">${Math.round(m.aprob || 50)}%</b></span>
+            <span>Logros <b class="num">${m.logros || 0}</b></span>
+          </div>
+          ${cuerpo}</div>`;
+      }).join('')}</div>`;
+  };
+
   C.Pantallas.gobierno = {
     render(el, params) {
       const E = C.E;
       const tab = params.tab || E.ui.tabGob || 'centro';
       E.ui.tabGob = tab;
-      const tabs = [['centro', '🦅 Centro de Gobierno'], ['presupuesto', '💰 Presupuesto'], ['economia', '📈 Economía'], ['oposicion', '⚔ Centro de Oposición']];
-      const titulos = { oposicion: 'Centro de Oposición', economia: 'Economía nacional', presupuesto: 'Presupuesto General de la Nación', centro: 'Centro de Gobierno' };
+      const tabs = [['centro', '🦅 Centro de Gobierno'], ['consejo', '🪑 Consejo de Ministros'], ['presupuesto', '💰 Presupuesto'], ['economia', '📈 Economía'], ['oposicion', '⚔ Centro de Oposición']];
+      const titulos = { oposicion: 'Centro de Oposición', economia: 'Economía nacional', presupuesto: 'Presupuesto General de la Nación', centro: 'Centro de Gobierno', consejo: 'Consejo de Ministros' };
       el.innerHTML = `<div class="cab"><div><h1>${titulos[tab]}</h1><div class="sub">Casa de Nariño · ${esc(E.partidos[E.gobierno.partido] ? E.partidos[E.gobierno.partido].nombre : '')}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
-        ${tab === 'centro' ? centroGobierno(E) : tab === 'presupuesto' ? presupuesto(E) : tab === 'economia' ? economia(E) : oposicion(E)}`;
+        ${tab === 'centro' ? centroGobierno(E) : tab === 'consejo' ? consejoMinistros(E) : tab === 'presupuesto' ? presupuesto(E) : tab === 'economia' ? economia(E) : oposicion(E)}`;
       el.onclick = e => {
         const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('gobierno', { tab: t.dataset.tab });
+        const irTab = e.target.closest('[data-ir-tab]'); if (irTab) return C.App.ir('gobierno', { tab: irTab.dataset.irTab });
         const f = e.target.closest('[data-ficha]'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha);
         const p = e.target.closest('[data-proy]'); if (p) return C.Pantallas.proyectos.expediente(p.dataset.proy);
         if (e.target.closest('#pres-reset')) { C.Presupuesto.restablecer(E); return C.App.refrescar(); }

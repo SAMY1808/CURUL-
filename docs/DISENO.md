@@ -240,7 +240,53 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa** |
 | **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa** |
 | **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa** |
-| **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa (esta entrega)** |
+| **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa** |
+| **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa (esta entrega)** |
+
+### Notas de la Fase 13
+
+- **Gabinete 2.0** (`js/sistemas/gabinete.js`, nuevo): cada ministro deja de ser un número de
+  imagen y un botón genérico (`mesaTrabajo`) y pasa a tener una **gestión** propia (0-100, sube o
+  baja según sus aciertos y errores, inicializada de su experiencia y pragmatismo) que decide en
+  buena parte si sus **iniciativas** salen adelante. Cada iniciativa reutiliza uno de los dos
+  `programas` ya definidos por ministerio en `data/instituciones.js` (no un catálogo nuevo): el
+  ministro la propone solo (probabilidad semanal del 5 % si no tiene ya una en curso ni una crisis
+  abierta), el presidente la respalda (`aceptarIniciativaMinistro`, cuesta un punto de agenda) o la
+  rechaza (`rechazarIniciativaMinistro`, gratis pero resta lealtad); si se respalda, tarda 5-9
+  semanas en resolverse con una probabilidad de éxito ligada a la gestión del ministro y a su
+  relación con el presidente (`relJ`, reutilizado también como lealtad/cercanía). Un éxito sube la
+  gestión, cuenta como un logro (`m.logros`, alimenta el Salón de la Fama) y aplica un efecto más
+  grande que el de la vieja `mesaTrabajo` sobre el indicador departamental de su sector; un fracaso
+  baja la gestión y puede detonar una **crisis propia** del ministro (contrato cuestionado,
+  negligencia, nepotismo…), resuelta con `respaldarMinistroCrisis` (cuesta lealtad y, si es grave,
+  algo de aprobación presidencial) o `destituirMinistroCrisis` (lo saca del cargo de inmediato,
+  reutilizando `Gobierno.designar`). Las crisis también pueden surgir solas (una probabilidad
+  semanal pequeña, mayor cuanto más baja la gestión y la integridad del ministro). Además, `ministro`
+  se agregó al escalafón de ambición de NPC (`Politicos.ESCALON`, Fase 11e/12a): un ministro puede
+  anunciar que aspira a la Presidencia y, si su partido es uno de los grandes, terminar siendo el
+  candidato presidencial de ese partido en la siguiente elección — tu propio gabinete puede darte un
+  rival.
+- **Comparación histórica de gobiernos** (`Gobierno.posesionar` + Salón de la Fama): al posesionarse
+  un nuevo presidente, el gobierno saliente se archiva en `E.historiaGobiernos` con su aprobación
+  promedio durante el mandato (calculada sobre la serie `E.series.aprobacion`, ya existente desde la
+  Fase 8), leyes aprobadas y hundidas, y su mejor ministro por logros. El Salón de la Fama agrega una
+  tabla "Gobiernos comparados" que junta esos gobiernos archivados con el actual (calculado en vivo,
+  marcado "en curso"), y el ranking de "Políticos más destacados" ahora también suma los logros de
+  gabinete de cada político al puntaje que ya usaba (cargo más alto, años de servicio, leyes como
+  autor).
+- **Pestaña Consejo de Ministros** (`js/pantallas/gobierno.js`): nueva sub-pestaña dedicada, con una
+  tarjeta por ministro mostrando su gestión, imagen, logros y —si aplica— la iniciativa que propone o
+  tiene en marcha, o la crisis que necesita respuesta, con los botones correspondientes. Antes esa
+  información vivía apretada dentro de una cuadrícula de avatares en el Centro de Gobierno, sin poder
+  hacer nada con ella salvo cambiar de ministro.
+- **Centro de Gobierno más cotidiano**: se agregó una tarjeta "Pendientes de hoy" al principio de la
+  pestaña que resume, en un vistazo, lo que necesita una decisión (ministros con crisis o iniciativas
+  pendientes, un referendo o una Asamblea Constituyente en curso, una mesa de paz con agenda por
+  acordar) con enlace directo a la pestaña correspondiente; la cuadrícula de gabinete se redujo a un
+  resumen agregado (gestión promedio, cuántos ministros tienen una crisis o una iniciativa en marcha)
+  con un botón a la nueva pestaña Consejo de Ministros, en vez de repetir el detalle completo en dos
+  lugares. El gobierno local (gobernación/alcaldía) no recibió el mismo tratamiento de gestión e
+  iniciativas por secretaría en esta entrega — queda anotado como candidato natural para una próxima.
 
 ### Notas de la Fase 8
 

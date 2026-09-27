@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 12 completas)
+## Qué hay en esta versión (Fases 1 a 13 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -158,6 +158,15 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Salón de la Fama**: nueva pantalla con los expresidentes de la partida, un ranking de los
   políticos NPC más destacados (cargo más alto, años de servicio, leyes aprobadas), las dinastías
   políticas que hayan surgido y el historial completo de partidos fundados y disueltos.
+- **Gabinete 2.0**: cada ministro tiene su propia gestión (sube o baja según sus aciertos), propone
+  iniciativas concretas de su sector que respaldas o rechazas, puede protagonizar una crisis propia
+  que hay que resolver (respaldarlo o destituirlo), y puede terminar aspirando él mismo a la
+  Presidencia. Todo se maneja desde la nueva pestaña **Consejo de Ministros**.
+- **Gobiernos comparables**: el Salón de la Fama ahora también compara gobiernos completos entre sí
+  (aprobación promedio, leyes aprobadas, mejor ministro), incluido el que tienes en curso.
+- **Centro de Gobierno más cotidiano**: una bandeja de "Pendientes de hoy" resume de un vistazo lo
+  que necesita tu decisión (ministros en crisis, iniciativas por respaldar, procesos abiertos),
+  con acceso directo a la pestaña que corresponde.
 
 ## Arquitectura
 

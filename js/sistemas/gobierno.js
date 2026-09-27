@@ -22,6 +22,20 @@ window.CURUL = window.CURUL || {};
     posesionar(E, electo, silencioso) {
       const g = E.gobierno;
       const esReeleccion = g.presidente === electo.pol && g.presidente != null;
+      // Antes de resetear el Gobierno, archivamos su gestión para poder compararla luego con
+      // otros gobiernos en el Salón de la Fama (aprobación promedio, leyes, mejor ministro…).
+      if (g.presidente) {
+        E.historiaGobiernos = E.historiaGobiernos || [];
+        const serieAprob = (E.series.aprobacion || []).filter(([t]) => t >= g.desde);
+        const ministros = Object.values(g.gabinete || {}).map(id => E.politicos[id]).filter(Boolean);
+        E.historiaGobiernos.push({
+          presidente: g.presidente === 'J' ? E.jugador.nombre : (E.politicos[g.presidente] || {}).nombre,
+          partido: g.partido, desde: g.desde, hasta: E.fecha.t,
+          aprobacionProm: serieAprob.length ? U.prom(serieAprob.map(x => x[1])) : null,
+          leyesAprobadas: g.leyesAprobadas || 0, leyesHundidas: g.leyesHundidas || 0,
+          mejorMinistro: ministros.length ? ministros.reduce((a, b) => (b.logros || 0) > (a.logros || 0) ? b : a).nombre : null
+        });
+      }
       // El gabinete saliente vuelve a la vida privada
       for (const id of Object.values(g.gabinete || {})) { const m = E.politicos[id]; if (m && m.cargo && m.cargo.tipo === 'ministro') m.cargo = null; }
       if (g.presidente && E.politicos[g.presidente] && g.presidente !== 'J') { const pr = E.politicos[g.presidente]; pr.cargo = { tipo: 'expresidente' }; C.Politicos.anotar(pr, 'Termina su mandato presidencial'); }

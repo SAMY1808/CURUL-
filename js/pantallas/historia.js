@@ -13,7 +13,24 @@ window.CURUL = window.CURUL || {};
     puntaje(p) {
       const h = p.honores || {};
       const maxHonor = Math.max(0, ...Object.keys(h).map(k => Hist.NIVEL_HONOR[k] || 0));
-      return maxHonor + (p.aniosServicio || 0) * 3 + (p.stats.aprobados || 0) * 5;
+      return maxHonor + (p.aniosServicio || 0) * 3 + (p.stats.aprobados || 0) * 5 + (p.logros || 0) * 4;
+    },
+    /* Gobiernos comparables: el actual (calculado en vivo) más los ya archivados al posesionarse
+       cada nuevo presidente (Gobierno.posesionar). Misma forma para poder ordenarlos juntos. */
+    gobiernos(E) {
+      const g = E.gobierno, out = (E.historiaGobiernos || []).slice();
+      if (g.presidente) {
+        const serieAprob = (E.series.aprobacion || []).filter(([t]) => t >= g.desde);
+        const ministros = Object.values(g.gabinete || {}).map(id => E.politicos[id]).filter(Boolean);
+        out.push({
+          presidente: g.presidente === 'J' ? E.jugador.nombre : (E.politicos[g.presidente] || {}).nombre,
+          partido: g.partido, desde: g.desde, hasta: null,
+          aprobacionProm: serieAprob.length ? U.prom(serieAprob.map(x => x[1])) : null,
+          leyesAprobadas: g.leyesAprobadas || 0, leyesHundidas: g.leyesHundidas || 0,
+          mejorMinistro: ministros.length ? ministros.reduce((a, b) => (b.logros || 0) > (a.logros || 0) ? b : a).nombre : null
+        });
+      }
+      return out.sort((a, b) => (b.aprobacionProm || 0) - (a.aprobacionProm || 0));
     },
     cargoMasAlto(p) {
       const h = p.honores || {};
@@ -41,8 +58,16 @@ window.CURUL = window.CURUL || {};
       const dinastias = Object.values(E.politicos).filter(p => p.dinastia);
       const partidos = Object.values(E.partidos).filter(p => !p.especial && p.fundado)
         .sort((a, b) => (b.disueltoT || b.fundado * 100) - (a.disueltoT || a.fundado * 100));
+      const gobiernos = Hist.gobiernos(E);
 
       el.innerHTML = `<div class="cab"><div><h1>Salón de la Fama</h1><div class="sub">Expresidentes, políticos que dejaron huella, dinastías y el mapa de partidos a través del tiempo.</div></div></div>
+      <div class="tarjeta" style="margin-bottom:14px"><h3>📊 Gobiernos comparados</h3>
+        ${gobiernos.length ? `<table class="tabla"><thead><tr><th>Presidente</th><th>Partido</th><th>Período</th><th>Aprobación prom.</th><th>Leyes aprobadas</th><th>Mejor ministro</th></tr></thead><tbody>
+          ${gobiernos.map(gb => `<tr><td>${esc(gb.presidente || '—')}</td><td>${gb.partido && E.partidos[gb.partido] ? esc(E.partidos[gb.partido].sigla) : '—'}</td>
+            <td>${U.fmtT(gb.desde, false)} – ${gb.hasta ? U.fmtT(gb.hasta, false) : '<span class="tenue">en curso</span>'}</td>
+            <td class="num">${gb.aprobacionProm != null ? Math.round(gb.aprobacionProm) + '%' : '—'}</td>
+            <td class="num">${gb.leyesAprobadas}</td><td>${gb.mejorMinistro ? esc(gb.mejorMinistro) : '<span class="tenue">ninguno destacado</span>'}</td></tr>`).join('')}
+          </tbody></table>` : '<div class="vacio">Todavía no ha habido un gobierno completo para comparar.</div>'}</div>
       <div class="grid g-dash">
         <div class="col">
           <div class="tarjeta"><h3>🎖 Expresidentes de la República</h3>
@@ -54,7 +79,7 @@ window.CURUL = window.CURUL || {};
         </div>
         <div class="col">
           <div class="tarjeta"><h3>⭐ Políticos más destacados</h3>
-            <div class="lista">${destacados.length ? destacados.map(p => `<div class="it"><span style="font-size:18px">⭐</span><div class="cuerpo"><b>${esc(p.nombre)}</b><span>${esc(Hist.cargoMasAlto(p))}${p.partido && E.partidos[p.partido] ? ' · ' + esc(E.partidos[p.partido].sigla) : ''} · ${p.aniosServicio || 0} año(s) en cargos · ${p.stats.aprobados || 0} ley(es) como autor${p.activo ? '' : ' · <span class="tenue">retirado</span>'}</span></div></div>`).join('') : '<div class="vacio">Todavía no hay trayectorias destacadas.</div>'}</div></div>
+            <div class="lista">${destacados.length ? destacados.map(p => `<div class="it"><span style="font-size:18px">⭐</span><div class="cuerpo"><b>${esc(p.nombre)}</b><span>${esc(Hist.cargoMasAlto(p))}${p.partido && E.partidos[p.partido] ? ' · ' + esc(E.partidos[p.partido].sigla) : ''} · ${p.aniosServicio || 0} año(s) en cargos · ${p.stats.aprobados || 0} ley(es) como autor${p.logros ? ' · ' + p.logros + ' iniciativa(s) lograda(s)' : ''}${p.activo ? '' : ' · <span class="tenue">retirado</span>'}</span></div></div>`).join('') : '<div class="vacio">Todavía no hay trayectorias destacadas.</div>'}</div></div>
 
           <div class="tarjeta"><h3>🎗 Historial de partidos</h3>
             <div class="lista">${partidos.length ? partidos.map(p => `<div class="it"><span style="width:10px;height:10px;border-radius:50%;background:${p.color}"></span><div class="cuerpo"><b>${esc(p.nombre)}</b><span>Fundado en ${p.fundado}${p.disuelto ? ` · disuelto en ${U.fechaDe(p.disueltoT).getUTCFullYear()}` : ' · activo'}</span></div></div>`).join('') : '<div class="vacio">Sin partidos fundados durante la partida todavía.</div>'}</div></div>

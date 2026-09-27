@@ -115,7 +115,7 @@ window.CURUL = window.CURUL || {};
     /* Ambición propia: un político con cargo y mucha ambición anuncia que aspira a un cargo
        superior en el próximo ciclo. Si otro de su mismo partido ya anunció lo mismo, nace una
        rivalidad entre ambos (con su propio desgaste de relación). */
-    ESCALON: { concejal: 'alcalde', diputado: 'gobernador', representante: 'senador', alcalde: 'gobernador', gobernador: 'presidencia', senador: 'presidencia' },
+    ESCALON: { concejal: 'alcalde', diputado: 'gobernador', representante: 'senador', alcalde: 'gobernador', gobernador: 'presidencia', senador: 'presidencia', ministro: 'presidencia' },
     anuncioAmbicion(E) {
       const cands = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && P.ESCALON[p.cargo.tipo] && !p.aspiraAnuncio && p.r.amb > 68);
       const p = U.pesado(cands, x => x.r.amb * x.r.amb);
