@@ -17,8 +17,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%}
 body{background:var(--fondo);color:var(--texto);font-family:var(--ui);font-size:14px;line-height:1.45;-webkit-text-size-adjust:100%;
-  background-image:radial-gradient(1200px 600px at 70% -10%,rgba(42,92,199,.10),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(217,180,90,.06),transparent 60%);
-  background-attachment:fixed}
+  background-image:radial-gradient(1200px 600px at 70% -10%,rgba(42,92,199,.10),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(217,180,90,.06),transparent 60%)}
 h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:.01em}
 h1,h2{font-family:var(--display);font-weight:500}
 button,input,select,textarea{font:inherit;color:inherit}
