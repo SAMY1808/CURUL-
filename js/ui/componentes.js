@@ -46,6 +46,15 @@ window.CURUL = window.CURUL || {};
         for (const com of Object.values(K.comisiones || {})) { if (com.presidente === pol.id) roles.push('Pdte. Comisión ' + C.DATA.comisiones[com.n - 1].nombre); if (com.vice === pol.id) roles.push('Vice Comisión ' + C.DATA.comisiones[com.n - 1].nombre); }
       }
       for (const pa of Object.values(E.partidos)) if (pa.lider === pol.id) roles.push('Líder del ' + pa.sigla);
+      for (const d of Object.values(E.deptos)) {
+        if (!d.corporaciones) continue;
+        for (const [organo, corp] of Object.entries(d.corporaciones)) {
+          if (!corp.mesa) continue;
+          const nombre = organo === 'gobernacion' ? 'Asamblea ' + d.nombre : 'Concejo ' + d.capital;
+          if (corp.mesa.presidente === pol.id) roles.push('Presidente ' + nombre);
+          if (corp.mesa.vice1 === pol.id || corp.mesa.vice2 === pol.id) roles.push('Vicepresidente ' + nombre);
+        }
+      }
       return roles;
     },
     relacion(v) { return v > 25 ? `<b class="bien">Aliado (${Math.round(v)})</b>` : v < -25 ? `<b class="mal">Hostil (${Math.round(v)})</b>` : `<b>Neutral (${Math.round(v)})</b>`; },

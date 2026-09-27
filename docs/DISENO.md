@@ -242,7 +242,33 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa** |
 | **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa** |
 | **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa** |
-| **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa (esta entrega)** |
+| **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa** |
+| **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa (esta entrega)** |
+
+### Notas de la Fase 15
+
+- **Mesa directiva en Asambleas y Concejos** (`js/sistemas/corporaciones.js`): exactamente el mismo
+  mecanismo de la Fase 14, llevado a la Asamblea Departamental y el Concejo Municipal. Como estas
+  corporaciones no tenían ningún concepto de mesa directiva antes de esta fase (se creaban una sola
+  vez, de forma perezosa, sin presidente ni vicepresidentes), se agregó `corp.mesa`/`mesaPendiente`
+  desde cero: al crearse la corporación se resuelve una mesa automática (`resolverMesaSinJugador`,
+  el mismo perfil determinista que ya se usaba para el Congreso antes de la Fase 14); en el momento
+  en que el jugador entra como diputado o concejal (`asegurarJugador`, la "primera sesión" real para
+  él), se reabre la elección con `abrirPostulacionMesa` para que compita de verdad. Mismos tres
+  caminos que en el Congreso —pedir el aval del partido (`postularMesaAvalLocal`), postularse de
+  forma autónoma (`postularMesaAutonomaLocal`) o no postularse (`noPostularseMesaLocal`)—, mismo
+  timeout de 3 semanas si no decide, mismos ids de acción distintos a los nacionales (para no
+  pisar el registro de `C.Acciones`, que sobrescribe silenciosamente por id).
+- **Peso interno departamental, no nacional**: a diferencia del Congreso (que usa
+  `Partidos.peso().nac`), aquí la probabilidad de aval y la fuerza electoral del jugador usan
+  `Partidos.peso().dep` — tiene sentido, porque esto se juega dentro de su propio departamento o
+  municipio, no a nivel país. Ganar da una recompensa más modesta que la nacional (+5 de
+  reconocimiento en vez de +8) y también suma `J.rep.liderazgo`, el mismo atributo que ya premiaba
+  sacar adelante una ordenanza o un acuerdo.
+- **Etiquetas de rol** (`js/ui/componentes.js`, `Comp.rolesDe`): "Presidente Asamblea de
+  &lt;departamento&gt;" / "Presidente Concejo de &lt;capital&gt;" aparecen ahora en la ficha de
+  cualquier político (jugador o NPC) que presida una corporación local, igual que ya pasaba con la
+  presidencia del Senado o la Cámara desde antes.
 
 ### Notas de la Fase 14
 

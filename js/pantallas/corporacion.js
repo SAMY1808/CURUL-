@@ -29,6 +29,10 @@ window.CURUL = window.CURUL || {};
           ${C.Hemiciclo.leyenda(E, 'local', corp.ultimoVoto ? 'voto' : 'partido', Co.miembros(E, depto, organo))}
           ${corp.ultimoVoto ? `<div class="tenue" style="font-size:12px;margin-top:6px">Última votación: <b>${esc(corp.ultimoVoto.asunto)}</b> · ${corp.ultimoVoto.si}-${corp.ultimoVoto.no} (${corp.ultimoVoto.aus} ausentes) · ${corp.ultimoVoto.aprobado ? 'aprobada' : 'negada'}</div>` : ''}
         </div>
+        <div class="tarjeta" style="margin-top:14px"><h3>Mesa directiva</h3>
+          ${corp.mesaPendiente ? `<div class="tenue" style="font-size:12.5px;margin-bottom:8px">Se está eligiendo la mesa directiva de ${esc(info.corp)}. Puedes pedir el aval de tu partido, presentarte de forma autónoma o dejarlo pasar.</div>
+            <div class="fila" style="gap:6px;flex-wrap:wrap">${UI.botonAccion('postularMesaAvalLocal', { organo }, null, 'chico')}${UI.botonAccion('postularMesaAutonomaLocal', { organo }, null, 'chico')}${UI.botonAccion('noPostularseMesaLocal', { organo }, null, 'chico')}</div>`
+          : `<div class="lista">${[['presidente', 'Presidente'], ['vice1', 'Primer vicepresidente'], ['vice2', 'Segundo vicepresidente']].map(([k, n]) => { const p = E.politicos[(corp.mesa || {})[k]]; return p ? `<div class="it clic" data-pol="${p.id}">${Comp.avatar(E, p, 30)}<div class="cuerpo"><b>${esc(p.nombre)}${p.id === 'J' ? ' (tú)' : ''}</b><span>${n} · ${Comp.partido(E, p.partido)}</span></div></div>` : ''; }).join('') || '<div class="vacio">Sin mesa directiva elegida todavía.</div>'}</div>`}</div>
         <div class="grid g2" style="margin-top:14px">
           <div class="tarjeta"><h3>Radicar ${info.acto.toLowerCase()}</h3>
             <div class="tenue" style="font-size:12px;margin-bottom:8px">Se somete a votación nominal real en la ${esc(info.corp)}: tu voto cuenta como sí, el resto de los ${corp.miembros.length - 1} miembros vota según su afinidad contigo.</div>
