@@ -241,7 +241,40 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa** |
 | **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa** |
 | **12** | Progresión de carrera real para NPC ambiciosos (la ambición anunciada en la Fase 11 ahora decide de verdad candidaturas al Senado, Cámara, gobernaciones y alcaldías); dinastías políticas NPC (un hijo puede heredar el arrastre electoral de un político notable al retirarse); Salón de la Fama / Archivo Histórico (expresidentes, políticos más destacados, dinastías y el historial de partidos fundados y disueltos) | **completa** |
-| **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa (esta entrega)** |
+| **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa** |
+| **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa (esta entrega)** |
+
+### Notas de la Fase 14
+
+- **Postulación a la mesa directiva** (`js/sistemas/congreso.js`): antes, `Co.elegirMesas` resolvía
+  la presidencia del Senado y la Cámara solo (cada 20 de julio, en la instalación de un nuevo
+  Congreso y en cada renovación anual), excluyendo siempre al jugador de la competencia
+  (`Co.miembros(...).filter(p => p.id !== 'J')`) sin darle ninguna opción. Ahora, si el jugador
+  pertenece a la cámara que renueva mesa (`E.jugador.cargo === 'senador'`/`'representante'`), en vez
+  de resolverla de una se abre una ventana de postulación (`K.mesaPendiente`) con tres caminos:
+  **pedir el aval del partido** (`postularMesaAval`, probabilidad según el peso interno del jugador
+  y su relación con la dirección — `Co.probAval`, mismo espíritu que `Coaliciones.probAceptar`; si
+  el partido no avala, el jugador igual se postula, solo que sin esa prima), **postularse de forma
+  autónoma** (`postularMesaAutonoma`, sin pedirle nada al partido) o **no postularse**
+  (`noPostularseMesa`, resuelve la mesa exactamente como antes, sin el jugador). Postularse con aval
+  da una prima del 25% a la fuerza del jugador en la lotería final; ir de forma autónoma resta un
+  25% — siempre es posible, pero compite en desventaja frente a quien sí consiguió el respaldo de su
+  colectividad. La cámara donde el jugador NO tiene curul sigue resolviéndose exactamente igual que
+  siempre (`Co.resolverMesaSinJugador`, la misma lógica determinista de antes, sin cambios). Si el
+  jugador deja pasar 3 semanas sin decidir, la mesa se resuelve sola (asume que no le interesó
+  competir esta vez).
+- **Elección real, no una moneda al aire**: `Co.resolverMesaConJugador` arma dos rivales (el mejor
+  perfil de la coalición de gobierno y el mejor de la oposición, igual que el reparto automático
+  de siempre) y compite contra el jugador en una lotería ponderada por fuerza con ruido aleatorio
+  (mismo patrón que `Coaliciones.consulta` y las consultas internas de partido), así que el
+  resultado no es determinista ni para el jugador ni para los rivales. Ganar da +8 de reconocimiento
+  y sube la relación con el partido si fue con su aval (o la resiente un poco si fue en su contra de
+  su respaldo); perder simplemente dejar constancia en la bitácora del Congreso y en Medios.
+- **Peso interno por presidir una cámara** (`Partidos.peso`): presidir el Senado o la Cámara ahora
+  suma +15 al peso interno nacional de quien la preside (jugador o NPC), sin importar si llegó ahí
+  con el aval de su partido o de forma autónoma — un efecto mecánico real, no solo la etiqueta
+  "Presidente del Senado/Cámara" que ya mostraban el hemiciclo y la ficha de cada político desde
+  antes de esta fase.
 
 ### Notas de la Fase 13
 

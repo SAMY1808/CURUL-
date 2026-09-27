@@ -50,8 +50,10 @@ window.CURUL = window.CURUL || {};
         <div class="tenue" style="font-size:11.5px;margin-top:6px">Pasa el cursor sobre una curul para ver al congresista; haz clic para abrir su ficha. ${E.jugador.camara === cam ? 'Tu curul tiene borde dorado.' : ''}</div>
       </div>
       <div class="col">
-        <div class="tarjeta"><h3>Mesa directiva ${C.Congreso.periodo(E).legislatura}</h3><div class="lista">
-          ${[['presidente', 'Presidente'], ['vice1', 'Primer vicepresidente'], ['vice2', 'Segundo vicepresidente']].map(([k, n]) => { const p = E.politicos[mesa[k]]; return p ? `<div class="it clic" data-ficha="${p.id}">${Comp.avatar(E, p, 34)}<div class="cuerpo"><b>${esc(p.nombre)}</b><span>${n} · ${Comp.partido(E, p.partido)}</span></div></div>` : ''; }).join('')}</div></div>
+        <div class="tarjeta"><h3>Mesa directiva ${C.Congreso.periodo(E).legislatura}</h3>
+          ${K.mesaPendiente ? `<div class="tenue" style="font-size:12.5px;margin-bottom:8px">Se está eligiendo la mesa directiva ${C.Congreso.delCamara(cam)}. Puedes pedir el aval de tu partido, presentarte de forma autónoma o dejarlo pasar.</div>
+            <div class="fila" style="gap:6px;flex-wrap:wrap">${UI.botonAccion('postularMesaAval', { camara: cam }, null, 'chico')}${UI.botonAccion('postularMesaAutonoma', { camara: cam }, null, 'chico')}${UI.botonAccion('noPostularseMesa', { camara: cam }, null, 'chico')}</div>`
+          : `<div class="lista">${[['presidente', 'Presidente'], ['vice1', 'Primer vicepresidente'], ['vice2', 'Segundo vicepresidente']].map(([k, n]) => { const p = E.politicos[mesa[k]]; return p ? `<div class="it clic" data-ficha="${p.id}">${Comp.avatar(E, p, 34)}<div class="cuerpo"><b>${esc(p.nombre)}${p.id === 'J' ? ' (tú)' : ''}</b><span>${n} · ${Comp.partido(E, p.partido)}</span></div></div>` : ''; }).join('')}</div>`}</div>
         <div class="tarjeta"><h3>Bancadas</h3><div class="lista">${bancadas.map(([pid, n]) => {
           const pa = E.partidos[pid]; const b = K.bancadas[pid] || {}; const voc = E.politicos[b.vocero];
           return `<div class="it"><i class="pto" style="background:${pa ? pa.color : '#8C96A3'};width:12px;height:12px"></i><div class="cuerpo"><b>${esc(pa ? pa.nombre : pid)}</b><span>${voc ? 'Vocero: ' + esc(voc.nombre) : ''} ${pa ? '· cohesión ' + pa.cohesion : ''}</span></div>${pa ? Comp.postura(pa.postura) : ''}<b class="num" style="width:28px;text-align:right">${n}</b></div>`;

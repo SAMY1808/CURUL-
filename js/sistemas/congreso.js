@@ -122,28 +122,94 @@ window.CURUL = window.CURUL || {};
         K.bancadas[pid] = { vocero: vocero ? vocero.id : null, n: ms.length };
       }
     },
-    /* Mesas directivas (cada 20 de julio) y mesas de comisión */
+    /* Mesas directivas (cada 20 de julio): si el jugador pertenece a esa cámara, se abre una
+       ventana de postulación (aval del partido o de forma autónoma) en vez de resolverla sola;
+       si no, sigue el reparto automático de siempre. Las mesas de comisión no dependen del
+       jugador y se resuelven siempre igual. */
     elegirMesas(E) {
       const coal = E.gobierno.coalicion || [];
       for (const cam of CAMARAS) {
-        const K = E.congreso[cam];
-        const ms = Co.miembros(E, cam).filter(p => p.id !== 'J');
-        const gob = ms.filter(p => coal.includes(p.partido));
-        const opo = ms.filter(p => E.partidos[p.partido] && E.partidos[p.partido].postura === 'oposicion');
-        const mejor = arr => arr.slice().sort((a, b) => (b.r.exp + b.r.amb + U.ri(0, 40)) - (a.r.exp + a.r.amb + U.ri(0, 40)))[0];
-        const pres = mejor(gob.length ? gob : ms);
-        const vice1 = mejor(ms.filter(p => p !== pres && p.partido !== pres.partido));
-        const vice2 = mejor(opo.length ? opo : ms.filter(p => p !== pres && p !== vice1));
-        K.mesa = { presidente: pres && pres.id, vice1: vice1 && vice1.id, vice2: vice2 && vice2.id, desde: E.fecha.t };
-        for (const com of Object.values(K.comisiones)) {
-          const mm = com.miembros.map(id => E.politicos[id]).filter(p => p && p.id !== 'J');
-          const g = mm.filter(p => coal.includes(p.partido));
-          com.presidente = (mejor(g.length ? g : mm) || {}).id || null;
-          const resto = mm.filter(p => p.id !== com.presidente);
-          const o = resto.filter(p => E.partidos[p.partido] && E.partidos[p.partido].postura !== 'gobierno');
-          com.vice = (mejor(o.length ? o : resto) || {}).id || null;
-        }
-        if (pres) Co.log(E, 'mesa', `${pres.nombre} (${E.partidos[pres.partido] ? E.partidos[pres.partido].sigla : ''}) es elegido presidente ${Co.delCamara(cam)}`);
+        const jEnCamara = (cam === 'senado' && E.jugador.cargo === 'senador') || (cam === 'camara' && E.jugador.cargo === 'representante');
+        if (jEnCamara) Co.abrirPostulacionMesa(E, cam); else Co.resolverMesaSinJugador(E, cam, coal);
+        Co.elegirMesaComision(E, cam, coal);
+      }
+    },
+    abrirPostulacionMesa(E, cam) {
+      E.congreso[cam].mesaPendiente = { t: E.fecha.t };
+      Co.log(E, 'mesa', `Se abre la elección de mesa directiva ${Co.delCamara(cam)}: puedes pedir el aval de tu partido o postularte de forma autónoma`);
+    },
+    /* Reparto automático de la mesa cuando el jugador no compite (no pertenece a esa cámara, o
+       decidió no postularse): igual que siempre, el mejor perfil de la coalición de gobierno. */
+    resolverMesaSinJugador(E, cam, coal) {
+      coal = coal || E.gobierno.coalicion || [];
+      const K = E.congreso[cam];
+      const ms = Co.miembros(E, cam).filter(p => p.id !== 'J');
+      const gob = ms.filter(p => coal.includes(p.partido));
+      const opo = ms.filter(p => E.partidos[p.partido] && E.partidos[p.partido].postura === 'oposicion');
+      const mejor = arr => arr.slice().sort((a, b) => (b.r.exp + b.r.amb + U.ri(0, 40)) - (a.r.exp + a.r.amb + U.ri(0, 40)))[0];
+      const pres = mejor(gob.length ? gob : ms);
+      const vice1 = mejor(ms.filter(p => p !== pres && p.partido !== pres.partido));
+      const vice2 = mejor(opo.length ? opo : ms.filter(p => p !== pres && p !== vice1));
+      K.mesa = { presidente: pres && pres.id, vice1: vice1 && vice1.id, vice2: vice2 && vice2.id, desde: E.fecha.t };
+      K.mesaPendiente = null;
+      if (pres) Co.log(E, 'mesa', `${pres.nombre} (${E.partidos[pres.partido] ? E.partidos[pres.partido].sigla : ''}) es elegido presidente ${Co.delCamara(cam)}`);
+    },
+    /* Probabilidad de que el partido avale al jugador para la mesa directiva: pesa su peso interno
+       y su relación con la dirección, igual que otras negociaciones internas de partido. */
+    probAval(E) {
+      const J = E.jugador, pa = E.partidos[J.partido]; if (!pa) return 0.1;
+      const peso = C.Partidos.peso(E, E.politicos.J).nac;
+      return U.clamp(0.15 + peso / 140 + (pa.relJ || 0) / 220, 0.05, 0.85);
+    },
+    /* Elección de la mesa con el jugador como candidato: dos rivales (el mejor perfil de la
+       coalición de gobierno y el mejor de la oposición) compiten contra él en una lotería
+       ponderada por fuerza — pedir el aval del partido da una prima real; ir de forma autónoma
+       siempre es posible, pero compite en desventaja. */
+    resolverMesaConJugador(E, cam, via) {
+      const K = E.congreso[cam], coal = E.gobierno.coalicion || [], J = E.jugador;
+      const ms = Co.miembros(E, cam).filter(p => p.id !== 'J');
+      const gob = ms.filter(p => coal.includes(p.partido));
+      const opo = ms.filter(p => E.partidos[p.partido] && E.partidos[p.partido].postura === 'oposicion');
+      const mejor = arr => arr.slice().sort((a, b) => (b.r.exp + b.r.amb + U.ri(0, 40)) - (a.r.exp + a.r.amb + U.ri(0, 40)))[0];
+      const rival1 = mejor(gob.length ? gob : ms);
+      const rival2 = mejor((opo.length ? opo : ms).filter(p => p !== rival1));
+      const pesoJ = C.Partidos.peso(E, E.politicos.J).nac;
+      const fuerzaJ = (pesoJ * 0.5 + J.reconocimiento * 0.3 + J.atributos.carisma * 0.2) * (via === 'aval' ? 1.25 : 0.75);
+      const cand = [{ id: 'J', fuerza: fuerzaJ }];
+      if (rival1) cand.push({ id: rival1.id, fuerza: rival1.r.exp * 0.6 + rival1.r.amb * 0.3 + rival1.r.car * 0.1 });
+      if (rival2 && rival2 !== rival1) cand.push({ id: rival2.id, fuerza: rival2.r.exp * 0.6 + rival2.r.amb * 0.3 + rival2.r.car * 0.1 });
+      const pesos = cand.map(c => Math.pow(c.fuerza + 5, 1.4) * Math.exp(U.gauss(0, 0.25)));
+      const tot = U.suma(pesos);
+      cand.forEach((c, i) => c.pct = pesos[i] / tot * 100);
+      cand.sort((a, b) => b.pct - a.pct);
+      const ganador = cand[0].id;
+      const vice1 = mejor(ms.filter(p => p.id !== ganador && p.partido !== (ganador === 'J' ? J.partido : E.politicos[ganador].partido)));
+      const vice2 = mejor((opo.length ? opo : ms).filter(p => p.id !== ganador && p !== vice1));
+      K.mesa = { presidente: ganador, vice1: vice1 && vice1.id, vice2: vice2 && vice2.id, desde: E.fecha.t };
+      K.mesaPendiente = null;
+      const pa = E.partidos[J.partido];
+      if (ganador === 'J') {
+        J.reconocimiento = U.clamp(J.reconocimiento + 8, 0, 100);
+        if (pa) pa.relJ = U.clamp((pa.relJ || 0) + (via === 'aval' ? 6 : -2), -100, 100);
+        C.Medios.noticia(E, { tipo: 'gobierno', titular: `${J.nombre} es elegido presidente ${Co.delCamara(cam)}${via === 'autonoma' ? ', sin el respaldo de su partido' : ''}`, tono: 1, importante: true, jugador: true });
+        Co.log(E, 'mesa', `${J.nombre} es elegido presidente ${Co.delCamara(cam)}`);
+      } else {
+        const ganadorPol = E.politicos[ganador];
+        C.Medios.noticia(E, { tipo: 'gobierno', titular: `${ganadorPol.nombre} es elegido presidente ${Co.delCamara(cam)}, no ${J.nombre}`, tono: 0, jugador: true });
+        Co.log(E, 'mesa', `${ganadorPol.nombre} (${E.partidos[ganadorPol.partido] ? E.partidos[ganadorPol.partido].sigla : ''}) es elegido presidente ${Co.delCamara(cam)}`);
+      }
+      return { ganador };
+    },
+    elegirMesaComision(E, cam, coal) {
+      const K = E.congreso[cam];
+      const mejor = arr => arr.slice().sort((a, b) => (b.r.exp + b.r.amb + U.ri(0, 40)) - (a.r.exp + a.r.amb + U.ri(0, 40)))[0];
+      for (const com of Object.values(K.comisiones)) {
+        const mm = com.miembros.map(id => E.politicos[id]).filter(p => p && p.id !== 'J');
+        const g = mm.filter(p => coal.includes(p.partido));
+        com.presidente = (mejor(g.length ? g : mm) || {}).id || null;
+        const resto = mm.filter(p => p.id !== com.presidente);
+        const o = resto.filter(p => E.partidos[p.partido] && E.partidos[p.partido].postura !== 'gobierno');
+        com.vice = (mejor(o.length ? o : resto) || {}).id || null;
       }
     },
     /* Composición agregada por partido y por postura */
@@ -180,9 +246,46 @@ window.CURUL = window.CURUL || {};
       }
       // Ausentismo semanal para las estadísticas
       if (sesion) for (const cam of CAMARAS) for (const p of Co.miembros(E, cam)) if (p.id !== 'J' && !U.chance(p.asistencia)) p.stats.ausencias++;
+      // Si el jugador deja pasar demasiado tiempo sin decidir, la mesa se resuelve sin él
+      for (const cam of CAMARAS) {
+        const K = E.congreso[cam];
+        if (K.mesaPendiente && E.fecha.t - K.mesaPendiente.t >= 3) Co.resolverMesaSinJugador(E, cam);
+      }
+    },
+
+    registrarAcciones() {
+      const A = C.Acciones;
+      const enCamara = (E, camara) => (camara === 'senado' && E.jugador.cargo === 'senador') || (camara === 'camara' && E.jugador.cargo === 'representante');
+      const hayPostulacion = (E, camara) => enCamara(E, camara) ? (E.congreso[camara].mesaPendiente ? true : 'No hay una elección de mesa directiva abierta') : 'No perteneces a esa cámara';
+      A.registrar({ id: 'postularMesaAval', nombre: 'Pedir aval del partido', icono: '🎗', grupo: 'congreso', costo: 1,
+        disponible(E, a) { return hayPostulacion(E, a.camara); },
+        ejecutar(E, a) {
+          const K = E.congreso[a.camara]; if (!K.mesaPendiente) return { ok: false, msg: 'No hay una elección de mesa directiva abierta' };
+          const J = E.jugador, pa = E.partidos[J.partido];
+          const exito = U.chance(Co.probAval(E));
+          if (pa) pa.relJ = U.clamp((pa.relJ || 0) + (exito ? 4 : -2), -100, 100);
+          C.Medios.noticia(E, { tipo: 'partidos', titular: exito ? `El ${pa ? pa.sigla : ''} respalda a ${J.nombre} para presidir ${Co.delCamara(a.camara)}` : `El ${pa ? pa.sigla : ''} no respalda a ${J.nombre} para la mesa directiva`, tono: exito ? 1 : -1, jugador: true });
+          Co.resolverMesaConJugador(E, a.camara, exito ? 'aval' : 'autonoma');
+          return { ok: true, msg: exito ? 'Tu partido te avala: te postulas con su respaldo' : 'Tu partido no te avala, pero igual te postulas de forma autónoma', exito };
+        } });
+      A.registrar({ id: 'postularMesaAutonoma', nombre: 'Postularme de forma autónoma', icono: '🚩', grupo: 'congreso', costo: 1,
+        disponible(E, a) { return hayPostulacion(E, a.camara); },
+        ejecutar(E, a) {
+          if (!E.congreso[a.camara].mesaPendiente) return { ok: false, msg: 'No hay una elección de mesa directiva abierta' };
+          Co.resolverMesaConJugador(E, a.camara, 'autonoma');
+          return { ok: true, msg: 'Te postulas de forma autónoma, sin pedirle nada a tu partido' };
+        } });
+      A.registrar({ id: 'noPostularseMesa', nombre: 'No postularme', icono: '➖', grupo: 'congreso', costo: 0,
+        disponible(E, a) { return hayPostulacion(E, a.camara); },
+        ejecutar(E, a) {
+          if (!E.congreso[a.camara].mesaPendiente) return { ok: false, msg: 'No hay una elección de mesa directiva abierta' };
+          Co.resolverMesaSinJugador(E, a.camara);
+          return { ok: true, msg: 'No te postulas a la mesa directiva esta vez' };
+        } });
     }
   };
 
   C.Congreso = Co;
+  Co.registrarAcciones();
   C.Tiempo.registrar('congreso', Co, 60);
 })(window.CURUL);

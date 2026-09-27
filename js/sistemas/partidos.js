@@ -64,7 +64,11 @@ window.CURUL = window.CURUL || {};
       const experiencia = esJ ? (J.rep.experiencia || 20) : pol.r.exp;
       const pid = esJ ? J.partido : pol.partido, pa = E.partidos[pid];
       const relDireccion = esJ ? (pa ? pa.relJ : 0) : 0;
-      const nac = U.clamp(base * 0.6 + carisma * 0.14 + experiencia * 0.14 + relDireccion * 0.35, 1, 100);
+      // Presidir el Senado o la Cámara pesa dentro del partido, sin importar si llegaste ahí con
+      // su aval o de forma autónoma.
+      const camMesa = cargo === 'senador' ? 'senado' : cargo === 'representante' ? 'camara' : null;
+      const presideMesa = camMesa && E.congreso[camMesa] && E.congreso[camMesa].mesa && E.congreso[camMesa].mesa.presidente === pol.id ? 15 : 0;
+      const nac = U.clamp(base * 0.6 + carisma * 0.14 + experiencia * 0.14 + relDireccion * 0.35 + presideMesa, 1, 100);
       const local = ['gobernador', 'alcalde', 'diputado', 'concejal'].includes(cargo);
       const dep = U.clamp(nac * (local ? 1.2 : 0.8) + (esJ ? (C.Opinion.recDepto(E, pol.depto || J.residencia) - 30) * 0.15 : 0), 1, 100);
       return { nac, dep };

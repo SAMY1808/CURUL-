@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 13 completas)
+## Qué hay en esta versión (Fases 1 a 14 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -167,6 +167,10 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Centro de Gobierno más cotidiano**: una bandeja de "Pendientes de hoy" resume de un vistazo lo
   que necesita tu decisión (ministros en crisis, iniciativas por respaldar, procesos abiertos),
   con acceso directo a la pestaña que corresponde.
+- **Elección real de la mesa directiva**: si eres senador o representante cuando toca renovar la
+  presidencia de tu cámara, puedes pedir el aval de tu partido o postularte de forma autónoma y
+  competir de verdad contra otros congresistas por presidirla — antes se decidía siempre sin ti.
+  Presidir el Senado o la Cámara suma peso real dentro de tu partido.
 
 ## Arquitectura
 
