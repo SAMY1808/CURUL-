@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 6 completas)
+## Qué hay en esta versión (Fases 1 a 7 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -82,6 +82,22 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   cada semana y suben o bajan de valor con la economía; puedes venderlos de vuelta al precio de
   mercado. Un patrimonio que crece mucho más rápido de lo que explica tu sueldo declarado puede
   disparar un escándalo mediático por "¿de dónde sacó eso?".
+- **Gabinete local mejorado**: como gobernador o alcalde eliges personalmente a cada secretario de
+  despacho (de tu partido o de tus aliados), lanzas programas de política pública concretos por
+  secretaría (seguridad, salud, educación, infraestructura, hacienda, planeación) con un efecto
+  medible sobre el departamento o municipio, y puedes convocar un Consejo de gobierno local que
+  sube tu favorabilidad y la aprobación de tus secretarios, igual que el Consejo de Ministros a
+  nivel nacional.
+- **Fundar un partido nuevo**: si tienes el patrimonio y el reconocimiento suficientes, puedes
+  iniciar la recolección de firmas para fundar tu propio partido; cada semana avanza según tus
+  redes y tu reconocimiento (o puedes impulsarla tú mismo), y al completar la meta nace el partido
+  con vida propia y tú como su líder.
+- **Coaliciones preelectorales y consulta interpartidista**: antes de una elección puedes proponerle
+  a otros partidos una coalición a cambio de un ministerio, una secretaría o sólo respaldo político;
+  si aceptan y ganas, se organiza una consulta interpartidista (como una consulta interna, pero entre
+  varios partidos) para escoger un candidato único de la coalición a Presidencia, Gobernación,
+  Alcaldía o Congreso. Ganar la consulta te vuelve el candidato de todos los aliados; ganar la
+  elección después cumple lo pactado —tus aliados reciben el ministerio o la secretaría prometida—.
 
 ## Arquitectura
 

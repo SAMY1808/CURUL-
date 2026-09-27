@@ -58,16 +58,29 @@ window.CURUL = window.CURUL || {};
     const peso = J.partido && E.partidos[J.partido] ? C.Partidos.peso(E, E.politicos.J) : null;
     const nivelPeso = (cargo === 'senado' || cargo === 'presidencia') ? 'nac' : 'dep';
     const local = !['senado', 'presidencia'].includes(cargo);
+    const deptoCoal = local ? (E.ui.deptoInsc || J.residencia) : null;
+    const pre = C.Coaliciones.pre(E, cargo, deptoCoal);
+    const aliados = pre.partidos.filter(p => p.aceptado);
     return `<div class="grid g2">
       <div class="tarjeta"><h3>Inscribir una candidatura</h3>
         <div class="cargos-elec">${Object.entries(El.CARGOS_CAMPANA).map(([k, n]) => { const e2 = El.proxima(E, El.tipoEleccion(k)); return `<button class="tarjeta clic ${k === cargo ? 'sel' : ''}" data-cargo="${k}"><b>${n}</b><span class="tenue">${e2 ? U.fmtFecha(e2.fecha, true) + ' · en ' + El.semanasPara(E, e2) + ' sem.' : '—'}</span></button>`; }).join('')}</div>
         <div class="accion-form" style="margin-top:12px">
           <input type="hidden" data-arg="cargo" value="${cargo}">
-          ${local ? `<div class="campo"><label>Circunscripción</label><select data-arg="depto">${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === J.residencia ? 'selected' : ''}>${esc(d.nombre)}${cargo === 'alcaldia' || cargo === 'concejo' ? ' (' + esc(d.capital) + ')' : ''}</option>`).join('')}</select></div>` : ''}
-          <div class="campo"><label>Vía de inscripción</label><select data-arg="via">${J.partido && E.partidos[J.partido] ? `<option value="aval">Aval de la dirección del ${esc(E.partidos[J.partido].sigla)} (probabilidad ${Math.round(pAval * 100)}%)</option><option value="primaria">Consulta interna del ${esc(E.partidos[J.partido].sigla)}: mídete contra otros aspirantes</option>` : ''}<option value="firmas">Grupo significativo de ciudadanos (firmas)</option></select></div>
+          ${local ? `<div class="campo"><label>Circunscripción</label><select data-arg="depto" id="insc-depto">${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === deptoCoal ? 'selected' : ''}>${esc(d.nombre)}${cargo === 'alcaldia' || cargo === 'concejo' ? ' (' + esc(d.capital) + ')' : ''}</option>`).join('')}</select></div>` : ''}
+          <div class="campo"><label>Vía de inscripción</label><select data-arg="via">${J.partido && E.partidos[J.partido] ? `<option value="aval">Aval de la dirección del ${esc(E.partidos[J.partido].sigla)} (probabilidad ${Math.round(pAval * 100)}%)</option><option value="primaria">Consulta interna del ${esc(E.partidos[J.partido].sigla)}: mídete contra otros aspirantes</option>` : ''}${aliados.length ? `<option value="coalicion">Consulta interpartidista de tu coalición (${aliados.length} ${aliados.length === 1 ? 'aliado' : 'aliados'})</option>` : ''}<option value="firmas">Grupo significativo de ciudadanos (firmas)</option></select></div>
           ${UI.botonAccion('inscribir', { cargo }, 'Inscribir candidatura', 'prim')}
         </div>
         <p class="tenue" style="font-size:12px">Las inscripciones abren 52 semanas antes y cierran 6 semanas antes de la elección. Por firmas no dependes de un partido, pero necesitas voluntarios y sin maquinaria cuesta más. En una consulta interna compites de verdad por el cupo: si ganas, en Senado o Cámara sales de cabeza de lista (más arrastre en la noche electoral); en los demás cargos, tu partido no lleva otro candidato aparte de ti.</p></div>
+      <div class="tarjeta"><h3>Coalición preelectoral${local ? ' · ' + esc(E.deptos[deptoCoal].nombre) : ''}</h3>
+        <p class="tenue" style="font-size:12px;margin-top:0">Negocia el respaldo de otros partidos antes de inscribirte, a cambio de un puesto si ganas. Con dos o más partidos aliados, una consulta interpartidista decide quién de todos ellos es el candidato único.</p>
+        <div class="lista">${pre.partidos.map(p => `<div class="it"><i class="pto" style="background:${E.partidos[p.partido] ? E.partidos[p.partido].color : '#8C96A3'}"></i><div class="cuerpo"><b>${esc(E.partidos[p.partido] ? E.partidos[p.partido].sigla : p.partido)}</b><span>${esc((C.Coaliciones.OFRECIMIENTOS[p.ofrecimiento] || {}).n || p.ofrecimiento)}</span></div><span class="etq ${p.aceptado ? 'verde' : 'rojo'}">${p.aceptado ? 'Aliado' : 'Rechazó'}</span></div>`).join('') || '<div class="vacio">Aún no has negociado con nadie.</div>'}</div>
+        <div class="accion-form" style="margin-top:10px;flex-wrap:nowrap" id="coal-form">
+          <input type="hidden" data-arg="cargo" value="${cargo}">
+          <input type="hidden" data-arg="depto" value="${deptoCoal || ''}">
+          <select data-arg="partido">${Object.values(E.partidos).filter(p => !p.especial && !p.futuro && p.id !== J.partido && !pre.partidos.some(x => x.partido === p.id)).map(p => `<option value="${p.id}">${esc(p.sigla)}</option>`).join('')}</select>
+          <select data-arg="ofrecimiento">${C.Coaliciones.ofrecimientosValidos(cargo).map(k => `<option value="${k}">${esc(C.Coaliciones.OFRECIMIENTOS[k].n)}</option>`).join('')}</select>
+          ${UI.botonAccion('proponerCoalicion', {}, 'Proponer')}
+        </div></div>
       <div class="tarjeta"><h3>Tu posición de partida</h3>
         ${peso ? `<div class="tenue" style="font-size:12px;margin-bottom:6px">Tu peso en el ${esc(E.partidos[J.partido].sigla)} (${nivelPeso === 'nac' ? 'dirección nacional' : 'dirección departamental'}): <b style="color:var(--oro2)">${Math.round(peso[nivelPeso])}/100</b></div>` : ''}
         ${G.barrasH([{ etq: 'Reconocimiento', v: J.reconocimiento }, { etq: 'Favorabilidad', v: J.popularidad }, { etq: 'Credibilidad', v: J.credibilidad }, { etq: 'Red de apoyo', v: J.redes * 10 }].map(x => ({ ...x, color: '#D9B45A' })), { max: 100, fmt: v => U.n(v) })}
@@ -101,6 +114,7 @@ window.CURUL = window.CURUL || {};
         const d = e.target.closest('#camp-mapa [data-depto]'); if (d) return C.App.ir('mapa', { depto: d.dataset.depto, capa: 'favorabilidad' });
       };
       el.onchange = e => {
+        if (e.target.id === 'insc-depto') { E.ui.deptoInsc = e.target.value; return C.App.refrescar(); }
         if (e.target.matches('.accion-form select[data-arg="depto"]')) UI.$$('.accion-form [data-accion]', e.target.closest('.accion-form')).forEach(b => { try { const a = JSON.parse(b.dataset.args); a.depto = e.target.value; b.dataset.args = JSON.stringify(a); } catch (x) {} });
       };
     },
@@ -210,6 +224,19 @@ window.CURUL = window.CURUL || {};
         <div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="np-cerrar">Continuar</button></div>`;
       const m = UI.modal({ titulo: 'Consulta interna · ' + esc(pa.sigla), icono: '🗳', cuerpo, sinCerrar: true });
       m.cuerpo.querySelector('#np-cerrar').onclick = () => { m.cerrar(); C.App.refrescar(); C.App.revisarPendientes(); };
+    },
+
+    /* Consulta interpartidista: la coalición ya negociada elige a su candidato único. */
+    nocheConsultaInterpartidista(r) {
+      const E = C.E;
+      const nombre = { senado: 'Senado', camara: 'Cámara', gobernacion: 'Gobernación', alcaldia: 'Alcaldía', presidencia: 'Presidencia' }[r.cargo] || r.cargo;
+      const siglas = [E.jugador.partido, ...r.aliados.map(a => a.partido)].map(p => E.partidos[p] ? E.partidos[p].sigla : p).join(' + ');
+      const cuerpo = `<p class="tenue" style="margin-top:0">Consulta interpartidista (${esc(siglas)}) por la candidatura única a ${esc(nombre)}${r.depto && E.deptos[r.depto] ? ' · ' + esc(E.deptos[r.depto].nombre) : ''}.</p>
+        ${G.barrasH(r.candidatos.map(c => ({ etq: (c.id === 'J' ? c.nombre + ' (tú)' : c.nombre) + ' · ' + (E.partidos[c.partido] ? E.partidos[c.partido].sigla : ''), v: c.pct, color: c.id === 'J' ? 'var(--oro)' : (E.partidos[c.partido] ? E.partidos[c.partido].color : '#8C96A3') })), { max: 100, fmt: v => U.d1(v) + '%', anchoEtq: '170px' })}
+        <div class="resultado-jugador ${r.gana ? 'ok' : 'no'}" style="margin-top:14px"><div style="font-size:30px">${r.gana ? '🎉' : '📉'}</div><div><b>${r.gana ? '¡Eres el candidato único de la coalición!' : 'No ganas la consulta interpartidista'}</b><div class="tenue">${U.d1(r.candidatos.find(c => c.id === 'J').pct)} % de apoyo · ${r.gana ? 'la coalición completa respalda tu candidatura' : 'otro nombre de la coalición será el candidato'}</div></div></div>
+        <div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="nci-cerrar">Continuar</button></div>`;
+      const m = UI.modal({ titulo: 'Consulta interpartidista', icono: '🤝', cuerpo, sinCerrar: true });
+      m.cuerpo.querySelector('#nci-cerrar').onclick = () => { m.cerrar(); C.App.refrescar(); C.App.revisarPendientes(); };
     }
   };
   C.Pantallas.elecciones = P;

@@ -23,7 +23,7 @@ window.CURUL = window.CURUL || {};
         presupuesto: {},
         ministeriosExtra: [],
         opinion: {},
-        elecciones: { historico: [], campana: null, proxima: null },
+        elecciones: { historico: [], campana: null, proxima: null, coaliciones: {} },
         medios: { lista: [], noticias: [] },
         eventos: { pendientes: [], historial: [] },
         agendaMundo: [],          // actividad del Congreso y del mundo (bitácora)

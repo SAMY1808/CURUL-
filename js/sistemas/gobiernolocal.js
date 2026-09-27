@@ -20,6 +20,16 @@ window.CURUL = window.CURUL || {};
   ];
   const EFECTO = { salud: 'salud', educacion: 'educacion', infraestructura: 'infraestructura', gobierno: 'seguridad' };
   const ORGANOS = { gobernacion: { cargo: 'gobernador', corp: 'Asamblea Departamental', acto: 'Ordenanza' }, alcaldia: { cargo: 'alcalde', corp: 'Concejo Municipal', acto: 'Acuerdo' } };
+  /* Programas de política pública por secretaría: cada uno se puede "lanzar" como una acción
+     concreta (no sólo mover el presupuesto), con un efecto acotado sobre el indicador asociado. */
+  const PROGRAMAS = {
+    gobierno: [['Frentes de seguridad barrial', 'seguridad'], ['Casas de justicia', 'seguridad']],
+    hacienda: [['Modernización catastral', null], ['Fiscalización tributaria', null]],
+    salud: [['Brigadas de salud rural', 'salud'], ['Ampliación de cobertura', 'salud']],
+    educacion: [['Jornada única regional', 'educacion'], ['Transporte escolar', 'educacion']],
+    infraestructura: [['Placa-huella en vías terciarias', 'infraestructura'], ['Alumbrado público', 'infraestructura']],
+    planeacion: [['Banco de proyectos', null], ['Actualización del POT', null]]
+  };
 
   const GL = {
     SECRETARIAS, ORGANOS,
@@ -64,6 +74,46 @@ window.CURUL = window.CURUL || {};
     subfinanciada(E, depto, organo, secId) {
       const g = E.deptos[depto].gobLocal[organo]; if (!g) return false;
       return g.shares[secId] < g.pesoBase[secId] * 0.7;
+    },
+    /* Nombrar personalmente a un secretario: igual que el presidente con un ministro, eliges el
+       partido (o técnico sin partido) y se designa a alguien nuevo en su lugar. */
+    designarSecretario(E, depto, organo, secId, partido) {
+      const g = GL.asegurar(E, depto, organo);
+      const ant = E.politicos[g.secretarios[secId]]; if (ant) C.Politicos.anotar(ant, 'Sale de la secretaría');
+      const pid = partido && E.partidos[partido] ? partido : null;
+      const nuevo = C.Politicos.crear(E, { partido: pid, depto, r: { exp: U.ri(40, 85) } });
+      if (!pid) nuevo.profesion = 'Técnico de carrera';
+      g.secretarios[secId] = nuevo.id;
+      nuevo.aprob = U.ri(40, 60);
+      C.Politicos.anotar(nuevo, 'Designado secretario');
+      const nombreSec = GL.secretariasDe(g).find(s => s.id === secId).nombre;
+      C.Medios.noticia(E, { tipo: 'regional', titular: `${nuevo.nombre} es el nuevo encargado de la ${nombreSec}`, tono: 0, jugador: true });
+      return nuevo;
+    },
+    programasDe(secId) { return PROGRAMAS[secId] || []; },
+    /* Lanza un programa de política pública concreto: efecto acotado y con algo de azar sobre el
+       indicador asociado (si lo tiene) y sobre la imagen del secretario y del jugador. */
+    lanzarPrograma(E, depto, organo, secId, idx) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto];
+      const prog = PROGRAMAS[secId] && PROGRAMAS[secId][idx]; if (!prog) return null;
+      const [nombre, campo] = prog;
+      const magnitud = campo ? U.rf(1, 2.4) : 0;
+      if (campo && d[campo] != null) d[campo] = U.clamp(d[campo] + magnitud, 1, 99);
+      const sec = E.politicos[g.secretarios[secId]]; if (sec) sec.aprob = U.clamp((sec.aprob || 50) + U.rf(0.5, 1.8), 0, 100);
+      C.Opinion.moverImagen(E, { dep: { [depto]: 0.8 } });
+      const nombreSec = GL.secretariasDe(g).find(s => s.id === secId).nombre;
+      g.historial.unshift({ t: E.fecha.t, txt: `Lanza el programa «${nombre}» (${nombreSec})${campo ? ' · ' + U.signo(magnitud, 1) + ' ' + campo : ''}` });
+      C.Medios.noticia(E, { tipo: 'regional', titular: `${organo === 'gobernacion' ? 'La Gobernación de ' + d.nombre : 'La Alcaldía de ' + d.capital} lanza «${nombre}»`, tono: 1, jugador: true });
+      return { nombre, campo, magnitud };
+    },
+    /* Consejo de gobierno local: reúne al gabinete, sube algo la imagen del jugador en la región
+       y la aprobación de sus secretarios — igual que el Consejo de Ministros nacional. */
+    consejoLocal(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo);
+      C.Opinion.moverImagen(E, { dep: { [depto]: 1.2 } });
+      for (const s of GL.secretariasDe(g)) { const pol = E.politicos[g.secretarios[s.id]]; if (pol) pol.aprob = U.clamp((pol.aprob || 50) + U.rf(0.3, 1.2), 0, 100); }
+      E.jugador.rep.liderazgo = U.clamp(E.jugador.rep.liderazgo + 0.5, 0, 100);
+      g.historial.unshift({ t: E.fecha.t, txt: 'Reúne su gabinete y alinea la agenda de gobierno' });
     },
 
     /* ── Decretos: potestad ejecutiva directa, sin necesidad de aprobación de la corporación ── */
@@ -145,6 +195,21 @@ window.CURUL = window.CURUL || {};
           const r = GL.proponerCreacion(E, a.depto, a.organo, 'Secretaría de ' + nombre, sector);
           return { ok: true, msg: r.aprobado ? `${ORGANOS[a.organo].corp} aprueba la nueva secretaría (${r.voto.si}-${r.voto.no})` : `${ORGANOS[a.organo].corp} la rechaza (${r.voto.si}-${r.voto.no})` };
         } });
+      A.registrar({ id: 'designarSecretario', nombre: 'Nombrar secretario', icono: '🧑‍💼', grupo: 'local', costo: 1,
+        disponible: (E, a) => propio(E, a.depto, a.organo) ? true : 'No ejerces ese cargo',
+        ejecutar(E, a) {
+          const s = GL.designarSecretario(E, a.depto, a.organo, a.secretaria, a.partido || null);
+          return { ok: true, msg: `${s.nombre} asume la secretaría` };
+        } });
+      A.registrar({ id: 'lanzarPrograma', nombre: 'Lanzar programa', icono: '📋', grupo: 'local', costo: 2,
+        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; return GL.programasDe(a.secretaria)[a.idx] ? true : 'Elige un programa'; },
+        ejecutar(E, a) {
+          const r = GL.lanzarPrograma(E, a.depto, a.organo, a.secretaria, +a.idx);
+          return { ok: true, msg: `Lanzas «${r.nombre}»${r.campo ? ': ' + U.signo(r.magnitud, 1) + ' en ' + r.campo : ''}` };
+        } });
+      A.registrar({ id: 'consejoGobLocal', nombre: 'Consejo de gobierno', icono: '🗂', grupo: 'local', costo: 1,
+        disponible: (E, a) => propio(E, a.depto, a.organo) ? true : 'No ejerces ese cargo',
+        ejecutar(E, a) { GL.consejoLocal(E, a.depto, a.organo); return { ok: true, msg: 'El gabinete se reúne y alinea la agenda local' }; } });
     }
   };
 

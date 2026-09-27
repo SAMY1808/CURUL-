@@ -133,10 +133,45 @@ window.CURUL = window.CURUL || {};
       return U.clamp(p, 0.02, 0.97);
     },
 
+    /* ── Fundar un partido nuevo ────────────────────────────────────────────────────────────── */
+    idDisponible(E, sigla) {
+      let id = sigla.toUpperCase().replace(/[^A-ZÑ0-9]/g, '').slice(0, 6) || 'NVO';
+      let base = id, i = 2;
+      while (E.partidos[id]) id = base + i++;
+      return id;
+    },
+    iniciarFundacion(E, cfg) {
+      const J = E.jugador;
+      const meta = U.clamp(400 - J.reconocimiento * 2, 80, 400);
+      J.fundacion = { nombre: cfg.nombre, sigla: cfg.sigla, color: cfg.color, lema: cfg.lema, eco: cfg.eco, soc: cfg.soc, firmas: 0, meta, t0: E.fecha.t };
+      C.Medios.noticia(E, { tipo: 'partidos', titular: `${J.nombre} anuncia la creación de un nuevo movimiento: ${cfg.nombre}`, tono: 0, jugador: true });
+    },
+    nacer(E) {
+      const J = E.jugador, f = J.fundacion;
+      const id = Pa.idDisponible(E, f.sigla);
+      E.partidos[id] = {
+        id, nombre: f.nombre, sigla: f.sigla.toUpperCase(), color: f.color, lema: f.lema,
+        eco: f.eco, soc: f.soc, popularidad: U.clamp(1.5 + J.reconocimiento / 20, 1, 8), popBase: U.clamp(1.5 + J.reconocimiento / 20, 1, 8),
+        cohesion: 70, estructura: 0.12, fuertes: {}, especial: false, fundado: U.anio(), futuro: false,
+        postura: 'independiente', facciones: [{ id: id + '-f0', nombre: 'Fundadores', eco: f.eco, soc: f.soc, peso: 100, lider: 'J', relJ: 100 }],
+        lider: 'J', militantes: Math.round(2000 + J.reconocimiento * 300 + J.redes * 500), finanzas: Math.round(200 + J.patrimonio * 0.15), relJ: 100, hist: []
+      };
+      if (J.partido && E.partidos[J.partido]) E.partidos[J.partido].relJ -= 10;
+      J.partido = id;
+      J.fundacion = null;
+      C.Medios.noticia(E, { tipo: 'partidos', titular: `Nace el ${f.nombre} («${f.lema}»), con ${J.nombre} a la cabeza`, tono: 1, importante: true, jugador: true });
+      C.Personaje.sincronizar(E);
+      return E.partidos[id];
+    },
     turno(E) {
       const gob = E.gobierno;
       const aprob = E.opinion.aprobacionPres || 45;
       const anio = U.anio();
+      const J = E.jugador;
+      if (J.fundacion) {
+        J.fundacion.firmas = U.clamp(J.fundacion.firmas + 7 + J.redes * 1.5 + J.reconocimiento / 15, 0, J.fundacion.meta);
+        if (J.fundacion.firmas >= J.fundacion.meta) Pa.nacer(E);
+      }
       for (const pa of Object.values(E.partidos)) {
         if (pa.futuro && pa.fundado && pa.fundado <= anio) {
           pa.futuro = false;
@@ -170,6 +205,33 @@ window.CURUL = window.CURUL || {};
           const r = Pa.disputarDireccion(E);
           E.elecciones.direccionPendiente = r;
           return { ok: true, msg: r.gana ? `Ganas la dirección del ${E.partidos[r.partido].sigla}` : `No ganas la dirección del ${E.partidos[r.partido].sigla}`, exito: r.gana };
+        } });
+      C.Acciones.registrar({ id: 'iniciarFundacion', nombre: 'Fundar un partido nuevo', icono: '✨', grupo: 'partidos', costo: 2,
+        disponible(E) {
+          const J = E.jugador;
+          if (J.fundacion) return 'Ya estás recogiendo firmas para tu movimiento';
+          if (J.patrimonio < 150) return 'Necesitas al menos $150 millones';
+          if (J.reconocimiento < 8) return 'Necesitas algo más de reconocimiento (mínimo 8%) para que alguien te siga';
+          return true;
+        },
+        ejecutar(E, a) {
+          const nombre = (a.nombre || '').trim(), sigla = (a.sigla || '').trim();
+          if (!nombre || !sigla) return { ok: false, msg: 'Dale nombre y sigla a tu movimiento' };
+          if (sigla.length > 8) return { ok: false, msg: 'La sigla es muy larga' };
+          const lema = (a.lema || '').trim() || 'Un nuevo camino';
+          const eco = U.clamp(+a.eco || 0, -100, 100), soc = U.clamp(+a.soc || 0, -100, 100);
+          const color = /^#[0-9a-fA-F]{6}$/.test(a.color || '') ? a.color : '#8C96A3';
+          E.jugador.patrimonio -= 150;
+          Pa.iniciarFundacion(E, { nombre, sigla, lema, eco, soc, color });
+          return { ok: true, msg: `Empiezas a recoger firmas para fundar ${nombre}` };
+        } });
+      C.Acciones.registrar({ id: 'impulsarFundacion', nombre: 'Impulsar la recolección de firmas', icono: '✍', grupo: 'partidos', costo: 1,
+        disponible: E => E.jugador.fundacion ? true : 'No estás fundando ningún partido',
+        ejecutar(E) {
+          const f = E.jugador.fundacion;
+          f.firmas = U.clamp(f.firmas + U.rf(12, 22), 0, f.meta);
+          if (f.firmas >= f.meta) { Pa.nacer(E); return { ok: true, msg: '¡Firmas completas! Tu partido nace hoy.' }; }
+          return { ok: true, msg: `Firmas: ${Math.round(f.firmas)}/${Math.round(f.meta)}` };
         } });
     }
   };

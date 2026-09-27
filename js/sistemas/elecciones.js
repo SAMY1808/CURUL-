@@ -111,7 +111,8 @@ window.CURUL = window.CURUL || {};
       const est = cam ? cam.estructura : 10;
       const gasto = cam ? Math.min(30, Math.sqrt(cam.gastado / 10)) : 0;
       const inc = (J.cargo === 'senador' || J.cargo === 'representante') ? 15 : 0;
-      return 10 + rec * 0.55 + fav * 0.35 + est * 0.3 + gasto + inc + (J.atributos.carisma - 50) * 0.15;
+      const coal = cam && cam.coalicion ? U.suma(cam.coalicion.map(c => (E.partidos[c.partido] ? E.partidos[c.partido].popularidad : 0) * 0.45)) : 0;
+      return 10 + rec * 0.55 + fav * 0.35 + est * 0.3 + gasto + inc + (J.atributos.carisma - 50) * 0.15 + coal;
     },
     /* Candidatos de un partido para una lista. Los incumbentes van primero (buscan reelección);
        los aspirantes se ordenan por su peso interno en el partido, porque cuando la dirección
@@ -533,7 +534,7 @@ window.CURUL = window.CURUL || {};
         equipo: {}, voluntarios: 20 + Math.round(J.redes * 3), estructura: 8 + (J.cargo === 'representante' || J.cargo === 'senador' ? 12 : 0),
         actividades: [], encuestas: [], inicio: E.fecha.t, firmas: via === 'firmas' ? 0 : null
       };
-      C.Medios.noticia(E, { tipo: 'campana', titular: `${J.nombre} inscribe su candidatura a ${El.CARGOS_CAMPANA[cargo]}${partido === 'MOV' ? ' por firmas' : via === 'primaria' ? ' tras ganar la consulta interna del ' + E.partidos[partido].sigla : ' con aval del ' + E.partidos[partido].sigla}`, tono: 1, jugador: true });
+      C.Medios.noticia(E, { tipo: 'campana', titular: `${J.nombre} inscribe su candidatura a ${El.CARGOS_CAMPANA[cargo]}${partido === 'MOV' ? ' por firmas' : via === 'primaria' ? ' tras ganar la consulta interna del ' + E.partidos[partido].sigla : via === 'coalicion' ? ' como candidato único de una coalición de partidos' : ' con aval del ' + E.partidos[partido].sigla}`, tono: 1, jugador: true });
       return { ok: true, msg: 'Candidatura inscrita' };
     },
     turnoCampana(E) {

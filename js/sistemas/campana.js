@@ -21,10 +21,26 @@ window.CURUL = window.CURUL || {};
       if (a.cargo === 'presidencia' && J.reconocimiento < 30) return 'Necesitas al menos 30 de reconocimiento nacional';
       if (a.via !== 'firmas' && !E.partidos[J.partido]) return 'Sin partido: inscríbete por firmas';
       if (a.via !== 'firmas' && J.avalNegado && J.avalNegado.partido === J.partido && E.fecha.t - J.avalNegado.t < 8) return `Tu partido te negó el aval hace poco: podrás insistir en ${8 - (E.fecha.t - J.avalNegado.t)} semanas (o ve por firmas)`;
+      if (a.via === 'coalicion' && !C.Coaliciones.aliados(E, a.cargo, a.depto || null).length) return 'Ningún partido se ha aliado todavía para esta elección';
       return true;
     },
     ejecutar(E, a) {
       const J = E.jugador;
+      if (a.via === 'coalicion') {
+        const r = C.Coaliciones.consulta(E, a.cargo, a.depto || null);
+        E.elecciones.consultaPendiente = r;
+        if (!r.gana) {
+          C.Coaliciones.limpiar(E, a.cargo, a.depto || null);
+          J.avalNegado = { partido: J.partido, t: E.fecha.t };
+          return { ok: true, msg: 'Pierdes la consulta interpartidista: otro nombre de la coalición será el candidato', exito: false };
+        }
+        const res = El.inscribir(E, a.cargo, a.depto, 'coalicion');
+        const cam = E.elecciones.campana;
+        cam.coalicion = r.aliados;
+        if (a.cargo === 'senado' || a.cargo === 'camara') cam.cabezaLista = true;
+        C.Coaliciones.limpiar(E, a.cargo, a.depto || null);
+        return res;
+      }
       if (a.via === 'primaria') {
         const r = C.Partidos.primaria(E, a.cargo, a.depto || J.residencia);
         E.elecciones.primariaPendiente = r;

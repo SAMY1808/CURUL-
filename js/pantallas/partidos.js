@@ -42,6 +42,24 @@ window.CURUL = window.CURUL || {};
             <div class="tenue" style="font-size:12px;text-align:center">Tamaño = congresistas. El punto dorado eres tú.</div></div>
         </div>
 
+        <div class="tarjeta" style="margin-top:14px"><h3>${J.fundacion ? 'Fundando ' + esc(J.fundacion.nombre) : 'Fundar un partido nuevo'}</h3>
+          ${J.fundacion ? `<div class="tenue" style="font-size:12px;margin-bottom:6px">«${esc(J.fundacion.lema)}» · ${Comp.etiquetaIdeo(J.fundacion.eco)}</div>
+            <div class="barra-h" style="height:10px"><i style="width:${U.clamp(J.fundacion.firmas / J.fundacion.meta * 100, 0, 100)}%;background:${esc(J.fundacion.color)}"></i></div>
+            <div class="tenue" style="font-size:12px;margin-top:4px">${Math.round(J.fundacion.firmas)} / ${Math.round(J.fundacion.meta)} firmas</div>
+            <div style="margin-top:8px">${UI.botonAccion('impulsarFundacion', {}, 'Impulsar recolección', 'chico')}</div>`
+            : `<p class="tenue" style="font-size:12px;margin-top:0">Cuesta $150 millones y necesitas algo de reconocimiento. Vas a recoger firmas semana a semana hasta fundarlo de verdad, con militantes propios.</p>
+            <div class="accion-form">
+              <div class="grid g2">
+                <input data-arg="nombre" placeholder="Nombre del partido" style="background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
+                <input data-arg="sigla" placeholder="Sigla (máx. 8)" maxlength="8" style="background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
+                <input data-arg="lema" placeholder="Lema" style="background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px;color:var(--texto)">
+                <input data-arg="color" type="color" value="#8C96A3" style="background:var(--panel);border:1px solid var(--borde2);border-radius:8px;height:34px">
+                <div><label class="tenue" style="font-size:11px">Económico: izquierda ↔ derecha</label><input data-arg="eco" type="range" min="-100" max="100" value="${J.ideologia.eco}"></div>
+                <div><label class="tenue" style="font-size:11px">Social: progresista ↔ conservador</label><input data-arg="soc" type="range" min="-100" max="100" value="${J.ideologia.soc}"></div>
+              </div>
+              <div style="margin-top:8px">${UI.botonAccion('iniciarFundacion', {}, 'Fundar partido', 'chico prim')}</div>
+            </div>`}</div>
+
         <div class="tarjeta partido-ficha" style="margin-top:14px;border-top:4px solid ${pa.color}">
           <div class="fila" style="justify-content:space-between;align-items:flex-start">
             <div class="fila"><div class="logo-partido" style="background:${pa.color}">${esc(pa.sigla)}</div><div><h2 style="font-size:24px">${esc(pa.nombre)}</h2><div class="tenue">«${esc(pa.lema)}» · ${Comp.etiquetaIdeo(pa.eco)} · ${pa.soc > 25 ? 'conservador' : pa.soc < -25 ? 'progresista' : 'moderado'}</div></div></div>

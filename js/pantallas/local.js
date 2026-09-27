@@ -22,7 +22,8 @@ window.CURUL = window.CURUL || {};
       const asignado = GL.asignado(E, depto, organo);
       const secs = GL.secretariasDe(g);
       el.innerHTML = `<div class="cab"><div><h1>${organo === 'gobernacion' ? 'Gobernación de ' + esc(d.nombre) : 'Alcaldía de ' + esc(d.capital)}</h1>
-          <div class="sub">${esc(d.nombre)} · ${info.corp} · presupuesto propio ${bill(total)}/año</div></div></div>
+          <div class="sub">${esc(d.nombre)} · ${info.corp} · presupuesto propio ${bill(total)}/año</div></div>
+          <div class="fila">${UI.botonAccion('consejoGobLocal', { depto, organo }, 'Consejo de gobierno')}</div></div>
         <div class="grid g4">
           ${Comp.kpi('Presupuesto anual', bill(total))}
           ${Comp.kpi('Decretos firmados', g.decretos)}
@@ -36,9 +37,11 @@ window.CURUL = window.CURUL || {};
           return `<div class="tarjeta ${under ? 'min-presu bajo' : ''}"><div class="t-cab"><h3>${esc(s.nombre)}</h3>${under ? '<span class="etq rojo">Ajustada</span>' : ''}</div>
             <div class="kpi-fila"><div class="kpi"><span class="v">${U.d1(g.shares[s.id] || 0)}%</span><span class="l">del presupuesto</span></div><div class="kpi" style="text-align:right"><span class="v" style="font-size:17px">${bill(asignado[s.id])}</span><span class="l">al año</span></div></div>
             <input type="range" min="1" max="55" step="1" value="${(g.shares[s.id] || 0).toFixed(0)}" data-secshare="${s.id}" style="margin-top:6px">
-            ${pol ? `<div class="fila" style="margin-top:8px;align-items:center;gap:6px"><span data-ficha="${pol.id}" style="cursor:pointer">${Comp.avatar(E, pol, 26)}</span><span class="tenue" style="font-size:11.5px">${esc(C.Politicos.nombreCorto(pol))} · imagen <b class="num" style="color:var(--texto)">${Math.round(pol.aprob || 50)}%</b></span></div>` : ''}
+            ${pol ? `<div class="fila" style="margin-top:8px;align-items:center;gap:6px"><span data-ficha="${pol.id}" style="cursor:pointer">${Comp.avatar(E, pol, 26)}</span><span class="tenue" style="font-size:11.5px">${esc(C.Politicos.nombreCorto(pol))}${pol.partido ? ' · ' + esc(E.partidos[pol.partido].sigla) : ' · técnico'} · imagen <b class="num" style="color:var(--texto)">${Math.round(pol.aprob || 50)}%</b></span></div>` : ''}
             <div class="fila accion-form" style="margin-top:8px"><select data-arg="sentido"><option value="si">Reforzar</option><option value="no">Restringir</option></select>
               ${UI.botonAccion('decretoLocal', { depto, organo, secretaria: s.id }, 'Decretar', 'chico')}</div>
+            <div class="fila accion-form" style="margin-top:6px;flex-wrap:nowrap"><select data-arg="partido"><option value="">Técnico</option>${Object.values(E.partidos).filter(p => !p.especial && !p.futuro).map(p => `<option value="${p.id}">${esc(p.sigla)}</option>`).join('')}</select>${UI.botonAccion('designarSecretario', { depto, organo, secretaria: s.id }, 'Nombrar', 'chico')}</div>
+            ${GL.programasDe(s.id).length ? `<div class="fila accion-form" style="margin-top:6px;flex-wrap:nowrap"><select data-arg="idx">${GL.programasDe(s.id).map((p, i) => `<option value="${i}">${esc(p[0])}</option>`).join('')}</select>${UI.botonAccion('lanzarPrograma', { depto, organo, secretaria: s.id }, 'Lanzar', 'chico')}</div>` : ''}
           </div>`;
         }).join('')}</div>
         <div class="tarjeta" style="margin-top:14px"><h3>${esc(info.corp)}</h3>

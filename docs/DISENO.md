@@ -234,9 +234,40 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **3** | Fecha de inicio libre (1900-2026) con bipartidismo pre-1991 y Frente Nacional; gobierno local del jugador (gabinete, presupuesto y decretos como gobernador o alcalde); ley para crear nuevos ministerios; Asambleas Departamentales y Concejos Municipales con miembros elegidos y voto nominal real; capa de los 1122 municipios reales en el mapa | **completa** |
 | **4** | Peso interno de partido (nacional y departamental) que decide cómo arma listas la dirección; consultas internas (primarias) para disputar cabeza de lista o candidatura única, con su propia noche de resultados; diputados y concejales con curul propia y ordenanzas/acuerdos; noche electoral candidato a candidato en Senado, Cámara, Asamblea y Concejo | **completa** |
 | **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa** |
-| **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa (esta entrega)** |
-| 7 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
-| 8 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa** |
+| **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa (esta entrega)** |
+| 8 | Diplomacia, mapa mundial, cumbres, crisis internacionales | pendiente |
+| 9 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+
+### Notas de la Fase 7
+
+- **Gabinete local mejorado** (`GobiernoLocal.designarSecretario`/`lanzarPrograma`/`consejoLocal`):
+  como el presidente con `cambiarMinistro`, ahora puedes elegir el partido (o un técnico sin
+  partido) de cada secretario, en vez de que salga siempre al azar. Cada secretaría tiene además
+  dos programas de política pública concretos (`PROGRAMAS` en `gobiernolocal.js`) que se pueden
+  lanzar como una acción con efecto acotado sobre el indicador del departamento asociado, y un
+  Consejo de gobierno local que sube algo tu imagen en la región y la aprobación de tu gabinete —
+  el mismo patrón que el Consejo de Ministros nacional, a escala departamental o municipal.
+- **Fundar un partido nuevo** (`Partidos.iniciarFundacion`/`nacer`, acciones `iniciarFundacion` y
+  `impulsarFundacion`): cuesta $150 millones y algo de reconocimiento; a partir de ahí recoges
+  firmas semana a semana (más rápido si impulsas la recolección) hasta alcanzar la meta, que es más
+  baja cuanto más reconocido seas. Al nacer, el partido entra a `E.partidos` como cualquier otro
+  (con su propia facción, militantes, popularidad inicial y color), tú quedas de director y tu
+  militancia anterior se resiente.
+- **Coaliciones preelectorales y consulta interpartidista** (`js/sistemas/coaliciones.js`): antes
+  de inscribirte, puedes proponerle a otro partido que respalde tu aspiración a cambio de un puesto
+  concreto si ganas (un ministerio para Presidencia, una secretaría para Gobernación/Alcaldía, o
+  apoyo en comisión para Senado/Cámara) — la probabilidad de que acepte depende de la afinidad
+  ideológica, la generosidad de la oferta y su relación contigo. Con uno o más partidos ya aliados,
+  la vía de inscripción "coalición" resuelve con una **consulta interpartidista** quién de todos
+  ellos —tú incluido— es el candidato único, reutilizando el mismo motor que las consultas internas
+  pero con un representante de cada partido aliado compitiendo (no sólo rivales de tu propio
+  partido). Si ganas, `cam.coalicion` viaja con la campaña real (con bonus de fuerza electoral
+  proporcional a la popularidad de tus aliados) y, al asumir el cargo, `Coaliciones.cumplirPresidencia`
+  o `Coaliciones.cumplirLocal` reparten automáticamente los puestos pactados. Para el Congreso, sin
+  cargos ejecutivos que repartir, el "apoyo en comisión" queda como un gesto de buena relación
+  (sube `relJ`) más que un puesto concreto — una simplificación deliberada frente al costo de
+  rehacer el reparto de curules como listas conjuntas multipartidistas.
 
 ### Notas de la Fase 6
 
