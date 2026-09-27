@@ -156,24 +156,25 @@ window.CURUL = window.CURUL || {};
           return { ok: true, msg: 'Una semana productiva en tu oficio' };
         } });
       A.registrar({ id: 'cambiarOficio', nombre: 'Cambiar de trayectoria profesional', icono: '🔀', grupo: 'carrera', costo: 2,
-        disponible: (E, a) => !sinCargoElecto(E) ? 'Debes dejar tu cargo público primero' : ORIGENES[a.oficio] && !ORIGENES[a.oficio].electo ? true : 'Trayectoria no válida',
+        disponible: E => sinCargoElecto(E) || 'Debes dejar tu cargo público primero',
         ejecutar(E, a) {
           const J = E.jugador, o = ORIGENES[a.oficio];
+          if (!o || o.electo) return { ok: false, msg: 'Trayectoria no válida' };
           J.cargo = a.oficio; J.oficio = a.oficio; J.ingresos = o.salario;
           J.ocupados = J.ocupados || []; if (!J.ocupados.includes(a.oficio)) J.ocupados.push(a.oficio);
           Pj.anotar(E, 'Cambia de trayectoria: ahora es ' + o.n.toLowerCase());
           return { ok: true, msg: 'Nueva etapa: ' + o.n };
         } });
       A.registrar({ id: 'afiliarse', nombre: 'Afiliarse a un partido', icono: '🎗', grupo: 'carrera', costo: 1,
-        disponible: (E, a) => {
+        disponible: E => {
           const J = E.jugador;
-          if (!E.partidos[a.partido] || E.partidos[a.partido].especial) return 'Partido no válido';
-          if (J.partido === a.partido) return 'Ya perteneces a ese partido';
           if (J.cargo === 'senador' || J.cargo === 'representante' || J.cargo === 'presidente') return 'Prohibición de doble militancia: no puedes cambiar de partido durante tu periodo';
           return true;
         },
         ejecutar(E, a) {
           const J = E.jugador, pa = E.partidos[a.partido];
+          if (!pa || pa.especial) return { ok: false, msg: 'Partido no válido' };
+          if (J.partido === a.partido) return { ok: false, msg: 'Ya perteneces a ese partido' };
           if (J.partido && E.partidos[J.partido]) E.partidos[J.partido].relJ -= 15;
           J.partido = a.partido; pa.relJ = U.clamp(pa.relJ + 5, -100, 100);
           Pj.anotar(E, 'Se afilia al ' + pa.nombre);

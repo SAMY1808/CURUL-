@@ -183,13 +183,13 @@ window.CURUL = window.CURUL || {};
           const st = E.ordenPublico.grupos[a.grupo];
           if (esPresidente(E) !== true) return esPresidente(E);
           if (!st || !st.negociacion || st.negociacion.fase !== 'agenda') return 'No hay una agenda de paz en negociación con ese grupo';
-          const p = st.negociacion.puntos[a.punto]; if (!p) return 'Elige un punto de la agenda';
-          if (p.acordado) return 'Ese punto ya quedó acordado';
           return true;
         },
         ejecutar(E, a) {
           const st = E.ordenPublico.grupos[a.grupo], g = GRUPOS.find(x => x.id === a.grupo);
           const pun = PUNTOS.find(x => x.id === a.punto), p = st.negociacion.puntos[a.punto];
+          if (!p) return { ok: false, msg: 'Elige un punto de la agenda' };
+          if (p.acordado) return { ok: false, msg: 'Ese punto ya quedó acordado' };
           p.avance = U.clamp(p.avance + U.rf(18, 32), 0, 100);
           E.opinion.aprobacionPres = U.clamp(E.opinion.aprobacionPres - U.rf(0.2, 0.6), 3, 95);
           let msg = `Avanza el punto «${pun.nombre}» (${Math.round(p.avance)}%)`;

@@ -95,20 +95,19 @@ window.CURUL = window.CURUL || {};
         return true;
       };
       A.registrar({ id: 'convocarReferendo', nombre: 'Convocar referendo constitucional', icono: '🗳', grupo: 'constitucion', costo: 3,
-        disponible(E, a) {
+        disponible(E) {
           if (esPresidente(E) !== true) return esPresidente(E);
-          const lib = procesoLibre(E); if (lib !== true) return lib;
-          const art = ARTICULOS[a.articulo]; if (!art) return 'Elige un artículo';
-          if (!art.valores.includes(a.valor)) return 'Elige un valor válido';
-          if (K.valor(E, a.articulo) === a.valor) return 'Ese ya es el valor vigente';
-          const candado = K.candadoAutonomia(E, a.articulo, a.valor); if (candado !== true) return candado;
-          const ult = (E.constitucion.ultimoReferendo || {})[a.articulo];
-          if (ult != null && E.fecha.t - ult < 30) return `El país acaba de votar esto: podrás insistir en ${30 - (E.fecha.t - ult)} semanas`;
-          return true;
+          return procesoLibre(E);
         },
         ejecutar(E, a) {
+          const art = ARTICULOS[a.articulo]; if (!art) return { ok: false, msg: 'Elige un artículo' };
+          if (!art.valores.includes(a.valor)) return { ok: false, msg: 'Elige un valor válido' };
+          if (K.valor(E, a.articulo) === a.valor) return { ok: false, msg: 'Ese ya es el valor vigente' };
+          const candado = K.candadoAutonomia(E, a.articulo, a.valor); if (candado !== true) return { ok: false, msg: candado };
+          const ult = (E.constitucion.ultimoReferendo || {})[a.articulo];
+          if (ult != null && E.fecha.t - ult < 30) return { ok: false, msg: `El país acaba de votar esto: podrás insistir en ${30 - (E.fecha.t - ult)} semanas` };
           E.constitucion.referendo = { t: E.fecha.t, articulo: a.articulo, valor: a.valor, apoyo: K.apoyoObjetivo(E) };
-          C.Medios.noticia(E, { tipo: 'constitucion', titular: `El Gobierno convoca un referendo para reformar: ${ARTICULOS[a.articulo].nombre}`, tono: 0, importante: true, jugador: true });
+          C.Medios.noticia(E, { tipo: 'constitucion', titular: `El Gobierno convoca un referendo para reformar: ${art.nombre}`, tono: 0, importante: true, jugador: true });
           return { ok: true, msg: 'Se convoca el referendo; el país vota en unos meses' };
         } });
       A.registrar({ id: 'convocarConstituyente', nombre: 'Convocar Asamblea Constituyente', icono: '📜', grupo: 'constitucion', costo: 5,
@@ -119,19 +118,20 @@ window.CURUL = window.CURUL || {};
           return { ok: true, msg: 'Se convoca la elección de constituyentes' };
         } });
       A.registrar({ id: 'proponerArticuloConstituyente', nombre: 'Proponer cambio en la Constituyente', icono: '✍', grupo: 'constitucion', costo: 1,
-        disponible(E, a) {
+        disponible(E) {
           const c = E.constitucion.constituyente;
           if (!c || c.fase !== 'redaccion') return 'La Constituyente no está redactando un texto ahora mismo';
-          const art = ARTICULOS[a.articulo]; if (!art) return 'Elige un artículo';
-          if (!art.valores.includes(a.valor)) return 'Elige un valor válido';
-          if (c.propuestas.some(p => p.articulo === a.articulo)) return 'Ya incluiste ese artículo en el paquete';
           if (c.propuestas.length >= 3) return 'El paquete ya tiene el máximo de 3 cambios';
-          const candado = K.candadoAutonomia(E, a.articulo, a.valor); if (candado !== true) return candado;
           return true;
         },
         ejecutar(E, a) {
-          E.constitucion.constituyente.propuestas.push({ articulo: a.articulo, valor: a.valor });
-          return { ok: true, msg: `Se incluye en el paquete: ${ARTICULOS[a.articulo].nombre} → ${ARTICULOS[a.articulo].etiqueta(a.valor)}` };
+          const c = E.constitucion.constituyente;
+          const art = ARTICULOS[a.articulo]; if (!art) return { ok: false, msg: 'Elige un artículo' };
+          if (!art.valores.includes(a.valor)) return { ok: false, msg: 'Elige un valor válido' };
+          if (c.propuestas.some(p => p.articulo === a.articulo)) return { ok: false, msg: 'Ya incluiste ese artículo en el paquete' };
+          const candado = K.candadoAutonomia(E, a.articulo, a.valor); if (candado !== true) return { ok: false, msg: candado };
+          c.propuestas.push({ articulo: a.articulo, valor: a.valor });
+          return { ok: true, msg: `Se incluye en el paquete: ${art.nombre} → ${art.etiqueta(a.valor)}` };
         } });
     }
   };

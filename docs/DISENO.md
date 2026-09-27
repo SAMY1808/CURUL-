@@ -285,6 +285,31 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   ministerio) mejora la relación con los países destacados peor calificados en vez de un indicador
   departamental.
 
+### Corrección posterior a la Fase 11: botones deshabilitados por depender de un `<select>`
+
+Un jugador reportó que en Safari (iOS/iPadOS) ningún desplegable "dejaba seleccionar nada". La
+causa real no tenía nada que ver con el navegador ni con el toque: `UI.botonAccion(id, args, …)`
+calcula si el botón se deshabilita (`C.Acciones.puede(id, args)`) **en el momento de dibujar la
+pantalla**, con los `args` que se le pasan ahí mismo — casi siempre `{}` cuando el valor real vive
+en un `<select data-arg="…">` hermano dentro del mismo `.accion-form` (esos valores sólo se leen al
+hacer clic, vía delegación en `UI.initAcciones`). Si la función `disponible(E, a)` de una acción
+revisaba `a.<campo>` para decidir si mostrarse habilitada, encontraba `undefined` en cada render y
+el botón nacía con el atributo `disabled` para siempre — sin importar qué se eligiera después en el
+desplegable, porque un botón `disabled` nunca llega a disparar el clic delegado. Confirmado con una
+selección y un clic reales por Playwright (`page.select_option` + `page.click`, no llamando la
+acción directamente): antes del fix no pasaba nada; después, comprar un bien funcionó de punta a
+punta. La regla correcta —ya documentada antes en este archivo, pero violada varias veces al
+construir las Fases 8-11— es que la validación de un campo que depende de un `<select>` en vivo
+debe vivir en `ejecutar(E, a)`, devolviendo `{ ok: false, msg }`, nunca en `disponible`. Se corrigió
+en: `comprarBien`, `mermelada`, `cumbreBilateral`, `firmarTratado`, `convocarReferendo`,
+`proponerArticuloConstituyente`, `transferirCompetencia`, `negociarPunto`, `presionarMinisterio`,
+`proponerCoalicion` — y dos bugs preexistentes de antes de la Fase 7 que nadie había detectado:
+`cambiarOficio` y `afiliarse` en `personaje.js`, ambos con el mismo defecto desde su creación. Se
+hizo un barrido automatizado con Playwright por todas las pantallas principales (con el jugador en
+varios estados: presidente, con partido propio, con procesos de federalización/paz abiertos) que
+lista cada botón deshabilitado y su motivo, para confirmar que los únicos que quedan deshabilitados
+lo están por una razón real del juego, no por este defecto.
+
 ### Notas de la Fase 11
 
 - **Balance de orden público** (`ordenpublico.js`): la recuperación territorial de la Fuerza

@@ -330,9 +330,9 @@ window.CURUL = window.CURUL || {};
          bancada, por fuera de cualquier pacto de coalición formal. Sube la relación con el
          partido de forma más barata y confiable que negociar de buena fe, pero deja huella. */
       A.registrar({ id: 'mermelada', nombre: 'Repartir mermelada', icono: '🍯', grupo: 'gobierno', costo: 2,
-        disponible: (E, a) => E.gobierno.presidente !== 'J' ? 'Sólo el Presidente' : (E.partidos[a.partido] ? true : 'Elige un partido'),
+        disponible: E => E.gobierno.presidente === 'J' || 'Sólo el Presidente',
         ejecutar(E, a) {
-          const pa = E.partidos[a.partido];
+          const pa = E.partidos[a.partido]; if (!pa) return { ok: false, msg: 'Elige un partido' };
           pa.relJ = U.clamp(pa.relJ + U.rf(6, 11), -100, 100);
           E.jugador.riesgoJudicial = U.clamp((E.jugador.riesgoJudicial || 0) + U.rf(2, 4), 0, 100);
           E.opinion.corrupcionAcum = (E.opinion.corrupcionAcum || 0) + 0.3;
@@ -371,10 +371,10 @@ window.CURUL = window.CURUL || {};
           if (J.cargo === 'presidente') return 'Ya eres Presidente';
           if (!E.gobierno.coalicion.includes(J.partido)) return 'Tu partido no está en la coalición de gobierno';
           if (pa.presionUlt != null && E.fecha.t - pa.presionUlt < 10) return `Ya negociaste hace poco: podrás insistir en ${10 - (E.fecha.t - pa.presionUlt)} semanas`;
-          if (!a.ministerio || !E.gobierno.gabinete[a.ministerio]) return 'Elige un ministerio';
           return true;
         },
         ejecutar(E, a) {
+          if (!a.ministerio || !E.gobierno.gabinete[a.ministerio]) return { ok: false, msg: 'Elige un ministerio' };
           const min = G.todosMinisterios(E).find(m => m.id === a.ministerio);
           const r = G.presionarMinisterio(E, a.ministerio);
           return { ok: true, msg: r.exito ? `Consigues el Ministerio de ${min.nombre}` : `El Gobierno no cede el Ministerio de ${min.nombre} (probabilidad era ${Math.round(r.prob * 100)}%)`, exito: r.exito };

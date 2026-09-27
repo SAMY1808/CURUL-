@@ -106,14 +106,13 @@ window.CURUL = window.CURUL || {};
 
     registrarAcciones() {
       C.Acciones.registrar({ id: 'proponerCoalicion', nombre: 'Negociar coalición', icono: '🤝', grupo: 'campana', costo: 1,
-        disponible(E, a) {
-          if (!a.cargo) return 'Elige un cargo';
-          if (E.elecciones.campana) return 'Ya tienes una campaña inscrita: negocia antes de inscribirte';
-          if (!a.partido || !E.partidos[a.partido] || E.partidos[a.partido].especial) return 'Elige un partido';
-          if (!Coal.ofrecimientosValidos(a.cargo).includes(a.ofrecimiento)) return 'Elige qué ofreces';
-          return true;
+        disponible(E) {
+          return E.elecciones.campana ? 'Ya tienes una campaña inscrita: negocia antes de inscribirte' : true;
         },
         ejecutar(E, a) {
+          if (!a.cargo) return { ok: false, msg: 'Elige un cargo' };
+          if (!a.partido || !E.partidos[a.partido] || E.partidos[a.partido].especial) return { ok: false, msg: 'Elige un partido' };
+          if (!Coal.ofrecimientosValidos(a.cargo).includes(a.ofrecimiento)) return { ok: false, msg: 'Elige qué ofreces' };
           const r = Coal.proponer(E, a.cargo, a.depto || null, a.partido, a.ofrecimiento);
           if (!r.ok) return r;
           const pa = E.partidos[a.partido];

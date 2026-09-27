@@ -57,7 +57,7 @@ window.CURUL = window.CURUL || {};
     },
     registrarAcciones() {
       C.Acciones.registrar({ id: 'comprarBien', nombre: 'Comprar un bien', icono: '🏷', grupo: 'finanzas', costo: 1,
-        disponible(E, a) { const t = TIPOS[a.tipo]; if (!t) return 'Elige un tipo de bien'; return E.jugador.patrimonio >= t.costoBase * 0.8 ? true : `Necesitas cerca de ${U.cop(t.costoBase)}`; },
+        disponible(E) { const masBarato = Math.min(...Object.values(TIPOS).map(t => t.costoBase)); return E.jugador.patrimonio >= masBarato * 0.8 ? true : `Necesitas al menos ${U.cop(masBarato)} de patrimonio`; },
         ejecutar(E, a) { const r = Prop.comprar(E, a.tipo); return r.ok ? { ok: true, msg: `Compras ${r.bien.nombre.toLowerCase()} por ${U.cop(r.bien.valor)}` } : r; } });
       C.Acciones.registrar({ id: 'venderBien', nombre: 'Vender', icono: '💵', grupo: 'finanzas', costo: 1,
         disponible(E, a) { return Prop.bienes(E).some(b => b.id === a.bien) ? true : 'Elige un bien'; },

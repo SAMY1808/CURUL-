@@ -38,15 +38,14 @@ window.CURUL = window.CURUL || {};
           return { ok: true, msg: 'Arranca el proceso de federalización' };
         } });
       A.registrar({ id: 'transferirCompetencia', nombre: 'Transferir competencia a las regiones', icono: '🤝', grupo: 'constitucion', costo: 3,
-        disponible(E, a) {
+        disponible(E) {
           if (esPresidente(E) !== true) return esPresidente(E);
           if (!E.federalizacion) return 'Primero debes iniciar el proceso de federalización';
-          const c = E.federalizacion.competencias[a.competencia]; if (!c) return 'Elige una competencia';
-          if (c.transferida) return 'Esa competencia ya está transferida';
           return true;
         },
         ejecutar(E, a) {
-          const c = E.federalizacion.competencias[a.competencia];
+          const c = E.federalizacion.competencias[a.competencia]; if (!c) return { ok: false, msg: 'Elige una competencia' };
+          if (c.transferida) return { ok: false, msg: 'Esa competencia ya está transferida' };
           c.transferida = true; c.t = E.fecha.t;
           for (const d of Object.values(E.deptos)) {
             const campo = { gobierno: 'seguridad', salud: 'salud', educacion: 'educacion', infraestructura: 'infraestructura' }[a.competencia];

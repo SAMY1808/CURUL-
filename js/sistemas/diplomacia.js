@@ -101,18 +101,21 @@ window.CURUL = window.CURUL || {};
       const A = C.Acciones;
       const esPresidente = E => E.gobierno.presidente === 'J' || 'Sólo el Presidente';
       A.registrar({ id: 'cumbreBilateral', nombre: 'Cumbre bilateral', icono: '🌎', grupo: 'diplomacia', costo: 1,
-        disponible: (E, a) => esPresidente(E) !== true ? esPresidente(E) : (E.diplomacia.paises[a.pais] ? true : 'Elige un país'),
-        ejecutar(E, a) { const p = Dip.pais(a.pais); const r = Dip.cumbre(E, a.pais); return { ok: true, msg: `Cumbre con ${p.nombre}: relación ahora en ${Math.round(r.relacion)}` }; } });
+        disponible: esPresidente,
+        ejecutar(E, a) {
+          const p = Dip.pais(a.pais); if (!p) return { ok: false, msg: 'Elige un país' };
+          const r = Dip.cumbre(E, a.pais); return { ok: true, msg: `Cumbre con ${p.nombre}: relación ahora en ${Math.round(r.relacion)}` };
+        } });
       A.registrar({ id: 'firmarTratado', nombre: 'Firmar tratado internacional', icono: '📜', grupo: 'diplomacia', costo: 2,
-        disponible(E, a) {
-          if (esPresidente(E) !== true) return esPresidente(E);
-          const st = E.diplomacia.paises[a.pais]; if (!st) return 'Elige un país';
-          if (!TRATADOS[a.tipo]) return 'Elige un tipo de tratado';
-          if (st.tratados.includes(a.tipo)) return 'Ya existe ese tratado con este país';
-          if (st.relacion < 45) return 'La relación bilateral es demasiado baja para negociar un tratado';
-          return true;
-        },
-        ejecutar(E, a) { const p = Dip.pais(a.pais); Dip.firmarTratado(E, a.pais, a.tipo); return { ok: true, msg: `Se firma ${TRATADOS[a.tipo].toLowerCase()} con ${p.nombre}` }; } });
+        disponible: esPresidente,
+        ejecutar(E, a) {
+          const st = E.diplomacia.paises[a.pais]; if (!st) return { ok: false, msg: 'Elige un país' };
+          if (!TRATADOS[a.tipo]) return { ok: false, msg: 'Elige un tipo de tratado' };
+          if (st.tratados.includes(a.tipo)) return { ok: false, msg: 'Ya existe ese tratado con este país' };
+          if (st.relacion < 45) return { ok: false, msg: 'La relación bilateral es demasiado baja para negociar un tratado' };
+          const p = Dip.pais(a.pais); Dip.firmarTratado(E, a.pais, a.tipo);
+          return { ok: true, msg: `Se firma ${TRATADOS[a.tipo].toLowerCase()} con ${p.nombre}` };
+        } });
       A.registrar({ id: 'ingresarOrganismo', nombre: 'Solicitar ingreso a un organismo', icono: '🏳', grupo: 'diplomacia', costo: 2,
         disponible(E, a) {
           if (esPresidente(E) !== true) return esPresidente(E);
