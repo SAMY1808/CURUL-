@@ -11,9 +11,12 @@ window.CURUL = window.CURUL || {};
        original de la de 1991; permitida por una sola vez entre el Acto Legislativo 02 de 2004 y
        su derogatoria por el Acto Legislativo 02 de 2015. */
     puedeReelegirseInmediato(E) {
+      if (E.gobierno.reeleccionUsada) return false;
+      const reforma = C.Constitucion && E.constitucion ? C.Constitucion.valor(E, 'reeleccion') : null;
+      if (reforma === 'permitida') return true;
+      if (reforma === 'prohibida') return false;
       const anio = U.anio();
-      if (anio < 2005 || anio >= 2015) return false;
-      return !E.gobierno.reeleccionUsada;
+      return anio >= 2005 && anio < 2015;
     },
     /* Posesión de un presidente (IA o jugador) */
     posesionar(E, electo, silencioso) {

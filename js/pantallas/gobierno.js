@@ -38,10 +38,28 @@ window.CURUL = window.CURUL || {};
         <div class="tarjeta"><h3>Gobernadores por partido</h3>${G.barrasH(Object.entries(U.contar(Object.values(E.deptos), d => E.politicos[d.gobernador] ? E.politicos[d.gobernador].partido : '—')).sort((a, b) => b[1] - a[1]).map(([p, n]) => ({ etq: E.partidos[p] ? E.partidos[p].sigla : p, v: n, color: E.partidos[p] ? E.partidos[p].color : '#8C96A3', tt: g.coalicion.includes(p) ? 'Partido de gobierno' : '' })), { fmt: v => U.n(v), anchoEtq: '60px' })}</div>
         <div class="tarjeta"><h3>Orden público</h3><div class="lista">${C.OrdenPublico.GRUPOS.map(gr => {
           const st = E.ordenPublico.grupos[gr.id];
-          if (!st.activo) return st.acuerdoPaz ? `<div class="it"><div class="cuerpo"><b>${esc(gr.sigla)}</b><span class="tenue">Paz firmada · ${esc(gr.nombre)}</span></div><span class="etq verde">En paz</span></div>` : '';
-          return `<div class="it"><div class="cuerpo"><b>${esc(gr.sigla)}</b><span class="tenue">${esc(gr.nombre)} · presencia en ${st.control.length} departamento(s) · fuerza ${Math.round(st.fuerza)}</span>
-            ${st.negociacion ? `<span class="tenue">Mesa de paz: ${Math.round(st.negociacion.avance)}% avance</span>` : ''}</div>
-            ${g.presidente === 'J' ? (st.negociacion ? `${UI.botonAccion('concesionPaz', { grupo: gr.id }, 'Ceder en la mesa', 'chico')}` : `${UI.botonAccion('ofensivaMilitar', { grupo: gr.id }, 'Ofensiva', 'chico peligro')}${UI.botonAccion('mesaPaz', { grupo: gr.id }, 'Abrir diálogo', 'chico')}`) : ''}</div>`;
+          if (!st.activo) {
+            if (st.implementacion && !st.implementacion.consolidada) {
+              const im = st.implementacion;
+              return `<div class="it" style="display:block"><div class="cuerpo"><b>${esc(gr.sigla)}</b><span class="tenue">Paz firmada · implementación: cumplimiento ${Math.round(im.cumplimiento)}%</span></div>
+                <div style="margin-top:6px">${g.presidente === 'J' ? UI.botonAccion('invertirImplementacion', { grupo: gr.id }, 'Invertir en la implementación', 'chico') : ''}</div></div>`;
+            }
+            return st.acuerdoPaz ? `<div class="it"><div class="cuerpo"><b>${esc(gr.sigla)}</b><span class="tenue">Paz consolidada · ${esc(gr.nombre)}</span></div><span class="etq verde">En paz</span></div>` : '';
+          }
+          const neg = st.negociacion;
+          let negoHtml = '';
+          if (neg) {
+            if (neg.fase === 'cese') negoHtml = `<span class="tenue">Mesa exploratoria: falta pactar el cese al fuego</span></div>${g.presidente === 'J' ? UI.botonAccion('pactarCese', { grupo: gr.id }, 'Pactar cese al fuego', 'chico') : ''}`;
+            else if (neg.fase === 'agenda') {
+              const pend = C.OrdenPublico.PUNTOS.filter(p => !neg.puntos[p.id].acordado);
+              negoHtml = `<span class="tenue">Agenda: ${C.OrdenPublico.PUNTOS.length - pend.length}/${C.OrdenPublico.PUNTOS.length} puntos acordados</span></div>
+                ${g.presidente === 'J' && pend.length ? `<div class="fila accion-form" style="margin-top:6px"><select data-arg="punto">${pend.map(p => `<option value="${p.id}">${esc(p.nombre)} (${Math.round(neg.puntos[p.id].avance)}%)</option>`).join('')}</select>${UI.botonAccion('negociarPunto', { grupo: gr.id })}</div>` : ''}`;
+            } else if (neg.fase === 'verificacion') negoHtml = `<span class="tenue">En verificación internacional del acuerdo</span></div>`;
+          } else {
+            negoHtml = `<span class="tenue">${esc(gr.nombre)} · presencia en ${st.control.length} departamento(s) · fuerza ${Math.round(st.fuerza)}</span></div>
+              ${g.presidente === 'J' ? `${UI.botonAccion('ofensivaMilitar', { grupo: gr.id }, 'Ofensiva', 'chico peligro')}${UI.botonAccion('mesaPaz', { grupo: gr.id }, 'Abrir diálogo', 'chico')}` : ''}`;
+          }
+          return `<div class="it" style="display:block"><div class="cuerpo"><b>${esc(gr.sigla)}</b>${negoHtml}</div></div>`;
         }).join('') || '<div class="vacio">Sin grupos armados activos.</div>'}</div></div>
         <div class="tarjeta"><h3>Diplomacia</h3>
           <div class="tenue" style="font-size:11px;letter-spacing:.1em;margin-bottom:4px">RELACIONES DESTACADAS</div>
@@ -61,6 +79,33 @@ window.CURUL = window.CURUL || {};
               ${g.presidente === 'J' && !st.miembro && o.puedeUnirse ? UI.botonAccion('ingresarOrganismo', { organismo: o.id }, 'Solicitar ingreso', 'chico') : ''}
               ${g.presidente === 'J' && st.miembro && o.puedeRetirarse ? UI.botonAccion('retirarseOrganismo', { organismo: o.id }, 'Retirarse', 'chico peligro') : ''}</div>`;
           }).join('')}</div></div>
+        <div class="tarjeta"><h3>Constitución</h3><div class="lista">${Object.entries(C.Constitucion.ARTICULOS).map(([id, art]) => `<div class="it"><div class="cuerpo"><b>${esc(art.nombre)}</b><span class="tenue">Vigente: ${esc(art.etiqueta(C.Constitucion.valor(E, id)))}</span></div></div>`).join('')}</div>
+          ${(() => {
+            const K_ = E.constitucion;
+            if (K_.referendo) {
+              const art = C.Constitucion.ARTICULOS[K_.referendo.articulo];
+              return `<div class="tenue" style="margin-top:8px">Referendo en curso: ${esc(art.nombre)} → ${esc(art.etiqueta(K_.referendo.valor))} · apoyo ${Math.round(K_.referendo.apoyo)}%</div>`;
+            }
+            if (K_.constituyente) {
+              const c = K_.constituyente;
+              const fases = { eleccion: 'Elección de constituyentes', redaccion: 'Redacción del texto', ratificacion: 'Referendo de ratificación' };
+              return `<div class="tenue" style="margin-top:8px">Asamblea Constituyente: ${esc(fases[c.fase])}${c.fase === 'ratificacion' ? ` · apoyo ${Math.round(c.apoyo)}%` : ''}${c.propuestas.length ? ' · paquete: ' + c.propuestas.map(p => esc(C.Constitucion.ARTICULOS[p.articulo].nombre)).join(', ') : ''}</div>
+                ${g.presidente === 'J' && c.fase === 'redaccion' ? `<div class="fila accion-form" style="margin-top:6px"><select data-arg="articulo">${Object.entries(C.Constitucion.ARTICULOS).map(([id, a]) => `<option value="${id}">${esc(a.nombre)}</option>`).join('')}</select><select data-arg="valor">${Object.values(C.Constitucion.ARTICULOS).flatMap(a => a.valores).filter((v, i, arr) => arr.indexOf(v) === i).map(v => `<option value="${v}">${esc(String(v))}</option>`).join('')}</select>${UI.botonAccion('proponerArticuloConstituyente', {})}</div>` : ''}`;
+            }
+            if (g.presidente !== 'J') return '';
+            return `<div class="fila accion-form" style="margin-top:8px"><select data-arg="articulo">${Object.entries(C.Constitucion.ARTICULOS).map(([id, a]) => `<option value="${id}">${esc(a.nombre)}</option>`).join('')}</select><select data-arg="valor">${Object.values(C.Constitucion.ARTICULOS).flatMap(a => a.valores).filter((v, i, arr) => arr.indexOf(v) === i).map(v => `<option value="${v}">${esc(String(v))}</option>`).join('')}</select>${UI.botonAccion('convocarReferendo', {})}</div>
+              <div class="fila" style="margin-top:6px">${UI.botonAccion('convocarConstituyente', {})}</div>`;
+          })()}</div>
+          ${(() => {
+            const auto = C.Constitucion.valor(E, 'autonomiaTerritorial');
+            if (auto === 'federal') return `<div class="tenue" style="margin-top:10px">Colombia es un Estado federal: las seis competencias regionales ya fueron transferidas.</div>`;
+            if (auto !== 'descentralizada') return '';
+            const f = E.federalizacion;
+            if (!f) return g.presidente === 'J' ? `<div style="margin-top:10px">${UI.botonAccion('iniciarFederalizacion', {}, 'Iniciar la federalización')}</div>` : '';
+            const pend = Object.entries(f.competencias).filter(([, c]) => !c.transferida);
+            return `<div class="tenue" style="margin-top:10px">Federalización en curso: ${Object.keys(f.competencias).length - pend.length}/${Object.keys(f.competencias).length} competencias transferidas</div>
+              ${g.presidente === 'J' && pend.length ? `<div class="fila accion-form" style="margin-top:6px"><select data-arg="competencia">${pend.map(([id]) => `<option value="${id}">${esc(C.Federalizacion.COMPETENCIAS[id])}</option>`).join('')}</select>${UI.botonAccion('transferirCompetencia', {})}</div>` : ''}`;
+          })()}</div>
       </div></div>`;
   };
 

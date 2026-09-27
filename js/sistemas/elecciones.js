@@ -174,7 +174,8 @@ window.CURUL = window.CURUL || {};
       // 2. Senado: cifra repartidora sobre 100 curules nacionales. El umbral del 3 % es una
       // reforma de 2003 (Acto Legislativo 01); antes no existía piso alguno.
       const era = El.era(anio);
-      const umbralSen = anio >= 2003 ? validosSen * C.DATA.camaras.senado.umbral : 0;
+      const umbralSenPct = E.constitucion ? C.Constitucion.valor(E, 'umbralSenado') : C.DATA.camaras.senado.umbral;
+      const umbralSen = anio >= 2003 ? validosSen * umbralSenPct : 0;
       const curSen = El.dhondt(votosSen, 100, umbralSen);
       if (era === 'frenteNacional') El.paridadFN(curSen, votosSen);
       if (opts.forzarJugador === 'senado' && !curSen[J.partido]) {

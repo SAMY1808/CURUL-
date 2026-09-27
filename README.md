@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 8 completas)
+## Qué hay en esta versión (Fases 1 a 10 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -120,6 +120,20 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   Pacífico, CELAC, ALADI, OCDE) y algunos de los que no hace parte (Mercosur, UNASUR, BRICS,
   CARICOM); puedes solicitar el ingreso a estos últimos o retirarte de los primeros, con sus
   propias consecuencias.
+- **Constitución reformable**: reelección presidencial, umbral electoral del Senado, edad mínima
+  para ser presidente y autonomía territorial se pueden cambiar por un referendo puntual o por una
+  Asamblea Nacional Constituyente que puede empaquetar hasta tres cambios a la vez, con sus propias
+  fases de elección, redacción y ratificación.
+- **Federalización**: con el país ya descentralizado, puedes iniciar un proceso de transferencia de
+  seis competencias (seguridad, hacienda, salud, educación, infraestructura, planeación) a
+  gobernaciones y alcaldías; cada una transferida les da más peso real en sus programas locales.
+  Al completar las seis, Colombia queda constituida como Estado federal — un cambio, en principio,
+  sin vuelta atrás fácil.
+- **Protocolo de paz completo**: negociar con un grupo armado ya no es un solo paso — primero un
+  cese al fuego bilateral, luego una agenda real de cinco puntos (reforma rural, participación
+  política, fin del conflicto, drogas ilícitas, víctimas) negociados uno a uno, después verificación
+  internacional, y por último una implementación post-acuerdo con riesgo real de que surjan
+  disidencias si el Gobierno no sigue invirtiendo en cumplirlo.
 
 ## Arquitectura
 

@@ -237,8 +237,9 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa** |
 | **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa** |
 | **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
-| **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa (esta entrega)** |
-| 10 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
+| **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa** |
+| **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa (esta entrega)** |
+| 11 | Cientos de políticos con carreras independientes, partidos que nacen y mueren, décadas | pendiente |
 
 ### Notas de la Fase 8
 
@@ -282,6 +283,47 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   Relaciones Exteriores, su mesa de trabajo (la misma acción genérica `convocarMesa` de cualquier
   ministerio) mejora la relación con los países destacados peor calificados en vez de un indicador
   departamental.
+
+### Notas de la Fase 10
+
+- **Constitución reformable** (`js/sistemas/constitucion.js`, nuevo): un catálogo curado de cuatro
+  artículos con hooks reales en el motor —no texto libre—: `reeleccion` (consultada por
+  `Gobierno.puedeReelegirseInmediato` antes de la regla histórica 2005-2015), `umbralSenado`
+  (consultado por `Elecciones.congreso` en vez de la constante fija de `DATA.camaras.senado`),
+  `edadMinimaPresidencia` (consultada por la acción `inscribir` de campaña) y `autonomiaTerritorial`
+  (unitaria/descentralizada/federal, la base de la federalización). Dos vías de reforma: un
+  **referendo** puntual (`convocarReferendo`, campaña de 16 semanas donde el apoyo deriva con la
+  aprobación presidencial y se resuelve con esa probabilidad) o una **Asamblea Constituyente**
+  (`convocarConstituyente`, tres fases —elección, redacción, ratificación— que permite empaquetar
+  hasta 3 cambios a la vez con `proponerArticuloConstituyente`, más lenta pero capaz de reformar
+  varias cosas de un golpe). Pasar a "federal" por cualquiera de las dos vías está bloqueado a
+  propósito (`Constitucion.candadoAutonomia`): exige el proceso dedicado de federalización, y una
+  vez alcanzado, revertirlo tampoco cabe en un solo referendo o constituyente.
+- **Federalización** (`js/sistemas/federalizacion.js`, nuevo): con el país ya descentralizado,
+  `iniciarFederalizacion` abre un proceso de transferencia de seis competencias (seguridad,
+  hacienda, salud, educación, infraestructura, planeación —las mismas seis secretarías que ya
+  existían en `GobiernoLocal`— transferidas una por una con `transferirCompetencia`). Cada
+  transferencia deja un efecto inmediato sobre los departamentos y, sobre todo, activa un
+  multiplicador (`Federalizacion.multiplicador`, ×1.6) que `GobiernoLocal.lanzarPrograma` aplica de
+  ahí en adelante a los programas de esa secretaría en cualquier departamento — gobernadores y
+  alcaldes literalmente gobiernan con más peso real. Al transferirse la sexta, el artículo
+  constitucional pasa a "federal" automáticamente, con su propia noticia de alcance nacional.
+- **Protocolo de paz con agenda y post-acuerdo** (`js/sistemas/ordenpublico.js`, reescrito): la
+  vieja mesa de negociación de un solo paso se reemplaza por un protocolo de cuatro fases, con la
+  agenda de La Habana (2012-2016) como referencia directa. `mesaPaz` abre una mesa exploratoria;
+  `pactarCese` la mueve a un cese al fuego bilateral; en la fase de agenda, `negociarPunto` avanza
+  uno de los cinco puntos reales (reforma rural, participación política, fin del conflicto, drogas
+  ilícitas, víctimas) a la vez, y sólo cuando los cinco quedan acordados se entra a una fase de
+  verificación internacional pasiva de 6 semanas antes de la firma. Firmar ya no es el final: abre
+  una **implementación** con un `cumplimiento` que decae solo si el Gobierno no sigue invirtiendo
+  (`invertirImplementacion`) y que, si cae por debajo de 25 %, tiene una probabilidad semanal de que
+  surjan disidencias que reactivan parte del conflicto (recuperan uno o dos departamentos con una
+  fuerza menor, bajo la misma sigla) — el mismo patrón de "la paz se puede perder si no se cumple"
+  del proceso real. Sostener el cumplimiento sobre 70 % durante 30 semanas consolida la paz de forma
+  permanente. Simplificación explícita: la disidencia reutiliza el mismo grupo (misma sigla, nueva
+  `fuerza` y `control`) en vez de crear una facción disidente aparte con su propia identidad — evita
+  tener que extender el catálogo fijo de `GRUPOS` en tiempo de ejecución por un beneficio narrativo
+  menor.
 
 ### Notas de la Fase 9
 

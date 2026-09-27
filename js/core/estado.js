@@ -25,6 +25,7 @@ window.CURUL = window.CURUL || {};
         opinion: {},
         ordenPublico: {},
         diplomacia: {},
+        constitucion: {},
         elecciones: { historico: [], campana: null, proxima: null, coaliciones: {} },
         medios: { lista: [], noticias: [] },
         eventos: { pendientes: [], historial: [] },
@@ -57,6 +58,7 @@ window.CURUL = window.CURUL || {};
       if (E.jugador.riesgoJudicial == null) E.jugador.riesgoJudicial = 0;
       if (C.OrdenPublico && (!E.ordenPublico || !E.ordenPublico.grupos)) { const prev = C.E; C.E = E; C.OrdenPublico.init(E); C.E = prev; }
       if (C.Diplomacia && (!E.diplomacia || !E.diplomacia.organismos)) { const prev = C.E; C.E = E; C.Diplomacia.init(E); C.E = prev; }
+      if (C.Constitucion && (!E.constitucion || !E.constitucion.articulos)) { const prev = C.E; C.E = E; C.Constitucion.init(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;
