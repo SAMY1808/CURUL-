@@ -203,8 +203,9 @@ window.CURUL = window.CURUL || {};
           return { ok: true, msg: `${s.nombre} asume la secretaría` };
         } });
       A.registrar({ id: 'lanzarPrograma', nombre: 'Lanzar programa', icono: '📋', grupo: 'local', costo: 2,
-        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; return GL.programasDe(a.secretaria)[a.idx] ? true : 'Elige un programa'; },
+        disponible(E, a) { return propio(E, a.depto, a.organo) ? true : 'No ejerces ese cargo'; },
         ejecutar(E, a) {
+          if (!GL.programasDe(a.secretaria)[a.idx]) return { ok: false, msg: 'Elige un programa' };
           const r = GL.lanzarPrograma(E, a.depto, a.organo, a.secretaria, +a.idx);
           return { ok: true, msg: `Lanzas «${r.nombre}»${r.campo ? ': ' + U.signo(r.magnitud, 1) + ' en ' + r.campo : ''}` };
         } });

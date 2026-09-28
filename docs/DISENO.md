@@ -474,6 +474,17 @@ varios estados: presidente, con partido propio, con procesos de federalización/
 lista cada botón deshabilitado y su motivo, para confirmar que los únicos que quedan deshabilitados
 lo están por una razón real del juego, no por este defecto.
 
+**Un tercer caso se coló después, sin que ese barrido lo cubriera**: `lanzarPrograma`
+(`gobiernolocal.js`, Fase 3c) revisaba `a.idx` —el programa elegido en el `<select data-arg="idx">`
+de cada secretaría— dentro de `disponible(E, a)`, exactamente el mismo defecto. Como el barrido
+automatizado de la Fase 11 sólo probó las pantallas listadas en ese momento y `local.js` (Gobierno
+local del jugador) no estaba entre ellas, pasó cinco fases sin detectarse hasta que un jugador
+reportó que el botón "Lanzar" de sus secretarías nunca se habilitaba. Corregido con la misma regla:
+la validación de `a.idx` se movió a `ejecutar`. Lección para el futuro: el barrido de botones
+deshabilitados debe cubrir **todas** las pantallas con formularios de `<select>`, incluidas las que
+sólo aparecen bajo un cargo concreto (gobernador/alcalde, diputado/concejal), no sólo las que se
+prueban con el jugador de presidente.
+
 ### Notas de la Fase 11
 
 - **Balance de orden público** (`ordenpublico.js`): la recuperación territorial de la Fuerza
