@@ -60,7 +60,12 @@ window.CURUL = window.CURUL || {};
         C.Familia.finDeCarrera(E, 'condena');
       } else {
         C.Medios.noticia(E, { tipo: 'judicial', titular: `${J.nombre} pierde la investidura tras ser condenado/a por ${TIPOS[inv.tipo]}`, tono: -1, importante: true, jugador: true });
-        if (C.DATA.cargos[J.cargo].electo) C.Personaje.dejarCargo(E, 'Pierde la investidura por condena judicial');
+        if (C.DATA.cargos[J.cargo].electo) {
+          const cargoAntes = J.cargo, depto = J.cargoInfo.depto;
+          if (cargoAntes === 'senador' || cargoAntes === 'representante') C.Gobierno.vacante(E, E.politicos.J);
+          C.Personaje.dejarCargo(E, 'Pierde la investidura por condena judicial');
+          if (cargoAntes === 'gobernador' || cargoAntes === 'alcalde') C.Elecciones.vacanteRegional(E, depto, cargoAntes);
+        }
       }
     },
     registrarAcciones() {

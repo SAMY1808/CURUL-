@@ -364,6 +364,25 @@ recordatorio para toda fase futura que agregue un `E.<sistema>` nuevo: además d
 `Mundo.generar`, hay que darle su línea en `C.Estado.migrar`, o cualquier partida guardada antes de
 esa fase quedará rota en cuanto la pantalla correspondiente intente leerlo.
 
+### Corrección posterior a la Fase 19: gobernación/alcaldía que se queda "congelada" tras perder la investidura
+
+Un jugador reportó que, tras ganar una gobernación, el mapa lo seguía mostrando como gobernador de
+Caldas para siempre — pero su chip de cargo decía "Empresario" y la pestaña de Gobernación había
+desaparecido. La partida mostraba en el ticker que había perdido la investidura por una condena
+judicial poco después de posesionarse. La causa: `Judicial.resolver` (Fase 8d), al condenar al
+jugador, llama a `C.Personaje.dejarCargo`, que sólo actualiza los campos del propio jugador
+(`J.cargo`, `J.cargoInfo`…) — nunca toca `E.deptos[depto].gobernador` o `.alcalde`, que es donde el
+mapa y el resto del juego leen quién ejerce ese cargo. Para un congresista sí existía este cuidado
+(`Gobierno.vacante` reasigna la curul a un sucesor antes de `dejarCargo`), pero nunca se replicó
+para gobernaciones y alcaldías porque hasta ahora nadie había perdido la investidura ejerciendo uno
+de esos dos cargos. Se agregó `Elecciones.vacanteRegional(E, depto, tipo)` — el mismo patrón que
+`Gobierno.vacante`, pero para el departamento o municipio: crea un sucesor interino del mismo
+partido y lo deja en `E.deptos[depto][tipo]` — y `Judicial.resolver` ahora la llama (guardando el
+cargo y el departamento del jugador *antes* de `dejarCargo`, que ya los borra) cuando la investidura
+perdida era de gobernador o alcalde. Verificado con Playwright forzando una condena repetidas veces
+hasta caer en la rama de pérdida de investidura: el departamento queda con un sucesor real (no con
+el id del jugador) y ni el mapa ni la barra de navegación quedan inconsistentes.
+
 ### Notas de la Fase 17
 
 - **Actores sociales permanentes** (`js/sistemas/movilizacion.js`, nuevo): cinco actores fijos —
