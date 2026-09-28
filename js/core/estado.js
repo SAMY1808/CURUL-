@@ -61,6 +61,8 @@ window.CURUL = window.CURUL || {};
       if (C.Diplomacia && (!E.diplomacia || !E.diplomacia.organismos)) { const prev = C.E; C.E = E; C.Diplomacia.init(E); C.E = prev; }
       if (C.Constitucion && (!E.constitucion || !E.constitucion.articulos)) { const prev = C.E; C.E = E; C.Constitucion.init(E); C.E = prev; }
       if (C.Redes && (!E.redes || E.redes.viralidad == null)) { const prev = C.E; C.E = E; C.Redes.init(E); C.E = prev; }
+      // Partidas previas a la Fase 17 no traen los actores sociales permanentes (Movilización).
+      if (C.Movilizacion && (!E.movilizacion || !E.movilizacion.actores)) { const prev = C.E; C.E = E; C.Movilizacion.init(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

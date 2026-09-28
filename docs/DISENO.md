@@ -346,6 +346,24 @@ buscar por `sector`.
   fase (Fase 18a): un valor que sólo existe en un `<select>` hermano debe validarse en `ejecutar()`,
   no en `disponible()`, o el botón queda deshabilitado sin importar qué se seleccione después.
 
+### Corrección posterior a la Fase 19: pantalla en blanco en Gobierno con partidas de antes de la Fase 17
+
+Un jugador con una partida muy antigua (empezada en 2010, antes de que existiera la Movilización
+social de la Fase 17) reportó `TypeError: Cannot read properties of undefined (reading 'actores')`
+al abrir "Gobierno y oposición". La causa no estaba en el Padrinazgo de esta entrega, sino en un
+descuido de la Fase 17 que nadie había disparado hasta ahora: `Movilizacion.init(E)` sólo se llama
+al **generar una partida nueva** (`Mundo.generar`), nunca al cargar una ya existente — a diferencia
+de Orden Público, Diplomacia, Constitución o Redes, que sí tienen su línea correspondiente en
+`C.Estado.migrar(E)` (`js/core/estado.js`) para rellenarse en partidas guardadas antes de que esos
+sistemas existieran. Cualquier partida guardada antes de la Fase 17 se queda sin `E.movilizacion`
+por completo, y la pantalla de Gobierno lo asume siempre presente. Corregido agregando la misma
+línea de migración que ya tienen los demás sistemas: `if (!E.movilizacion || !E.movilizacion.actores)
+Movilizacion.init(E)`. Verificado con Playwright borrando `E.movilizacion` de una partida en
+memoria, migrando y confirmando que la pantalla de Gobierno renderiza sin error. Queda como
+recordatorio para toda fase futura que agregue un `E.<sistema>` nuevo: además de inicializarlo en
+`Mundo.generar`, hay que darle su línea en `C.Estado.migrar`, o cualquier partida guardada antes de
+esa fase quedará rota en cuanto la pantalla correspondiente intente leerlo.
+
 ### Notas de la Fase 17
 
 - **Actores sociales permanentes** (`js/sistemas/movilizacion.js`, nuevo): cinco actores fijos —
