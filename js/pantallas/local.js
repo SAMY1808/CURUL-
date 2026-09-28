@@ -64,11 +64,11 @@ window.CURUL = window.CURUL || {};
             <div class="kpi"><span class="v">${bill(g.fondoRegalias || 0)}</span><span class="l">fondo disponible</span></div>
             <div class="fila" style="margin-top:8px">${UI.botonAccion('pedirRegalias', { depto, organo })}</div></div>
           <div class="tarjeta"><h3>🏗 Obra bandera</h3>
-            ${g.obraBandera ? `<div class="tenue" style="font-size:12px;margin-bottom:6px">En obra: <b style="color:var(--texto)">${esc((secs.find(s => s.id === g.obraBandera.sector) || {}).nombre || g.obraBandera.sector)}</b> · ${g.obraBandera.semanas} sem. restantes${g.obraBandera.acelerada ? ' · <span class="mal">acelerada</span>' : ''}</div>
+            ${g.obraBandera ? (() => { const ob = GL.nombreObra(g.obraBandera); return `<div class="tenue" style="font-size:12px;margin-bottom:6px">En obra: <b style="color:var(--texto)">${ob.icono} ${esc(ob.nombre)}</b> · ${g.obraBandera.semanas} sem. restantes${g.obraBandera.acelerada ? ' · <span class="mal">acelerada</span>' : ''}</div>
               <div class="barra-h" style="margin-bottom:8px"><i style="width:${Math.round((1 - g.obraBandera.semanas / g.obraBandera.semanasTot) * 100)}%;background:var(--oro)"></i></div>
-              ${!g.obraBandera.acelerada ? UI.botonAccion('acelerarObraBandera', { depto, organo }, null, 'chico') : ''}`
+              ${!g.obraBandera.acelerada ? UI.botonAccion('acelerarObraBandera', { depto, organo }, null, 'chico') : ''}`; })()
             : `<div class="tenue" style="font-size:12px;margin-bottom:8px">Un megaproyecto visible, uno a la vez: si sale bien deja un legado real; si lo aprietas, hay riesgo de sobrecostos.</div>
-              <div class="fila accion-form" style="flex-wrap:nowrap"><select data-arg="sector">${secs.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('')}</select>${UI.botonAccion('iniciarObraBandera', { depto, organo })}</div>`}
+              <div class="fila accion-form" style="flex-wrap:nowrap"><select data-arg="obra">${GL.obrasDisponibles(E, depto, organo).map(o => `<option value="${o.id}">${o.icono} ${esc(o.nombre)}</option>`).join('')}</select>${UI.botonAccion('iniciarObraBandera', { depto, organo })}</div>`}
             <div class="tenue" style="font-size:11px;margin-top:8px">${(g.obras || []).length} obra(s) entregada(s) hasta ahora · ${(g.obras || []).filter(o => o.exito).length} exitosa(s)</div></div>
           <div class="tarjeta"><h3>📢 Paro cívico</h3>
             <div class="tenue" style="font-size:12px;margin-bottom:6px">El descontento local sube si tu gestión se queda corta frente al resto del país.</div>

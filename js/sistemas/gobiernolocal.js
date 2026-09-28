@@ -19,6 +19,24 @@ window.CURUL = window.CURUL || {};
     ['planeacion', 'Secretaría de Planeación', 'tecnologia', 8]
   ];
   const EFECTO = { salud: 'salud', educacion: 'educacion', infraestructura: 'infraestructura', gobierno: 'seguridad' };
+  /* Megaproyectos concretos para la obra bandera: cada uno queda ligado a una secretaría (para el
+     efecto sobre el indicador y el gestor a cargo) pero se nombra y se filtra como una obra real,
+     no como "la secretaría de X". minPob filtra por población (miles) de la entidad que ejecuta
+     (capital si es alcaldía, departamento si es gobernación); soloAlcaldia reserva el metro a las
+     grandes ciudades, que es donde tiene sentido. */
+  const OBRAS_BANDERA = [
+    ['metro', 'Sistema de metro', '🚇', 'infraestructura', { soloAlcaldia: true, minPob: 1400 }],
+    ['aeropuerto', 'Aeropuerto regional', '✈️', 'infraestructura', { minPob: 350 }],
+    ['terminal', 'Terminal de transporte', '🚌', 'infraestructura', {}],
+    ['malla_vial', 'Malla vial y puentes', '🛣️', 'infraestructura', {}],
+    ['hospital', 'Hospital de tercer nivel', '🏥', 'salud', { minPob: 300 }],
+    ['centros_salud', 'Red de centros de salud rural', '⚕️', 'salud', {}],
+    ['megacolegio', 'Megacolegio', '🏫', 'educacion', {}],
+    ['universidad', 'Universidad pública', '🎓', 'educacion', { minPob: 500 }],
+    ['ciudadela', 'Ciudadela de seguridad y justicia', '🚔', 'gobierno', {}],
+    ['parque', 'Parque metropolitano', '🌳', 'planeacion', {}],
+    ['convenciones', 'Centro de convenciones', '🏛', 'hacienda', {}]
+  ];
   const ORGANOS = { gobernacion: { cargo: 'gobernador', corp: 'Asamblea Departamental', acto: 'Ordenanza' }, alcaldia: { cargo: 'alcalde', corp: 'Concejo Municipal', acto: 'Acuerdo' } };
   /* Programas de política pública por secretaría: cada uno se puede "lanzar" como una acción
      concreta (no sólo mover el presupuesto), con un efecto acotado sobre el indicador asociado. */
@@ -32,7 +50,13 @@ window.CURUL = window.CURUL || {};
   };
 
   const GL = {
-    SECRETARIAS, ORGANOS,
+    SECRETARIAS, ORGANOS, OBRAS_BANDERA,
+    obrasDisponibles(E, depto, organo) {
+      const d = E.deptos[depto];
+      const pob = organo === 'alcaldia' ? GL.poblacionCapital(d) : d.poblacion;
+      return OBRAS_BANDERA.filter(o => (!o[4].soloAlcaldia || organo === 'alcaldia') && pob >= (o[4].minPob || 0))
+        .map(o => ({ id: o[0], nombre: o[1], icono: o[2], sector: o[3] }));
+    },
     /* Población aproximada de la capital (no hay dato municipal propio: se estima del departamento). */
     poblacionCapital: d => Math.max(120, Math.round(d.poblacion * (d.id === 'BOG' || d.id === 'SAP' ? 1 : 0.38))),
     presupuestoTotal(E, depto, organo) {
@@ -281,10 +305,11 @@ window.CURUL = window.CURUL || {};
 
     /* ── Obra bandera: un megaproyecto de infraestructura visible, uno a la vez. Acelerarla la
        adelanta pero sube el riesgo de sobrecostos y, en el peor caso, un escándalo real. */
-    iniciarObraBandera(E, depto, organo, sector) {
+    iniciarObraBandera(E, depto, organo, obraId) {
       const g = GL.asegurar(E, depto, organo);
+      const def = OBRAS_BANDERA.find(o => o[0] === obraId) || OBRAS_BANDERA[2];
       const semanas = U.ri(16, 24);
-      g.obraBandera = { sector, t: E.fecha.t, semanas, semanasTot: semanas, acelerada: false };
+      g.obraBandera = { obraId: def[0], sector: def[3], t: E.fecha.t, semanas, semanasTot: semanas, acelerada: false };
     },
     acelerarObra(E, depto, organo) {
       const o = GL.asegurar(E, depto, organo).obraBandera; if (!o || o.acelerada) return;
@@ -295,8 +320,13 @@ window.CURUL = window.CURUL || {};
       o.semanas--;
       if (o.semanas <= 0) GL.resolverObra(E, depto, organo);
     },
+    nombreObra(o) {
+      const def = OBRAS_BANDERA.find(x => x[0] === o.obraId) || OBRAS_BANDERA.find(x => x[3] === o.sector);
+      return def ? { nombre: def[1], icono: def[2] } : { nombre: 'Obra de infraestructura', icono: '🏗' };
+    },
     resolverObra(E, depto, organo) {
       const g = GL.asegurar(E, depto, organo), d = E.deptos[depto], o = g.obraBandera;
+      const nombreObra = GL.nombreObra(o).nombre;
       const campo = EFECTO[o.sector] || null;
       const secPol = E.politicos[g.secretarios[o.sector]];
       const gestionSec = secPol ? GL.asegurarSecretario(secPol).gestion : 50;
@@ -311,14 +341,14 @@ window.CURUL = window.CURUL || {};
         E.jugador.reconocimiento = U.clamp(E.jugador.reconocimiento + 10, 0, 100);
         E.jugador.rep.liderazgo = U.clamp(E.jugador.rep.liderazgo + 4, 0, 100);
         if (g.fondoRegalias) g.fondoRegalias = Math.max(0, g.fondoRegalias - tot * 0.15);
-        g.obras.push({ t: E.fecha.t, sector: o.sector, exito: true });
-        C.Medios.noticia(E, { tipo: 'regional', titular: `Se entrega la obra bandera de ${nombreLugar}: un antes y un después${campo ? ' en ' + campo : ''}`, tono: 1, importante: true, jugador: true });
+        g.obras.push({ t: E.fecha.t, obraId: o.obraId, sector: o.sector, exito: true });
+        C.Medios.noticia(E, { tipo: 'regional', titular: `Se entrega ${nombreObra.toLowerCase()} en ${nombreLugar}: un antes y un después${campo ? ' en ' + campo : ''}`, tono: 1, importante: true, jugador: true });
       } else {
         const grave = o.acelerada && U.chance(0.4);
         C.Opinion.moverImagen(E, { dep: { [depto]: -2 } });
         if (grave) E.jugador.riesgoJudicial = U.clamp((E.jugador.riesgoJudicial || 0) + U.ri(6, 14), 0, 100);
-        g.obras.push({ t: E.fecha.t, sector: o.sector, exito: false, grave });
-        C.Medios.noticia(E, { tipo: 'escandalo', titular: grave ? `Escándalo por sobrecostos en la obra bandera de ${nombreLugar}` : `La obra bandera de ${nombreLugar} se entrega tarde y por debajo de lo prometido`, tono: -1, importante: true, jugador: true });
+        g.obras.push({ t: E.fecha.t, obraId: o.obraId, sector: o.sector, exito: false, grave });
+        C.Medios.noticia(E, { tipo: 'escandalo', titular: grave ? `Escándalo por sobrecostos en ${nombreObra.toLowerCase()} de ${nombreLugar}` : `${nombreObra} de ${nombreLugar} se entrega tarde y por debajo de lo prometido`, tono: -1, importante: true, jugador: true });
       }
       g.obraBandera = null;
     },
@@ -501,8 +531,9 @@ window.CURUL = window.CURUL || {};
         ejecutar(E, a) {
           const g = E.deptos[a.depto].gobLocal[a.organo];
           if (g.obraBandera) return { ok: false, msg: 'Ya tienes una obra bandera en curso' };
-          const sector = GL.secretariasDe(g).some(s => s.id === a.sector) ? a.sector : 'infraestructura';
-          GL.iniciarObraBandera(E, a.depto, a.organo, sector);
+          const disponibles = GL.obrasDisponibles(E, a.depto, a.organo);
+          const obraId = disponibles.some(o => o.id === a.obra) ? a.obra : disponibles[0].id;
+          GL.iniciarObraBandera(E, a.depto, a.organo, obraId);
           return { ok: true, msg: 'Inicias la obra bandera: tardará varias semanas en completarse' };
         } });
       A.registrar({ id: 'acelerarObraBandera', nombre: 'Acelerar la obra', icono: '⏱', grupo: 'local', costo: 1,

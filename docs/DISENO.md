@@ -266,12 +266,16 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   fiscal entre el centro y la región. El fondo resultante (`g.fondoRegalias`) sólo se usa como
   bonus de probabilidad al resolver la obra bandera, no como dinero libre para gastar en cualquier
   cosa.
-- **Obra bandera** (`GL.iniciarObraBandera`/`resolverObra`): un megaproyecto de infraestructura, uno
-  a la vez, de 16 a 24 semanas. Puede acelerarse (`acelerarObra`, -5 semanas) a cambio de una
-  penalización real a la probabilidad de éxito y, si falla estando acelerada, una probabilidad de
-  escándalo por sobrecostos que suma `riesgoJudicial` (mismo campo del sistema judicial de la Fase
-  8). Un éxito da un salto grande al indicador del sector (mucho mayor que un programa normal de
-  secretaría) y sube el reconocimiento del jugador de forma notoria.
+- **Obra bandera** (`GL.iniciarObraBandera`/`resolverObra`): un megaproyecto concreto y nombrado
+  (metro, aeropuerto, hospital de tercer nivel, terminal, megacolegio, etc. — catálogo
+  `OBRAS_BANDERA`), uno a la vez, de 16 a 24 semanas. Cada obra queda ligada a una secretaría (para
+  el indicador que mueve y el secretario cuya gestión influye en el éxito) y algunas se filtran por
+  población (`GL.obrasDisponibles`, ej. el metro sólo aparece en alcaldías de ciudades grandes).
+  Puede acelerarse (`acelerarObra`, -5 semanas) a cambio de una penalización real a la probabilidad
+  de éxito y, si falla estando acelerada, una probabilidad de escándalo por sobrecostos que suma
+  `riesgoJudicial` (mismo campo del sistema judicial de la Fase 8). Un éxito da un salto grande al
+  indicador del sector (mucho mayor que un programa normal de secretaría) y sube el reconocimiento
+  del jugador de forma notoria.
 - **Paro cívico local** (`GL.turnoCivico`/`iniciarParoCivico`): un actor social propio del
   departamento o municipio del jugador, distinto de los cinco actores nacionales de la Fase 17 — su
   señal de descontento no depende de indicadores nacionales sino de qué tan por debajo del promedio
@@ -298,6 +302,20 @@ mismos valores por defecto que usa la creación desde cero. Es la misma clase de
 había pasado antes con partidas guardadas de fases anteriores (ver el patrón `asegurarDatos` de
 `Familia`, Fase 6): cualquier sistema que agregue campos a un objeto que ya podía existir en
 partidas viejas necesita rellenarlos también al recuperarlo, no sólo al crearlo.
+
+### Mejora posterior a la Fase 18: obras bandera con nombre propio
+
+La primera versión de la obra bandera sólo dejaba elegir "en qué secretaría" (ej. "Secretaría de
+Educación"), sin decir qué se construía — un jugador esperaba ver proyectos concretos como
+aeropuerto, metro, hospital o terminal, al estilo de *The Political Process*. Se agregó el catálogo
+`OBRAS_BANDERA` con megaproyectos nombrados e iconografía propia (metro, aeropuerto, terminal,
+malla vial, hospital, red de salud rural, megacolegio, universidad, ciudadela de seguridad, parque
+metropolitano, centro de convenciones), cada uno ligado a la secretaría que ya determinaba el
+indicador afectado y el secretario responsable, y filtrado por población con
+`GL.obrasDisponibles` (el metro, por ejemplo, sólo aparece en alcaldías de ciudades grandes). Las
+obras en curso o ya guardadas con la forma anterior (sólo `sector`, sin `obraId`) se siguen
+mostrando correctamente gracias a `GL.nombreObra`, que si no encuentra el `obraId` cae de vuelta a
+buscar por `sector`.
 
 ### Notas de la Fase 17
 
