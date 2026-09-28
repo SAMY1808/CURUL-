@@ -244,7 +244,43 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **13** | Gabinete 2.0: cada ministro gestiona su cartera con iniciativas propias, gestión que sube o baja con sus aciertos, crisis personales y ambición presidencial propia; pestaña Consejo de Ministros; comparación histórica de gobiernos (aprobación promedio, leyes, mejor ministro) en el Salón de la Fama; Centro de Gobierno reorganizado alrededor de una bandeja de pendientes del día | **completa** |
 | **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa** |
 | **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa** |
-| **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa (esta entrega)** |
+| **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa** |
+| **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa (esta entrega)** |
+
+### Notas de la Fase 17
+
+- **Actores sociales permanentes** (`js/sistemas/movilizacion.js`, nuevo): cinco actores fijos —
+  Central de Trabajadores (CUT, sector empleo), Gremios Empresariales (ANDI, comercio), Movimiento
+  Estudiantil (MOES, educación), Movimiento Indígena (ONIC, paz/territorio) y Movimiento Agrario
+  (FENSA, agricultura)—, cada uno con un líder propio (un político NPC creado al iniciar la
+  partida), un `descontento` (0-100) y una `relJ` con el jugador. El descontento no es aleatorio:
+  sube o baja cada semana según una señal ligada al sector real de cada actor (el desempleo para la
+  CUT, el déficit fiscal para los gremios, el promedio de educación departamental para el
+  estudiantil, una negociación de paz estancada más de 40 semanas para el indígena, la pobreza para
+  el agrario), con una decadencia natural hacia la calma si nadie lo empeora.
+- **Paros con pliego concreto**: cuando el descontento de un actor supera 72, hay una probabilidad
+  semanal pequeña y creciente de que convoque un paro nacional con un pliego de peticiones propio
+  (`Movilizacion.PLIEGOS`, ligado a la causa del actor, no genérico). Mientras el paro sigue sin
+  resolverse, escala (`intensidad` sube hasta 4×) y erosiona la seguridad de los departamentos más
+  poblados y la aprobación presidencial cada semana — la inacción tiene un costo real y creciente.
+- **Tres caminos para el presidente** (`js/sistemas/movilizacion.js`, acciones): **dialogar**
+  (`dialogarMovimiento`, probabilidad de éxito según la negociación del jugador y la relación con el
+  actor — éxito reduce mucho el descontento y sube la relación; fracaso deja el paro activo),
+  **atender el pliego por completo** (`atenderPliegoMovimiento`, siempre funciona, sube mucho la
+  relación y el reconocimiento, pero tiene un costo fiscal real —sube el déficit— y baja la
+  aprobación en el tema económico), o **dispersar por la fuerza** (`reprimirMovimiento`, siempre
+  termina el paro, pero con una probabilidad de que se vuelva un "caso grave" —mayor cuanto más
+  intensa esté la protesta— que suma `riesgoJudicial` real (el mismo campo que ya usa
+  `js/sistemas/judicial.js` desde la Fase 8) y golpea fuerte la aprobación presidencial). No hay una
+  opción gratis: cada camino cede algo distinto.
+- **Nueva pestaña Movilización social** (`js/pantallas/gobierno.js`): una tarjeta por actor con su
+  descontento, causa y relación, y —si hay un paro activo— los tres botones de respuesta. Un paro
+  activo también aparece en la bandeja "Pendientes de hoy" del Centro de Gobierno (Fase 13d), con
+  enlace directo a la pestaña.
+- **Alcance de esta entrega**: por ahora sólo el presidente puede responder a un paro (no
+  gobernadores/alcaldes); y un movimiento muy desatendido no funda un partido propio ni un líder se
+  lanza a la política todavía, aunque el patrón ya existe (`Partidos.fundacionNPC`, Fase 11e) y sería
+  una extensión natural si se quiere profundizar más adelante.
 
 ### Notas de la Fase 16
 

@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 16 completas)
+## Qué hay en esta versión (Fases 1 a 17 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -178,6 +178,12 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   aplazar en el orden del día cualquier proyecto en trámite en tu cámara, sea tuyo o no. Y si el
   Gobierno necesita que su propio proyecto avance justo en la cámara que presides, negocias cambios
   con más fuerza de la que tendrías sin la mesa.
+- **Movilización social**: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil,
+  indígena y agrario) acumulan descontento según indicadores reales del país — el desempleo, el
+  déficit, la educación, la pobreza, un proceso de paz estancado. Si nadie los atiende, convocan un
+  paro con un pliego concreto que golpea la seguridad y tu aprobación mientras siga sin resolverse.
+  Como presidente puedes dialogar, ceder al pliego por completo, o dispersarlo por la fuerza —con
+  riesgo judicial real si se te va la mano.
 
 ## Arquitectura
 

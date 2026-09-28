@@ -17,6 +17,8 @@ window.CURUL = window.CURUL || {};
     const K_ = E.constitucion;
     if (K_.referendo) out.push(['📜', `Referendo en curso: apoyo ${Math.round(K_.referendo.apoyo)}%`, 'centro']);
     if (K_.constituyente) out.push(['📜', 'Asamblea Nacional Constituyente en marcha', 'centro']);
+    const conParo = C.Movilizacion.ACTORES.filter(a => C.Movilizacion.actor(E, a.id).paro).length;
+    if (conParo) out.push(['📢', `${conParo} paro(s) activo(s) sin resolver`, 'social']);
     for (const gr of C.OrdenPublico.GRUPOS) {
       const st = E.ordenPublico.grupos[gr.id];
       if (st.negociacion && st.negociacion.fase === 'agenda') out.push(['🕊', `Mesa de paz con ${gr.sigla}: agenda pendiente de acordar`, 'centro']);
@@ -259,16 +261,35 @@ window.CURUL = window.CURUL || {};
       }).join('')}</div>`;
   };
 
+  /* Movilización social: actores sociales permanentes con su propio descontento; si estalla un
+     paro, el presidente puede dialogar, atender el pliego por completo o dispersarlo por la
+     fuerza (con riesgo real de que se le vaya la mano). */
+  const movilizacionSocial = (E) => {
+    const M = C.Movilizacion, esPres = E.gobierno.presidente === 'J';
+    return `<div class="sub" style="margin:-4px 0 12px">Cada actor social acumula descontento según indicadores reales del país; si nadie lo atiende, puede convocar un paro con un pliego concreto.</div>
+      <div class="grid g3">${M.ACTORES.map(a => {
+        const st = M.actor(E, a.id);
+        const color = st.descontento > 70 ? 'var(--mal)' : st.descontento > 40 ? 'var(--alerta)' : 'var(--bien)';
+        return `<div class="tarjeta"><h3>${esc(a.nombre)} <span class="tenue" style="font-size:12px">${esc(a.sigla)}</span></h3>
+          <div class="tenue" style="font-size:12px;margin-bottom:6px">Le preocupa ${esc(a.causa)}.</div>
+          <div class="fila" style="gap:14px;font-size:11.5px;margin-bottom:6px"><span>Descontento <b class="num" style="color:${color}">${Math.round(st.descontento)}</b></span><span>Relación <b class="num">${Comp.relacion(st.relJ)}</b></span></div>
+          <div class="barra-h"><i style="width:${Math.round(st.descontento)}%;background:${color}"></i></div>
+          ${st.paro ? `<div class="mal" style="font-size:12px;margin-top:8px">⚠ Paro activo: exige ${esc(M.PLIEGOS[a.id])} (intensidad ${st.paro.intensidad.toFixed(1)})</div>
+            ${esPres ? `<div class="fila" style="margin-top:6px;gap:6px;flex-wrap:wrap">${UI.botonAccion('dialogarMovimiento', { actor: a.id }, 'Dialogar', 'chico')}${UI.botonAccion('atenderPliegoMovimiento', { actor: a.id }, 'Atender pliego', 'chico')}${UI.botonAccion('reprimirMovimiento', { actor: a.id }, 'Dispersar', 'chico peligro')}</div>` : '<div class="tenue" style="font-size:11.5px;margin-top:6px">Sólo el presidente puede responder.</div>'}`
+          : '<div class="tenue" style="font-size:11.5px;margin-top:8px">En calma por ahora.</div>'}</div>`;
+      }).join('')}</div>`;
+  };
+
   C.Pantallas.gobierno = {
     render(el, params) {
       const E = C.E;
       const tab = params.tab || E.ui.tabGob || 'centro';
       E.ui.tabGob = tab;
-      const tabs = [['centro', '🦅 Centro de Gobierno'], ['consejo', '🪑 Consejo de Ministros'], ['presupuesto', '💰 Presupuesto'], ['economia', '📈 Economía'], ['oposicion', '⚔ Centro de Oposición']];
-      const titulos = { oposicion: 'Centro de Oposición', economia: 'Economía nacional', presupuesto: 'Presupuesto General de la Nación', centro: 'Centro de Gobierno', consejo: 'Consejo de Ministros' };
+      const tabs = [['centro', '🦅 Centro de Gobierno'], ['consejo', '🪑 Consejo de Ministros'], ['social', '📢 Movilización social'], ['presupuesto', '💰 Presupuesto'], ['economia', '📈 Economía'], ['oposicion', '⚔ Centro de Oposición']];
+      const titulos = { oposicion: 'Centro de Oposición', economia: 'Economía nacional', presupuesto: 'Presupuesto General de la Nación', centro: 'Centro de Gobierno', consejo: 'Consejo de Ministros', social: 'Movilización social' };
       el.innerHTML = `<div class="cab"><div><h1>${titulos[tab]}</h1><div class="sub">Casa de Nariño · ${esc(E.partidos[E.gobierno.partido] ? E.partidos[E.gobierno.partido].nombre : '')}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
-        ${tab === 'centro' ? centroGobierno(E) : tab === 'consejo' ? consejoMinistros(E) : tab === 'presupuesto' ? presupuesto(E) : tab === 'economia' ? economia(E) : oposicion(E)}`;
+        ${tab === 'centro' ? centroGobierno(E) : tab === 'consejo' ? consejoMinistros(E) : tab === 'social' ? movilizacionSocial(E) : tab === 'presupuesto' ? presupuesto(E) : tab === 'economia' ? economia(E) : oposicion(E)}`;
       el.onclick = e => {
         const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('gobierno', { tab: t.dataset.tab });
         const irTab = e.target.closest('[data-ir-tab]'); if (irTab) return C.App.ir('gobierno', { tab: irTab.dataset.irTab });
