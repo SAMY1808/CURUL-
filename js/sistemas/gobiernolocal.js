@@ -51,9 +51,18 @@ window.CURUL = window.CURUL || {};
       const shares = Object.assign({}, pesoBase);
       const secretarios = {};
       for (const s of SECRETARIAS) secretarios[s[0]] = C.Politicos.crear(E, { partido: E.jugador.partido, depto, r: { exp: U.ri(40, 85) } }).id;
-      const g = { extra: [], pesoBase, shares, secretarios, decretos: 0, historial: [] };
+      const g = { extra: [], pesoBase, shares, secretarios, decretos: 0, historial: [],
+        fondoRegalias: 0, regaliasUlt: null, obraBandera: null, obras: [],
+        civico: { descontento: U.ri(10, 25), relJ: 0, paro: null }, ultimaRendicion: E.fecha.t };
       d.gobLocal[organo] = g;
       return g;
+    },
+    /* Gestión local de un secretario: mismo espíritu que Gabinete.asegurar para los ministros
+       nacionales, inicializada perezosamente para no romper partidas guardadas antes de esta fase. */
+    asegurarSecretario(pol) {
+      if (pol.gestion == null) pol.gestion = U.clamp(Math.round((pol.r.exp + (pol.r.pra || 50)) / 2 + U.gauss(0, 6)), 15, 90);
+      if (pol.logros == null) pol.logros = 0;
+      return pol;
     },
     secretariasDe(g) { return SECRETARIAS.map(s => ({ id: s[0], nombre: s[1], sector: s[2] })).concat(g.extra || []); },
     asignado(E, depto, organo) {
@@ -106,6 +115,80 @@ window.CURUL = window.CURUL || {};
       g.historial.unshift({ t: E.fecha.t, txt: `Lanza el programa «${nombre}» (${nombreSec})${campo ? ' · ' + U.signo(magnitud, 1) + ' ' + campo : ''}` });
       C.Medios.noticia(E, { tipo: 'regional', titular: `${organo === 'gobernacion' ? 'La Gobernación de ' + d.nombre : 'La Alcaldía de ' + d.capital} lanza «${nombre}»`, tono: 1, jugador: true });
       return { nombre, campo, magnitud };
+    },
+
+    /* ── Gabinete local 2.0: cada secretario propone sus propias iniciativas (de los mismos
+       PROGRAMAS de arriba) y puede protagonizar una crisis propia — mismo mecanismo que el
+       Gabinete 2.0 nacional (Fase 13), a escala departamental/municipal. */
+    proponerIniciativaLocal(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || pol.iniciativa || pol.crisisActiva) return;
+      const progs = PROGRAMAS[secId]; if (!progs || !progs.length) return;
+      const [nombre, campo] = U.pick(progs);
+      pol.iniciativa = { programa: nombre, campo, estado: 'propuesta', t: E.fecha.t, semanas: U.ri(4, 8) };
+    },
+    resolverIniciativaLocal(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto];
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || !pol.iniciativa) return;
+      GL.asegurarSecretario(pol);
+      const { programa, campo } = pol.iniciativa;
+      const nombreSec = GL.secretariasDe(g).find(s => s.id === secId).nombre;
+      const exito = U.chance(U.clamp(0.28 + pol.gestion / 160 + (pol.relJ || 0) / 400, 0.12, 0.85));
+      if (exito) {
+        pol.gestion = U.clamp(pol.gestion + U.ri(3, 8), 0, 100);
+        pol.logros++;
+        pol.aprob = U.clamp((pol.aprob || 50) + U.rf(2, 5), 0, 100);
+        if (campo && d[campo] != null) {
+          const mult = C.Federalizacion ? C.Federalizacion.multiplicador(E, secId) : 1;
+          d[campo] = U.clamp(d[campo] + U.rf(1.5, 3) * mult, 1, 99);
+        }
+        C.Medios.noticia(E, { tipo: 'regional', titular: `«${programa}» sale adelante en la ${nombreSec}`, tono: 1, jugador: true });
+      } else {
+        pol.gestion = U.clamp(pol.gestion - U.ri(4, 10), 0, 100);
+        pol.aprob = U.clamp((pol.aprob || 50) - U.rf(2, 6), 0, 100);
+        C.Medios.noticia(E, { tipo: 'regional', titular: `«${programa}» no logra los resultados esperados en la ${nombreSec}`, tono: -1, jugador: true });
+        if (U.chance(0.3)) GL.crisisSecretario(E, depto, organo, secId);
+      }
+      pol.iniciativa = null;
+    },
+    aceptarIniciativaLocal(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || !pol.iniciativa || pol.iniciativa.estado !== 'propuesta') return { ok: false, msg: 'No hay una propuesta pendiente en esa secretaría' };
+      pol.iniciativa.estado = 'en_curso'; pol.iniciativa.semanasTot = pol.iniciativa.semanas;
+      pol.relJ = U.clamp((pol.relJ || 0) + 3, -100, 100);
+      return { ok: true, msg: 'Respaldas la iniciativa' };
+    },
+    rechazarIniciativaLocal(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || !pol.iniciativa || pol.iniciativa.estado !== 'propuesta') return { ok: false, msg: 'No hay una propuesta pendiente en esa secretaría' };
+      pol.relJ = U.clamp((pol.relJ || 0) - 3, -100, 100);
+      pol.iniciativa = null;
+      return { ok: true, msg: 'Rechazas la propuesta' };
+    },
+    CRISIS_LOCAL: ['un contrato cuestionado en una obra de la secretaría', 'una denuncia de negligencia en su gestión',
+      'un escándalo de nepotismo en su equipo', 'un manejo cuestionado de recursos públicos'],
+    crisisSecretario(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || pol.crisisActiva) return;
+      const motivo = U.pick(GL.CRISIS_LOCAL), grave = U.chance(0.3);
+      pol.crisisActiva = { motivo, grave, t: E.fecha.t };
+      pol.aprob = U.clamp((pol.aprob || 50) - U.ri(4, 10), 0, 100);
+      const nombreSec = GL.secretariasDe(g).find(s => s.id === secId).nombre;
+      C.Medios.noticia(E, { tipo: 'escandalo', titular: `Sale a la luz ${motivo} del secretario de ${nombreSec}`, tono: -1, importante: grave, jugador: true });
+    },
+    respaldarSecretario(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      const pol = E.politicos[g.secretarios[secId]]; if (!pol || !pol.crisisActiva) return { ok: false, msg: 'No hay una crisis activa en esa secretaría' };
+      pol.relJ = U.clamp((pol.relJ || 0) + 6, -100, 100);
+      if (pol.crisisActiva.grave) C.Opinion.moverImagen(E, { dep: { [depto]: -0.5 } });
+      pol.crisisActiva = null;
+      return { ok: true, msg: 'Respaldas al secretario pese a la polémica' };
+    },
+    destituirSecretario(E, depto, organo, secId) {
+      const g = GL.asegurar(E, depto, organo);
+      if (!E.politicos[g.secretarios[secId]]) return { ok: false, msg: 'No hay secretario en esa cartera' };
+      GL.designarSecretario(E, depto, organo, secId, null);
+      return { ok: true, msg: 'Destituyes al secretario' };
     },
     /* Consejo de gobierno local: reúne al gabinete, sube algo la imagen del jugador en la región
        y la aprobación de sus secretarios — igual que el Consejo de Ministros nacional. */
@@ -160,6 +243,157 @@ window.CURUL = window.CURUL || {};
       return { aprobado: aprueba, voto };
     },
 
+    /* ── Regalías: pedirle al Gobierno Nacional un giro adicional. Le va mejor a quien está en la
+       coalición de gobierno que a quien está en la oposición — la misma tensión centro-región real
+       de la política colombiana. El fondo resultante se puede usar en la obra bandera. */
+    probRegalias(E, depto, organo) {
+      const J = E.jugador, coal = E.gobierno.coalicion || [];
+      const pa = J.partido ? E.partidos[J.partido] : null;
+      const enCoalicion = J.partido && coal.includes(J.partido);
+      const enOposicion = pa && pa.postura === 'oposicion';
+      const peso = C.Partidos.peso(E, E.politicos.J).dep;
+      return U.clamp(0.25 + (enCoalicion ? 0.35 : enOposicion ? -0.15 : 0) + peso / 300, 0.05, 0.85);
+    },
+    pedirRegalias(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto];
+      const exito = U.chance(GL.probRegalias(E, depto, organo));
+      g.regaliasUlt = E.fecha.t;
+      const nombreLugar = organo === 'gobernacion' ? d.nombre : d.capital;
+      if (exito) {
+        const monto = U.rf(0.15, 0.35) * GL.presupuestoTotal(E, depto, organo);
+        g.fondoRegalias = (g.fondoRegalias || 0) + monto;
+        C.Medios.noticia(E, { tipo: 'regional', titular: `El Gobierno Nacional gira regalías adicionales a ${nombreLugar}`, tono: 1, jugador: true });
+        return { exito: true, monto };
+      }
+      C.Medios.noticia(E, { tipo: 'regional', titular: `El Gobierno Nacional niega un giro adicional de regalías a ${nombreLugar}`, tono: -1, jugador: true });
+      return { exito: false };
+    },
+
+    /* ── Obra bandera: un megaproyecto de infraestructura visible, uno a la vez. Acelerarla la
+       adelanta pero sube el riesgo de sobrecostos y, en el peor caso, un escándalo real. */
+    iniciarObraBandera(E, depto, organo, sector) {
+      const g = GL.asegurar(E, depto, organo);
+      const semanas = U.ri(16, 24);
+      g.obraBandera = { sector, t: E.fecha.t, semanas, semanasTot: semanas, acelerada: false };
+    },
+    acelerarObra(E, depto, organo) {
+      const o = GL.asegurar(E, depto, organo).obraBandera; if (!o || o.acelerada) return;
+      o.semanas = Math.max(1, o.semanas - 5); o.acelerada = true;
+    },
+    turnoObra(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), o = g.obraBandera; if (!o) return;
+      o.semanas--;
+      if (o.semanas <= 0) GL.resolverObra(E, depto, organo);
+    },
+    resolverObra(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto], o = g.obraBandera;
+      const campo = EFECTO[o.sector] || null;
+      const secPol = E.politicos[g.secretarios[o.sector]];
+      const gestionSec = secPol ? GL.asegurarSecretario(secPol).gestion : 50;
+      const tot = GL.presupuestoTotal(E, depto, organo);
+      const fondoBonus = tot > 0 ? Math.min(0.25, (g.fondoRegalias || 0) / tot * 0.5) : 0;
+      const prob = U.clamp(0.35 + gestionSec / 200 + fondoBonus - (o.acelerada ? 0.2 : 0), 0.15, 0.85);
+      const exito = U.chance(prob);
+      const nombreLugar = organo === 'gobernacion' ? d.nombre : d.capital;
+      g.obras = g.obras || [];
+      if (exito) {
+        if (campo && d[campo] != null) d[campo] = U.clamp(d[campo] + U.rf(5, 9), 1, 99);
+        E.jugador.reconocimiento = U.clamp(E.jugador.reconocimiento + 10, 0, 100);
+        E.jugador.rep.liderazgo = U.clamp(E.jugador.rep.liderazgo + 4, 0, 100);
+        if (g.fondoRegalias) g.fondoRegalias = Math.max(0, g.fondoRegalias - tot * 0.15);
+        g.obras.push({ t: E.fecha.t, sector: o.sector, exito: true });
+        C.Medios.noticia(E, { tipo: 'regional', titular: `Se entrega la obra bandera de ${nombreLugar}: un antes y un después${campo ? ' en ' + campo : ''}`, tono: 1, importante: true, jugador: true });
+      } else {
+        const grave = o.acelerada && U.chance(0.4);
+        C.Opinion.moverImagen(E, { dep: { [depto]: -2 } });
+        if (grave) E.jugador.riesgoJudicial = U.clamp((E.jugador.riesgoJudicial || 0) + U.ri(6, 14), 0, 100);
+        g.obras.push({ t: E.fecha.t, sector: o.sector, exito: false, grave });
+        C.Medios.noticia(E, { tipo: 'escandalo', titular: grave ? `Escándalo por sobrecostos en la obra bandera de ${nombreLugar}` : `La obra bandera de ${nombreLugar} se entrega tarde y por debajo de lo prometido`, tono: -1, importante: true, jugador: true });
+      }
+      g.obraBandera = null;
+    },
+
+    /* ── Paro cívico local: un actor propio del departamento/municipio, ligado a la gestión local
+       (no a los indicadores nacionales de Movilizacion) — mismo protocolo de tres caminos. */
+    senalCivico(E, depto, organo) {
+      const d = E.deptos[depto], g = GL.asegurar(E, depto, organo);
+      const promPais = U.prom(Object.values(E.deptos).map(x => (x.seguridad + x.educacion + x.salud + x.infraestructura) / 4));
+      const propio = (d.seguridad + d.educacion + d.salud + d.infraestructura) / 4;
+      const subfin = GL.secretariasDe(g).filter(s => GL.subfinanciada(E, depto, organo, s.id)).length;
+      return (promPais - propio) * 0.8 + subfin * 4;
+    },
+    turnoCivico(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), civ = g.civico;
+      const senal = GL.senalCivico(E, depto, organo);
+      civ.descontento = U.clamp(civ.descontento + U.clamp(senal * 0.08, -2, 2.5) - 0.35 + U.gauss(0, 0.4), 0, 100);
+      if (civ.paro) { GL.turnoParoCivico(E, depto, organo); return; }
+      if (civ.descontento > 70 && U.chance(U.clamp((civ.descontento - 66) / 850, 0, 0.05))) GL.iniciarParoCivico(E, depto, organo);
+    },
+    iniciarParoCivico(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto];
+      g.civico.paro = { t: E.fecha.t, intensidad: 1 };
+      const nombreLugar = organo === 'gobernacion' ? d.nombre : d.capital;
+      C.Medios.noticia(E, { tipo: 'evento', titular: `Un paro cívico paraliza ${nombreLugar}: exigen mejor gestión de ${organo === 'gobernacion' ? 'la Gobernación' : 'la Alcaldía'}`, tono: -1, importante: true, jugador: true });
+    },
+    turnoParoCivico(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo), d = E.deptos[depto], p = g.civico.paro;
+      p.intensidad = U.clamp(p.intensidad + 0.08, 1, 4);
+      d.seguridad = U.clamp(d.seguridad - U.rf(0.15, 0.4) * p.intensidad, 1, 99);
+      C.Opinion.moverImagen(E, { dep: { [depto]: -U.rf(0.2, 0.5) * p.intensidad } });
+    },
+    resolverDialogoCivico(E, depto, organo) {
+      const J = E.jugador, civ = GL.asegurar(E, depto, organo).civico;
+      const exito = U.chance(U.clamp(0.3 + J.atributos.negociacion / 200 + (civ.relJ || 0) / 250, 0.1, 0.85));
+      if (exito) {
+        civ.descontento = U.clamp(civ.descontento - U.ri(30, 45), 0, 100);
+        civ.relJ = U.clamp((civ.relJ || 0) + 8, -100, 100); civ.paro = null;
+        C.Medios.noticia(E, { tipo: 'regional', titular: 'Se levanta el paro cívico tras una mesa de diálogo', tono: 1, importante: true, jugador: true });
+      } else {
+        civ.relJ = U.clamp((civ.relJ || 0) - 3, -100, 100);
+        C.Medios.noticia(E, { tipo: 'regional', titular: 'La mesa de diálogo fracasa: el paro cívico continúa', tono: -1, jugador: true });
+      }
+      return { exito };
+    },
+    atenderPliegoCivico(E, depto, organo) {
+      const civ = GL.asegurar(E, depto, organo).civico;
+      civ.descontento = 8; civ.relJ = U.clamp((civ.relJ || 0) + 18, -100, 100); civ.paro = null;
+      E.jugador.rep.liderazgo = U.clamp(E.jugador.rep.liderazgo + 1, 0, 100);
+      C.Medios.noticia(E, { tipo: 'regional', titular: 'Se atienden las peticiones del paro cívico por completo', tono: 1, importante: true, jugador: true });
+    },
+    reprimirCivico(E, depto, organo) {
+      const civ = GL.asegurar(E, depto, organo).civico, J = E.jugador;
+      const grave = U.chance(U.clamp(0.15 + (civ.paro ? civ.paro.intensidad * 0.08 : 0), 0.1, 0.5));
+      civ.descontento = U.clamp(civ.descontento - U.ri(10, 20), 0, 100);
+      civ.relJ = U.clamp((civ.relJ || 0) - (grave ? 25 : 12), -100, 100);
+      civ.paro = null;
+      if (grave) {
+        J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.ri(8, 16), 0, 100);
+        C.Opinion.moverImagen(E, { dep: { [depto]: -3 } });
+        C.Medios.noticia(E, { tipo: 'escandalo', titular: 'Denuncian uso excesivo de la fuerza contra el paro cívico', tono: -1, importante: true, jugador: true });
+      } else {
+        C.Opinion.moverImagen(E, { dep: { [depto]: -1 } });
+        C.Medios.noticia(E, { tipo: 'regional', titular: 'Se dispersa el paro cívico', tono: -1, jugador: true });
+      }
+      return { grave };
+    },
+
+    /* ── Rendición de cuentas: cada ~26 semanas, un balance de la gestión acumulada (indicadores,
+       gestión de secretarías, obras entregadas) mueve la imagen local del jugador. */
+    turnoRendicion(E, depto, organo) {
+      const g = GL.asegurar(E, depto, organo);
+      if (E.fecha.t - (g.ultimaRendicion || 0) < 26) return;
+      g.ultimaRendicion = E.fecha.t;
+      const d = E.deptos[depto];
+      const indicador = (d.seguridad + d.educacion + d.salud + d.infraestructura) / 4;
+      const gestiones = GL.secretariasDe(g).map(s => { const pol = E.politicos[g.secretarios[s.id]]; return pol ? GL.asegurarSecretario(pol).gestion : 50; });
+      const gestionProm = gestiones.length ? U.prom(gestiones) : 50;
+      const obrasExitosas = (g.obras || []).filter(o => o.exito).length;
+      const efecto = U.clamp(((indicador - 50) * 0.3 + (gestionProm - 50) * 0.3 + obrasExitosas * 3) * 0.15, -4, 4);
+      C.Opinion.moverImagen(E, { dep: { [depto]: efecto } });
+      const nombreLugar = organo === 'gobernacion' ? d.nombre : d.capital;
+      C.Medios.noticia(E, { tipo: 'regional', titular: `Balance de gestión en ${nombreLugar}: ${efecto >= 0 ? 'evaluación positiva' : 'evaluación negativa'} de tu administración`, tono: efecto >= 0 ? 1 : -1, importante: true, jugador: true });
+    },
+
     turno(E) {
       const J = E.jugador;
       if (J.cargo !== 'gobernador' && J.cargo !== 'alcalde') return;
@@ -168,9 +402,19 @@ window.CURUL = window.CURUL || {};
       if (!g) return;
       for (const s of GL.secretariasDe(g)) {
         const pol = E.politicos[g.secretarios[s.id]]; if (!pol) continue;
+        GL.asegurarSecretario(pol);
         const adecuacion = U.clamp((g.shares[s.id] - g.pesoBase[s.id]) / g.pesoBase[s.id], -0.5, 0.5);
         pol.aprob = U.clamp((pol.aprob || 50) + adecuacion * 0.12 + U.gauss(0, 0.2), 5, 95);
+        if (!pol.iniciativa && !pol.crisisActiva && U.chance(0.05)) GL.proponerIniciativaLocal(E, depto, organo, s.id);
+        if (pol.iniciativa && pol.iniciativa.estado === 'en_curso') {
+          pol.iniciativa.semanas--;
+          if (pol.iniciativa.semanas <= 0) GL.resolverIniciativaLocal(E, depto, organo, s.id);
+        }
+        if (!pol.crisisActiva && U.chance(0.012 * (1 + (70 - pol.gestion) / 70))) GL.crisisSecretario(E, depto, organo, s.id);
       }
+      GL.turnoObra(E, depto, organo);
+      GL.turnoCivico(E, depto, organo);
+      GL.turnoRendicion(E, depto, organo);
     },
 
     registrarAcciones() {
@@ -212,6 +456,68 @@ window.CURUL = window.CURUL || {};
       A.registrar({ id: 'consejoGobLocal', nombre: 'Consejo de gobierno', icono: '🗂', grupo: 'local', costo: 1,
         disponible: (E, a) => propio(E, a.depto, a.organo) ? true : 'No ejerces ese cargo',
         ejecutar(E, a) { GL.consejoLocal(E, a.depto, a.organo); return { ok: true, msg: 'El gabinete se reúne y alinea la agenda local' }; } });
+
+      /* ── Gabinete local 2.0: iniciativas y crisis de secretarías ── */
+      A.registrar({ id: 'aceptarIniciativaLocal', nombre: 'Respaldar iniciativa', icono: '✅', grupo: 'local', costo: 1,
+        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; const pol = E.politicos[E.deptos[a.depto].gobLocal[a.organo].secretarios[a.secretaria]]; return pol && pol.iniciativa && pol.iniciativa.estado === 'propuesta' ? true : 'No hay una propuesta pendiente'; },
+        ejecutar(E, a) { return GL.aceptarIniciativaLocal(E, a.depto, a.organo, a.secretaria); } });
+      A.registrar({ id: 'rechazarIniciativaLocal', nombre: 'Rechazar', icono: '✖', grupo: 'local', costo: 0,
+        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; const pol = E.politicos[E.deptos[a.depto].gobLocal[a.organo].secretarios[a.secretaria]]; return pol && pol.iniciativa && pol.iniciativa.estado === 'propuesta' ? true : 'No hay una propuesta pendiente'; },
+        ejecutar(E, a) { return GL.rechazarIniciativaLocal(E, a.depto, a.organo, a.secretaria); } });
+      A.registrar({ id: 'respaldarSecretarioCrisis', nombre: 'Respaldar al secretario', icono: '🛡', grupo: 'local', costo: 1,
+        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; const pol = E.politicos[E.deptos[a.depto].gobLocal[a.organo].secretarios[a.secretaria]]; return pol && pol.crisisActiva ? true : 'No hay una crisis activa'; },
+        ejecutar(E, a) { return GL.respaldarSecretario(E, a.depto, a.organo, a.secretaria); } });
+      A.registrar({ id: 'destituirSecretarioCrisis', nombre: 'Destituir', icono: '🚪', grupo: 'local', costo: 1,
+        disponible(E, a) { if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo'; const pol = E.politicos[E.deptos[a.depto].gobLocal[a.organo].secretarios[a.secretaria]]; return pol && pol.crisisActiva ? true : 'No hay una crisis activa'; },
+        ejecutar(E, a) { return GL.destituirSecretario(E, a.depto, a.organo, a.secretaria); } });
+
+      /* ── Regalías ── */
+      A.registrar({ id: 'pedirRegalias', nombre: 'Pedir regalías al Gobierno Nacional', icono: '💵', grupo: 'local', costo: 1,
+        disponible(E, a) {
+          if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
+          const g = E.deptos[a.depto].gobLocal[a.organo];
+          if (g && g.regaliasUlt != null && E.fecha.t - g.regaliasUlt < 8) return 'Ya pediste regalías hace poco: espera unas semanas';
+          return true;
+        },
+        ejecutar(E, a) { const r = GL.pedirRegalias(E, a.depto, a.organo); return { ok: true, msg: r.exito ? `Recibes ${U.d1(r.monto)} billones adicionales en regalías` : 'El Gobierno Nacional no gira recursos adicionales', exito: r.exito }; } });
+
+      /* ── Obra bandera ── */
+      A.registrar({ id: 'iniciarObraBandera', nombre: 'Iniciar obra bandera', icono: '🏗', grupo: 'local', costo: 2,
+        disponible(E, a) {
+          if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
+          const g = E.deptos[a.depto].gobLocal[a.organo];
+          return g && g.obraBandera ? 'Ya tienes una obra bandera en curso' : true;
+        },
+        ejecutar(E, a) {
+          const g = E.deptos[a.depto].gobLocal[a.organo];
+          if (g.obraBandera) return { ok: false, msg: 'Ya tienes una obra bandera en curso' };
+          const sector = GL.secretariasDe(g).some(s => s.id === a.sector) ? a.sector : 'infraestructura';
+          GL.iniciarObraBandera(E, a.depto, a.organo, sector);
+          return { ok: true, msg: 'Inicias la obra bandera: tardará varias semanas en completarse' };
+        } });
+      A.registrar({ id: 'acelerarObraBandera', nombre: 'Acelerar la obra', icono: '⏱', grupo: 'local', costo: 1,
+        disponible(E, a) {
+          if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
+          const g = E.deptos[a.depto].gobLocal[a.organo];
+          return g && g.obraBandera && !g.obraBandera.acelerada ? true : 'No hay una obra que acelerar';
+        },
+        ejecutar(E, a) { GL.acelerarObra(E, a.depto, a.organo); return { ok: true, msg: 'Aprietas el cronograma: llega antes, pero con más riesgo de sobrecostos' }; } });
+
+      /* ── Paro cívico local ── */
+      const hayParoCivico = (E, a) => {
+        if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
+        const g = E.deptos[a.depto].gobLocal[a.organo];
+        return g && g.civico.paro ? true : 'No hay un paro cívico activo';
+      };
+      A.registrar({ id: 'dialogarParoCivico', nombre: 'Abrir mesa de diálogo', icono: '🤝', grupo: 'local', costo: 1,
+        disponible: hayParoCivico,
+        ejecutar(E, a) { const r = GL.resolverDialogoCivico(E, a.depto, a.organo); return { ok: true, msg: r.exito ? 'Llegan a un acuerdo: el paro se levanta' : 'No hay acuerdo: el paro continúa', exito: r.exito }; } });
+      A.registrar({ id: 'atenderPliegoCivico', nombre: 'Atender el pliego por completo', icono: '📋', grupo: 'local', costo: 2,
+        disponible: hayParoCivico,
+        ejecutar(E, a) { GL.atenderPliegoCivico(E, a.depto, a.organo); return { ok: true, msg: 'Cedes al pliego completo: el paro se levanta' }; } });
+      A.registrar({ id: 'reprimirParoCivico', nombre: 'Dispersar por la fuerza', icono: '🛡', grupo: 'local', costo: 1,
+        disponible: hayParoCivico,
+        ejecutar(E, a) { const r = GL.reprimirCivico(E, a.depto, a.organo); return { ok: true, msg: r.grave ? 'Dispersas el paro, pero con un costo alto' : 'Dispersas el paro', grave: r.grave }; } });
     }
   };
 

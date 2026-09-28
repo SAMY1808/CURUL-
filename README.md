@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 17 completas)
+## Qué hay en esta versión (Fases 1 a 18 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -184,6 +184,12 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   paro con un pliego concreto que golpea la seguridad y tu aprobación mientras siga sin resolverse.
   Como presidente puedes dialogar, ceder al pliego por completo, o dispersarlo por la fuerza —con
   riesgo judicial real si se te va la mano.
+- **Gobernación/Alcaldía con más vida**: tus secretarios ahora gestionan como los ministros
+  nacionales (iniciativas propias, gestión que sube o baja, crisis propias); puedes pedirle
+  regalías al Gobierno Nacional (te va mejor si estás en su coalición); iniciar una obra bandera
+  —un megaproyecto visible, con riesgo de sobrecostos si la aprietas—; enfrentar un paro cívico
+  propio si tu gestión se queda corta; y cada seis meses recibes una rendición de cuentas que
+  mueve tu imagen local según el balance real de tu administración.
 
 ## Arquitectura
 

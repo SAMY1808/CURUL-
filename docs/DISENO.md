@@ -245,7 +245,44 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **14** | Elección real de la mesa directiva del Senado y la Cámara cuando el jugador pertenece a esa cámara: pedir el aval del partido o postularse de forma autónoma, compitiendo contra rivales reales en una lotería ponderada; presidir una cámara suma peso interno de partido | **completa** |
 | **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa** |
 | **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa** |
-| **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa (esta entrega)** |
+| **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa** |
+| **18** | Gabinete local 2.0 (secretarías con gestión, iniciativas y crisis propias, como los ministros de la Fase 13); regalías del Gobierno Nacional con tensión centro-región; obra bandera (megaproyecto con riesgo de sobrecostos si se acelera); paro cívico local ligado a la gestión propia; rendición de cuentas periódica | **completa (esta entrega)** |
+
+### Notas de la Fase 18
+
+- **Gabinete local 2.0** (`js/sistemas/gobiernolocal.js`): exactamente el mismo mecanismo del
+  Gabinete nacional (Fase 13), aplicado a cada secretario. Reutiliza el catálogo `PROGRAMAS` que ya
+  existía (Fase 3c) como fuente de iniciativas en vez de inventar uno nuevo: el secretario propone
+  una, el gobernador/alcalde la respalda (`aceptarIniciativaLocal`) o la rechaza
+  (`rechazarIniciativaLocal`), y el resultado depende de su `gestion` (mismo campo y misma fórmula
+  que los ministros). Un fracaso puede detonar una crisis propia (`crisisSecretario`), resuelta con
+  `respaldarSecretarioCrisis` o `destituirSecretarioCrisis`. Los ids de acción son distintos a los
+  nacionales (`...Local` en vez de `...Ministro`) para no pisar el registro de `C.Acciones`, que
+  sobrescribe silenciosamente por id — la misma lección de la Fase 15.
+- **Regalías y tensión centro-región** (`GL.pedirRegalias`): la probabilidad de que el Gobierno
+  Nacional gire recursos adicionales depende de si el partido del jugador está en la coalición de
+  gobierno (+35 puntos) o en la oposición (−15) — la misma tensión real que ya existía para pedir un
+  ministerio (Fase 5) o buscar el aval de la mesa directiva (Fase 14), llevada a la relación
+  fiscal entre el centro y la región. El fondo resultante (`g.fondoRegalias`) sólo se usa como
+  bonus de probabilidad al resolver la obra bandera, no como dinero libre para gastar en cualquier
+  cosa.
+- **Obra bandera** (`GL.iniciarObraBandera`/`resolverObra`): un megaproyecto de infraestructura, uno
+  a la vez, de 16 a 24 semanas. Puede acelerarse (`acelerarObra`, -5 semanas) a cambio de una
+  penalización real a la probabilidad de éxito y, si falla estando acelerada, una probabilidad de
+  escándalo por sobrecostos que suma `riesgoJudicial` (mismo campo del sistema judicial de la Fase
+  8). Un éxito da un salto grande al indicador del sector (mucho mayor que un programa normal de
+  secretaría) y sube el reconocimiento del jugador de forma notoria.
+- **Paro cívico local** (`GL.turnoCivico`/`iniciarParoCivico`): un actor social propio del
+  departamento o municipio del jugador, distinto de los cinco actores nacionales de la Fase 17 — su
+  señal de descontento no depende de indicadores nacionales sino de qué tan por debajo del promedio
+  del país está la propia gestión local (indicadores del departamento y secretarías subfinanciadas).
+  Mismo protocolo de tres caminos que el paro nacional (dialogar, atender el pliego, reprimir), con
+  las mismas consecuencias de riesgo judicial si la represión se va de las manos.
+- **Rendición de cuentas** (`GL.turnoRendicion`): cada 26 semanas, un balance automático de la
+  gestión acumulada (promedio de indicadores del departamento, gestión promedio de las secretarías,
+  obras bandera entregadas con éxito) mueve la imagen local del jugador hacia arriba o hacia abajo
+  — le da a la partida un ritmo de evaluación periódica en vez de una acción continua sin
+  puntuación intermedia.
 
 ### Notas de la Fase 17
 
