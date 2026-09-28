@@ -469,13 +469,15 @@ window.CURUL = window.CURUL || {};
       A.registrar({ id: 'crearSecretaria', nombre: 'Proponer crear una secretaría', icono: '🏛', grupo: 'local', costo: 2,
         disponible(E, a) {
           if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
-          const nombre = (a.nombre || '').trim(); if (!nombre) return true;
+          let nombre = (a.nombre || '').trim(); if (!nombre) return true;
+          nombre = nombre.replace(/^secretar[íi]a\s+(de\s+|del\s+)?/i, '').trim();
           const g = E.deptos[a.depto].gobLocal[a.organo];
           if (g && GL.secretariasDe(g).some(s => s.nombre.toLowerCase() === ('secretaría de ' + nombre).toLowerCase())) return 'Ya existe esa secretaría';
           return true;
         },
         ejecutar(E, a) {
-          const nombre = (a.nombre || '').trim(); if (!nombre) return { ok: false, msg: 'Dale un nombre a la secretaría' };
+          let nombre = (a.nombre || '').trim(); if (!nombre) return { ok: false, msg: 'Dale un nombre a la secretaría' };
+          nombre = nombre.replace(/^secretar[íi]a\s+(de\s+|del\s+)?/i, '').trim();
           const sector = C.DATA.sectores[a.sector] ? a.sector : 'politica';
           const r = GL.proponerCreacion(E, a.depto, a.organo, 'Secretaría de ' + nombre, sector);
           return { ok: true, msg: r.aprobado ? `${ORGANOS[a.organo].corp} aprueba la nueva secretaría (${r.voto.si}-${r.voto.no})` : `${ORGANOS[a.organo].corp} la rechaza (${r.voto.si}-${r.voto.no})` };

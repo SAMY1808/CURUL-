@@ -67,6 +67,7 @@
 .campo input,.campo select,.campo textarea{background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:8px 10px;color:var(--texto)}
 input[type=range]{accent-color:var(--oro);width:100%}
 select{background:var(--panel);border:1px solid var(--borde2);border-radius:8px;padding:6px 8px}
+.accion-form select{flex:1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Gráficos */
 .graf{width:100%;display:block;overflow:visible}
 .graf text{fill:var(--tenue);font-size:10.5px;font-family:var(--ui)}
