@@ -284,6 +284,21 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   — le da a la partida un ritmo de evaluación periódica en vez de una acción continua sin
   puntuación intermedia.
 
+### Corrección posterior a la Fase 18: pantalla en blanco por partidas guardadas antes de esta fase
+
+Un jugador reportó `TypeError: Cannot read properties of undefined (reading 'descontento')` al
+abrir la pantalla de Gobierno local. La causa: `GL.asegurar(E, depto, organo)` sólo rellenaba los
+campos nuevos de esta fase (`fondoRegalias`, `obraBandera`, `civico`, `ultimaRendicion`) cuando
+**creaba** el gabinete local desde cero; si ya existía (una partida guardada antes de la Fase 18,
+donde `d.gobLocal[organo]` ya estaba en el archivo de guardado sin esos campos), el `if
+(d.gobLocal[organo]) return d.gobLocal[organo];` de la primera línea lo devolvía tal cual, sin
+completarlo — y la pantalla intentaba leer `g.civico.descontento` de un `civico` que no existía.
+Corregido rellenando los campos que falten también en ese camino de retorno temprano, con los
+mismos valores por defecto que usa la creación desde cero. Es la misma clase de descuido que ya
+había pasado antes con partidas guardadas de fases anteriores (ver el patrón `asegurarDatos` de
+`Familia`, Fase 6): cualquier sistema que agregue campos a un objeto que ya podía existir en
+partidas viejas necesita rellenarlos también al recuperarlo, no sólo al crearlo.
+
 ### Notas de la Fase 17
 
 - **Actores sociales permanentes** (`js/sistemas/movilizacion.js`, nuevo): cinco actores fijos —

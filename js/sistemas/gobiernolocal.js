@@ -45,7 +45,17 @@ window.CURUL = window.CURUL || {};
     asegurar(E, depto, organo) {
       const d = E.deptos[depto];
       d.gobLocal = d.gobLocal || {};
-      if (d.gobLocal[organo]) return d.gobLocal[organo];
+      if (d.gobLocal[organo]) {
+        // Partidas guardadas antes de la Fase 18 no tienen estos campos: se rellenan solos.
+        const g = d.gobLocal[organo];
+        if (g.fondoRegalias == null) g.fondoRegalias = 0;
+        if (g.regaliasUlt === undefined) g.regaliasUlt = null;
+        if (g.obraBandera === undefined) g.obraBandera = null;
+        if (!g.obras) g.obras = [];
+        if (!g.civico) g.civico = { descontento: U.ri(10, 25), relJ: 0, paro: null };
+        if (g.ultimaRendicion == null) g.ultimaRendicion = E.fecha.t;
+        return g;
+      }
       const pesoBase = {}; let tot = 0; for (const s of SECRETARIAS) tot += s[3];
       for (const s of SECRETARIAS) pesoBase[s[0]] = s[3] / tot * 100;
       const shares = Object.assign({}, pesoBase);
