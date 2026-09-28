@@ -13,6 +13,33 @@ window.CURUL = window.CURUL || {};
     return G.plano(puntos, { tam: 340 });
   };
 
+  /* Padrinazgo: a quién puedes apadrinar y tu red de protegidos, con la opción de pedirles un
+     cupo para un copartidario sin puesto o para un hijo adulto. Sólo tiene sentido viendo tu
+     propio partido, así que el llamador la muestra sólo en ese caso. */
+  const padrinazgoHTML = (E) => {
+    const J = E.jugador, Pad = C.Padrinazgo;
+    const candidatos = Pad.candidatosApadrinar(E);
+    const protegidos = Pad.misProtegidos(E);
+    const { copartidarios, hijos } = Pad.beneficiariosCupo(E);
+    const opcionesDestino = `${hijos.length ? `<optgroup label="Familia">${hijos.map(h => `<option value="familia:${h.id}">${esc(h.nombre)} (${esc(h.rol)})</option>`).join('')}</optgroup>` : ''}${copartidarios.length ? `<optgroup label="Copartidarios sin puesto">${copartidarios.map(p => `<option value="partido:${p.id}">${esc(p.nombre)}</option>`).join('')}</optgroup>` : ''}`;
+    return `<div class="tarjeta" style="margin-top:14px"><h3>🤝 Padrinazgo</h3>
+      <div class="tenue" style="font-size:12px;margin-bottom:10px">Usa tu peso interno para respaldar a compañeros de partido más pequeños que tú: se convierten en tus protegidos y, más adelante, les puedes pedir un cupo para un copartidario sin puesto o para un hijo adulto.</div>
+      <div class="grid g2">
+        <div><h4 class="sub-h" style="margin-top:0">A quién puedes apadrinar</h4>
+          ${candidatos.length ? `<div class="lista">${candidatos.map(p => `<div class="it" data-ficha="${p.id}" style="cursor:pointer">${Comp.avatar(E, p, 32)}<div class="cuerpo"><b>${esc(p.nombre)}</b><span class="tenue">${esc(C.Politicos.etiquetaCargo(E, p))} · peso ${Math.round(C.Partidos.peso(E, p).nac)}</span></div><div>${UI.botonAccion('apadrinar', { pol: p.id }, 'Apadrinar', 'chico')}</div></div>`).join('')}</div>`
+            : '<div class="tenue" style="font-size:12px">Nadie en tu partido tiene hoy menos peso interno que tú por un margen claro.</div>'}</div>
+        <div><h4 class="sub-h" style="margin-top:0">Tus protegidos</h4>
+          ${protegidos.length ? `<div class="lista">${protegidos.map(({ id, r, pol }) => {
+            const puede = Pad.puedeCupo(E, id);
+            return `<div class="it" style="align-items:flex-start"><span data-ficha="${id}" style="cursor:pointer">${Comp.avatar(E, pol, 32)}</span>
+              <div class="cuerpo"><b>${esc(pol.nombre)}</b><span class="tenue">${esc(C.Politicos.etiquetaCargo(E, pol))} · lealtad <b class="num">${Math.round(r.relJ)}</b>${r.cupos ? ` · ${r.cupos} cupo(s) conseguido(s)` : ''}</span>
+                ${opcionesDestino ? `<div class="accion-form" style="margin-top:6px;flex-wrap:nowrap"><select data-arg="destino">${opcionesDestino}</select>${UI.botonAccion('pedirCupo', { prot: id }, 'Pedir cupo', 'chico')}</div>`
+                  : '<div class="tenue" style="font-size:11px;margin-top:4px">No tienes a quién beneficiar con un cupo todavía.</div>'}
+                ${puede !== true ? `<div class="tenue" style="font-size:11px;margin-top:2px">${esc(puede)}</div>` : ''}</div></div>`;
+          }).join('')}</div>` : '<div class="tenue" style="font-size:12px">Aún no tienes protegidos: apadrina a alguien primero.</div>'}</div>
+      </div></div>`;
+  };
+
   C.Pantallas.partidos = {
     render(el, params) {
       const E = C.E, J = E.jugador;
@@ -81,7 +108,8 @@ window.CURUL = window.CURUL || {};
           <h3 class="sub-h" style="margin-top:14px">Bancada en el Congreso</h3>
           <div class="curules-mini grande">${C.Hemiciclo.ordenar(E, cong).map(p => `<span class="curul-mini" data-pol="${p.id}" style="background:${pa.color};${p.cargo.tipo === 'senador' ? 'border-radius:3px' : ''}${p.id === 'J' ? ';outline:2px solid #FFF3C4' : ''}"></span>`).join('')}</div>
           <div class="tenue" style="font-size:11.5px">Cuadrados: senadores · círculos: representantes</div>
-        </div>`;
+        </div>
+        ${J.partido === pa.id ? padrinazgoHTML(E) : ''}`;
       el.onclick = e => {
         const r = e.target.closest('[data-part]'); if (r) return C.App.ir('partidos', { partido: r.dataset.part });
         const f = e.target.closest('[data-ficha],.curul-mini'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha || f.dataset.pol);

@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 18 completas)
+## Qué hay en esta versión (Fases 1 a 19 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -190,6 +190,11 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   —un megaproyecto visible, con riesgo de sobrecostos si la aprietas—; enfrentar un paro cívico
   propio si tu gestión se queda corta; y cada seis meses recibes una rendición de cuentas que
   mueve tu imagen local según el balance real de tu administración.
+- **Padrinazgo**: usa tu peso interno de partido para apadrinar a copartidarios con menos peso que
+  tú — ganan arrastre electoral y quedan en tu red de protegidos, con su propia lealtad hacia ti.
+  A un protegido que ejerce un cargo o dirige el partido le puedes pedir un cupo real: una plaza
+  para un copartidario sin puesto propio, o un puesto para uno de tus hijos adultos (con algo de
+  riesgo de que se cuestione por nepotismo).
 
 ## Arquitectura
 

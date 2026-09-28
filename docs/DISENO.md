@@ -246,7 +246,8 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **15** | La misma elección real de mesa directiva (aval o autónoma) extendida a la Asamblea Departamental y el Concejo Municipal del jugador, con peso interno departamental en vez de nacional | **completa** |
 | **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa** |
 | **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa** |
-| **18** | Gabinete local 2.0 (secretarías con gestión, iniciativas y crisis propias, como los ministros de la Fase 13); regalías del Gobierno Nacional con tensión centro-región; obra bandera (megaproyecto con riesgo de sobrecostos si se acelera); paro cívico local ligado a la gestión propia; rendición de cuentas periódica | **completa (esta entrega)** |
+| **18** | Gabinete local 2.0 (secretarías con gestión, iniciativas y crisis propias, como los ministros de la Fase 13); regalías del Gobierno Nacional con tensión centro-región; obra bandera (megaproyecto con riesgo de sobrecostos si se acelera); paro cívico local ligado a la gestión propia; rendición de cuentas periódica | **completa** |
+| **19** | Padrinazgo político: usar el peso interno de partido para apadrinar a copartidarios más pequeños, que se vuelven protegidos con una lealtad propia; pedirles luego un cupo real (una plaza que sólo alguien con cargo o la dirección del partido puede repartir) para un copartidario sin puesto o para un hijo adulto, con riesgo de que se cuestione por nepotismo | **completa (esta entrega)** |
 
 ### Notas de la Fase 18
 
@@ -316,6 +317,34 @@ indicador afectado y el secretario responsable, y filtrado por población con
 obras en curso o ya guardadas con la forma anterior (sólo `sector`, sin `obraId`) se siguen
 mostrando correctamente gracias a `GL.nombreObra`, que si no encuentra el `obraId` cae de vuelta a
 buscar por `sector`.
+
+### Notas de la Fase 19
+
+- **Padrinazgo** (`js/sistemas/padrinazgo.js`, nuevo): no crea una moneda nueva de "capital
+  político" — reutiliza el peso interno de partido que ya existía desde la Fase 4
+  (`C.Partidos.peso`) como la vara con la que se decide a quién puede apadrinar el jugador: sólo a
+  copartidarios activos con un margen claro de menos peso (`MARGEN_PESO`). Apadrinar sube el
+  `fuerza` del político (el mismo campo que ya deciden las listas y las noches electorales) y crea
+  o refuerza la entrada en `E.jugador.protegidos[id]`, con su propia `relJ` (lealtad hacia el
+  jugador, independiente de la `relJ` del político hacia el jugador que ya existía).
+- **Cupos** (`Pad.pedirCupo`): sólo se le puede pedir un cupo a un
+  protegido que reparte algo real — ejerce un cargo que no sea de aspirante o dirige el partido
+  (`Pad.puedeRepartir`) —, con una lealtad mínima y un enfriamiento entre peticiones, igual que las
+  regalías locales de la Fase 18. El beneficiario puede ser un copartidario sin puesto propio (gana
+  `fuerza` y relación con el jugador, el mismo lenguaje que ya usan el transfuguismo y los anuncios
+  de ambición de la Fase 11) o un hijo adulto del jugador (gana relación y algo de patrimonio para
+  la familia, con una probabilidad menor de que se cuestione por nepotismo — el mismo campo
+  `riesgoJudicial` del sistema judicial de la Fase 8). Antes de tocar a un hijo hay que llamar
+  `C.Familia.asegurarDatos(E)`: un hijo recién creado no tiene `atributos` hasta que ese método lo
+  rellena, la misma clase de descuido que ya se documentó para el Gobierno local de la Fase 18.
+- **Interfaz** (`js/pantallas/partidos.js`): la tarjeta de Padrinazgo sólo se muestra viendo la
+  ficha del propio partido del jugador (no la de un partido cualquiera), con dos columnas — a quién
+  apadrinar y la lista de protegidos con su lealtad y el selector de a quién beneficiar con un cupo
+  (hijos adultos y copartidarios sin puesto, agrupados en el mismo `<select>`). El botón "Pedir
+  cupo" valida en `disponible()` sólo el protegido (llega fijo desde `UI.botonAccion`), nunca el
+  destino elegido en el `<select>` — la regla de esta sesión desde la primera corrección de esta
+  fase (Fase 18a): un valor que sólo existe en un `<select>` hermano debe validarse en `ejecutar()`,
+  no en `disponible()`, o el botón queda deshabilitado sin importar qué se seleccione después.
 
 ### Notas de la Fase 17
 
