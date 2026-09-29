@@ -16,6 +16,14 @@ window.CURUL = window.CURUL || {};
       <span class="etq ${c.electo ? 'verde' : 'rojo'}" style="margin-left:8px">${c.electo ? 'Pasa' : 'No pasa'}</span>
     </div>`).join('')}</div>`;
 
+  const formulaCard = (E, cam) => {
+    const V = C.Vice, ops = V.opciones(E), sel = cam.formula && E.politicos[cam.formula.vice];
+    const tipo = { copartidario: 'Copartidario', aliado: 'Aliado', independiente: 'Independiente' };
+    return `<div class="tarjeta" style="margin-top:14px"><div class="t-cab"><h3>Fórmula vicepresidencial</h3>${sel ? `<span class="etq verde">Tu fórmula: ${esc(sel.nombre)}</span>` : '<span class="etq amar">Sin elegir: se completará sola al inscribirse</span>'}</div>
+      <div class="tenue" style="font-size:12px;margin-bottom:8px">El nombre que te acompaña suma votos (más si es de una región fuerte o de un partido aliado, que además entra a tu Gobierno) y será quien asuma si faltas como Presidente.</div>
+      <div class="lista">${ops.map(o => `<div class="it">${Comp.avatar(E, o.p, 32)}<div class="cuerpo"><b>${esc(o.p.nombre)}</b><span class="tenue">${tipo[o.tipo]}${o.p.partido ? ' · ' + esc(E.partidos[o.p.partido].sigla) : ''} · ${esc(E.deptos[o.p.depto].nombre)} · aporte ${o.aporte} · ambición ${o.p.r.amb}${o.p.extraFormula ? ' · ' + esc(V.EXTRAS[o.p.extraFormula].n) : ''}</span></div>${cam.formula && cam.formula.vice === o.p.id ? '<span class="etq verde">Elegido</span>' : UI.botonAccion('elegirFormula', { pol: o.p.id }, null, 'chico')}</div>`).join('')}</div></div>`;
+  };
+
   const campanaActiva = (E) => {
     const cam = E.elecciones.campana, J = E.jugador;
     const p = El.proyeccion(E, false);
@@ -29,6 +37,7 @@ window.CURUL = window.CURUL || {};
       <div class="tarjeta">${G.medidor(p.prob * 100, { tam: 120, etq: 'PROB. DE GANAR', texto: Math.round(p.prob * 100) + '%' })}</div>
       <div class="tarjeta">${Comp.kpi('Caja de campaña', U.cop(cam.caja), `Gastado ${U.cop(cam.gastado)} de ${U.cop(cam.tope)} (tope legal)`)}<div class="barra-h" style="margin-top:6px"><i style="width:${Math.min(100, cam.gastado / cam.tope * 100)}%;background:var(--oro)"></i></div></div>
     </div>
+    ${cam.cargo === 'presidencia' ? formulaCard(E, cam) : ''}
     <div class="grid g-dash" style="margin-top:14px">
       <div class="tarjeta"><div class="t-cab"><h3>Mapa de campaña</h3><div class="seg" id="camp-capa">${[['favorabilidad', 'Favorabilidad'], ['reconocimiento', 'Reconocimiento'], ['senado', 'Voto por partidos']].map(([k, n]) => `<button data-c="${k}" class="${k === capa ? 'activo' : ''}">${n}</button>`).join('')}</div></div>
         <div id="camp-mapa">${mapa.svg}</div>${mapa.leyenda}<div class="tenue" style="font-size:12px">Haz clic en un departamento para recorrerlo o hacer un evento allí.</div></div>

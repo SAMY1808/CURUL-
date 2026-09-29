@@ -39,6 +39,8 @@ window.CURUL = window.CURUL || {};
       // El gabinete saliente vuelve a la vida privada
       for (const id of Object.values(g.gabinete || {})) { const m = E.politicos[id]; if (m && m.cargo && m.cargo.tipo === 'ministro') m.cargo = null; }
       if (g.presidente && E.politicos[g.presidente] && g.presidente !== 'J') { const pr = E.politicos[g.presidente]; pr.cargo = { tipo: 'expresidente' }; C.Politicos.anotar(pr, 'Termina su mandato presidencial'); }
+      const viceSaliente = E.politicos[g.vice];
+      if (viceSaliente && viceSaliente.cargo && viceSaliente.cargo.tipo === 'vicepresidente') { viceSaliente.cargo = null; C.Politicos.anotar(viceSaliente, 'Termina su periodo como vicepresidente'); }
       if (g.presidente === 'J') C.Personaje.dejarCargo(E, 'Termina el mandato presidencial');
       else if (E.jugador.cargo === 'ministro') C.Personaje.dejarCargo(E, 'Termina su periodo como ministro al posesionarse un nuevo Gobierno');
       const partido = electo.partido === 'MOV' ? (E.jugador.partido || 'IND') : electo.partido;
@@ -55,9 +57,10 @@ window.CURUL = window.CURUL || {};
         pr.cargo = { tipo: 'presidente' }; pr.aspiraOtro = null;
         C.Politicos.anotar(pr, 'Se posesiona como Presidente de la República');
       }
-      const vice = C.Politicos.crear(E, { partido, depto: U.pick(Object.keys(E.deptos)), cargo: { tipo: 'vicepresidente' } });
+      const vice = C.Vice.instalar(E, electo, partido);
       g2.vice = vice.id;
       G.formarCoalicion(E);
+      C.Vice.integrarCoalicion(E);
       G.nombrarGabinete(E);
       E.opinion.luna = 26;
       E.opinion.aprobacionPres = U.rf(52, 60);

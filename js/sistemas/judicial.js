@@ -64,6 +64,7 @@ window.CURUL = window.CURUL || {};
           const cargoAntes = J.cargo, depto = J.cargoInfo.depto;
           if (cargoAntes === 'senador' || cargoAntes === 'representante') C.Gobierno.vacante(E, E.politicos.J);
           C.Personaje.dejarCargo(E, 'Pierde la investidura por condena judicial');
+          if (cargoAntes === 'presidente') C.Vice.faltaAbsoluta(E, 'investidura');
           if (cargoAntes === 'gobernador' || cargoAntes === 'alcalde') C.Elecciones.vacanteRegional(E, depto, cargoAntes);
         }
       }

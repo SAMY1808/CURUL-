@@ -10,6 +10,7 @@ window.CURUL = window.CURUL || {};
   const INDICES = ['educacion', 'salud', 'seguridad', 'infraestructura'];
 
   const Ec = {
+    PLAZOS,
     VARS: {
       crecimiento: { n: 'Crecimiento del PIB', u: '%', bueno: 1 },
       inflacion:   { n: 'Inflación', u: '%', bueno: -1 },

@@ -35,7 +35,7 @@ window.CURUL = window.CURUL || {};
       // 1. Territorio
       for (const d of C.DATA.departamentos) E.deptos[d.id] = Object.assign({}, d, { gobernador: null, alcalde: null, ajusteAprob: 0 });
       // 2. Instituciones y sistemas base
-      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E);
+      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E); C.Corte.init(E);
       // 3. Jugador
       C.Personaje.crear(E, cfg.jugador);
       const J = E.jugador;
@@ -57,7 +57,7 @@ window.CURUL = window.CURUL || {};
       if (!resP.ganador) { const r2 = C.Elecciones.presidencial(E, 2, resP.segunda); r2.anterior = null; hist.push(r2); resP = r2; }
       hist.forEach(h => { h.t = 0; h.anterior = null; h.inicial = true; });
       E.elecciones.historico.push(...hist);
-      E.gobierno.electo = { pol: resP.ganador, partido: resP.candidatos[0].partido, segundo: resP.candidatos[1] };
+      E.gobierno.electo = { pol: resP.ganador, partido: resP.candidatos[0].partido, vice: resP.candidatos[0].vice || null, segundo: resP.candidatos[1] };
       // 6. Instalación del Congreso y posesión presidencial
       C.Congreso.instalar(E, resC);
       C.Gobierno.posesionar(E, E.gobierno.electo, true);

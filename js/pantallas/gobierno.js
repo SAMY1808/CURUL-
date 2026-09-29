@@ -26,6 +26,18 @@ window.CURUL = window.CURUL || {};
     return out;
   };
 
+  const viceCard = (E) => {
+    const g = E.gobierno, V = C.Vice, vp = V.actual(E);
+    if (!vp) return `<div class="tarjeta"><h3>Vicepresidencia</h3><div class="tenue" style="font-size:12px">Vacante: el Congreso elegirá reemplazo${g.viceVacante != null ? ' en ' + Math.max(0, g.viceVacante + 8 - E.fecha.t) + ' semanas' : ''}.</div></div>`;
+    const s = V.asegurar(vp), esJ = g.presidente === 'J';
+    const barras = [{ etq: 'Lealtad', v: s.lealtad, color: s.lealtad < 35 ? 'var(--mal)' : s.lealtad < 55 ? 'var(--alerta)' : 'var(--bien)' }, { etq: 'Gestión', v: s.gestion, color: 'var(--oro)' }, { etq: 'Ambición', v: vp.r.amb, color: vp.r.amb > 70 ? 'var(--alerta)' : '#8C96A3' }];
+    return `<div class="tarjeta"><div class="t-cab"><h3>Vicepresidencia</h3>${s.ruptura ? '<span class="etq rojo">Ha roto con el Presidente</span>' : ''}</div>
+      <div class="fila" style="flex-wrap:nowrap;cursor:pointer" data-ficha="${vp.id}">${Comp.avatar(E, vp, 52)}<div style="flex:1;min-width:0"><b>${esc(vp.nombre)}</b><div class="fila" style="gap:6px;margin-top:2px">${vp.partido ? Comp.partido(E, vp.partido, true) : '<span class="etq">Independiente</span>'}<span class="tenue" style="font-size:12px">${esc(C.DATA.departamentos.find(d => d.id === vp.depto).nombre)}</span></div></div></div>
+      <div style="margin-top:8px">${G.barrasH(barras, { max: 100, fmt: v => Math.round(v), anchoEtq: '70px' })}</div>
+      <div class="tenue" style="font-size:12px;margin:6px 0">Encargo: <b style="color:var(--texto)">${esc(V.ENCARGOS[s.encargo])}</b>. Si el Presidente falta, asume; con poca lealtad y mucha ambición puede romper y lanzarse por su cuenta.</div>
+      ${esJ ? `<div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="encargo">${Object.entries(V.ENCARGOS).map(([k, n]) => `<option value="${k}" ${k === s.encargo ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${UI.botonAccion('asignarEncargoVice', {}, 'Asignar', 'chico')}${UI.botonAccion('reunirConVice', {}, null, 'chico')}</div>` : ''}</div>`;
+  };
+
   const centroGobierno = (E) => {
     const g = E.gobierno, J = E.jugador;
     const pres = g.presidente === 'J' ? E.politicos.J : E.politicos[g.presidente];
@@ -56,6 +68,7 @@ window.CURUL = window.CURUL || {};
             <div class="fila accion-form" style="margin-top:6px"><select data-arg="ministerio">${C.Gobierno.todosMinisterios(E).map(m => `<option value="${m.id}">${esc(m.nombre)}${E.politicos[g.gabinete[m.id]] && E.politicos[g.gabinete[m.id]].partido === J.partido ? ' (ya es tuyo)' : ''}</option>`).join('')}</select>${UI.botonAccion('presionarMinisterio', {})}</div>` : ''}</div>
       </div>
       <div class="col">
+        ${viceCard(E)}
         <div class="tarjeta"><div class="t-cab"><h3>Coalición de gobierno</h3><span class="etq ${est.total > 60 ? 'verde' : est.total > 40 ? 'amar' : 'rojo'}">Estabilidad ${Math.round(est.total)}%</span></div>
           <div class="fila">${g.coalicion.map(p => `<span class="etq" style="background:${E.partidos[p].color}33;color:#e8edf5"><i class="pto" style="background:${E.partidos[p].color}"></i> ${esc(E.partidos[p].sigla)}</span>`).join('')}</div>
           ${est.factores.map(f => `<div class="factor"><span>${esc(f.n)}</span><div class="eje-div"><i style="${f.v >= 0 ? 'left:50%' : 'right:50%'};width:${Math.min(50, Math.abs(f.v) * 2)}%;background:${f.v >= 0 ? 'var(--bien)' : 'var(--mal)'}"></i></div><b class="num">${U.signo(f.v)}</b></div>`).join('')}

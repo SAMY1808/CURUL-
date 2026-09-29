@@ -123,7 +123,9 @@ window.CURUL = window.CURUL || {};
       }).join('<i class="lin"></i>')}</div>`;
     },
     estadoProyecto(p) {
-      if (p.estado === 'ley') return `<span class="etq verde">✔ Ley ${p.ley}</span>`;
+      if (p.estado === 'inexequible') return `<span class="etq rojo">⚖ Ley ${p.ley} · inexequible</span>`;
+      if (p.estado === 'derogada') return `<span class="etq rojo">🗳 Ley ${p.ley} · derogada</span>`;
+      if (p.estado === 'ley') return `<span class="etq verde">✔ Ley ${p.ley}${p.corte && p.corte.resultado === 'condicionada' ? ' · condicionada' : ''}</span>`;
       if (p.estado === 'archivado') return `<span class="etq rojo">✖ Archivado</span>`;
       const sub = { radicado: 'Radicado', reparto: 'En reparto', ponencia: 'Ponencia en elaboración', agenda: 'En orden del día', sancion: 'En sanción', decisionPresidente: 'Despacho presidencial' }[p.sub] || p.sub;
       return `<span class="etq amar">${esc(sub)}</span>`;

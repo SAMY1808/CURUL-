@@ -127,13 +127,19 @@ window.CURUL = window.CURUL || {};
       n.estado = 'cerrada'; n.proyecto = null; n.intentosCongreso++;
       C.Medios.noticia(E, { tipo: 'legislativo', titular: `Se hunde en el Congreso el TLC con ${C.Comercio.socio(socioId).nombre}: el Gobierno puede volver a presentarlo`, tono: -1, importante: true, jugador: true });
     },
-    riesgoCorte(neg) {
+    riesgoCorte(neg, E) {
       const st = id => (neg.capitulos[id].postura == null ? 1 : neg.capitulos[id].postura);
-      return U.clamp(0.04 + (st('solucion') === 2 ? 0.06 : 0) + (st('pi') === 2 ? 0.04 : 0) + (st('laboral') === 0 ? 0.03 : 0) + (neg.consulta ? -0.03 : 0.08), 0.01, 0.35);
+      let r = 0.04 + (st('solucion') === 2 ? 0.06 : 0) + (st('pi') === 2 ? 0.04 : 0) + (st('laboral') === 0 ? 0.03 : 0) + (neg.consulta ? -0.03 : 0.08);
+      // Una Corte más afín al texto lo tumba menos; un plebiscito de respaldo a la apertura lo blinda.
+      if (E && C.Corte) r *= C.Corte.factorEco(E, Tlc.ecoDelTexto(neg));
+      if (E && E.participacion && E.participacion.refrendos && E.participacion.refrendos.apertura && E.fecha.t - E.participacion.refrendos.apertura.t < 208) r *= 0.6;
+      return U.clamp(r, 0.01, 0.4);
     },
     resolverControl(E, socioId) {
       const Co = C.Comercio, n = Tlc.neg(E, socioId), p = Co.socio(socioId);
-      if (U.chance(Tlc.riesgoCorte(n))) {
+      const tumba = U.chance(Tlc.riesgoCorte(n, E));
+      if (C.Corte) C.Corte.registrarFallo(E, { tipo: 'tratado', titulo: Tlc.nombreAcuerdo(socioId), resultado: tumba ? 'inexequible' : 'exequible', gobierno: true });
+      if (tumba) {
         n.estado = 'fracasada'; n.enfriaHasta = E.fecha.t + 40;
         E.jugador.rep.competencia = U.clamp(E.jugador.rep.competencia - 2, 0, 100);
         C.Medios.noticia(E, { tipo: 'judicial', titular: `La Corte Constitucional declara inexequible el TLC con ${p.nombre}`, tono: -1, importante: true, jugador: true });

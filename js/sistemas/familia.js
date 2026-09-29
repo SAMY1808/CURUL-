@@ -54,6 +54,8 @@ window.CURUL = window.CURUL || {};
         leyesAprobadas: (J.historialLegislativo || []).filter(h => h.resultado === 'ley').length,
         patrimonio: J.patrimonio + (C.Propiedades ? C.Propiedades.valorTotal(E) : 0)
       };
+      // Si eres Presidente, la Presidencia pasa al vicepresidente: la familia sólo hereda el apellido.
+      if (E.gobierno.presidente === 'J' && C.Vice) C.Vice.faltaAbsoluta(E, motivo === 'condena' ? 'condena' : motivo === 'retiro' ? 'retiro' : 'fallecimiento');
       const candidatos = Fam.candidatosSucesion(E);
       if (candidatos.length) E.ui.sucesionPendiente = { motivo, resumen, candidatos: candidatos.map(f => f.id) };
       else E.ui.finPartida = { motivo, resumen };
@@ -70,7 +72,7 @@ window.CURUL = window.CURUL || {};
       const heredado = Math.round(U.clamp(J.reconocimiento * 0.3, 4, 35));
       const inicioPatrimonio = Math.round(Math.max(25, J.patrimonio * 0.4));
       const hermanos = J.familia.filter(f => f.id !== hijoId && (f.rol === 'Hijo' || f.rol === 'Hija'));
-      const legado = { predecesor: J.nombre, cargoMaximo: C.DATA.cargos[J.cargo] ? C.DATA.cargos[J.cargo].nombre : null, apellido, eleccionesGanadas: (J.historialElectoral || []).filter(h => h.electo).length };
+      const pendiente = E.ui.sucesionPendiente; const legado = { predecesor: J.nombre, cargoMaximo: pendiente && pendiente.resumen ? pendiente.resumen.cargoFinal : (C.DATA.cargos[J.cargo] ? C.DATA.cargos[J.cargo].nombre : null), apellido, eleccionesGanadas: (J.historialElectoral || []).filter(h => h.electo).length };
       const cfg = {
         nombre: hijo.nombre, genero: hijo.genero, edad: Math.max(18, hijo.edad),
         eco: hijo.ideologia.eco, soc: hijo.ideologia.soc,

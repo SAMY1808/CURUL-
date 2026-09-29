@@ -65,6 +65,8 @@ window.CURUL = window.CURUL || {};
       if (C.Movilizacion && (!E.movilizacion || !E.movilizacion.actores)) { const prev = C.E; C.E = E; C.Movilizacion.init(E); C.E = prev; }
       // Partidas previas a la Fase 19 no traen el comercio exterior (flujos, acuerdos, Mercosur).
       if (C.Comercio && (!E.comercio || !E.comercio.acuerdos || !E.comercio.mercosur)) { const prev = C.E; C.E = E; C.Comercio.migrar(E); C.E = prev; }
+      // Partidas previas a la Fase 21 no traen la Corte Constitucional.
+      if (C.Corte && (!E.corte || !E.corte.magistrados)) { const prev = C.E; C.E = E; C.Corte.migrar(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

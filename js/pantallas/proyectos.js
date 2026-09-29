@@ -87,7 +87,10 @@ window.CURUL = window.CURUL || {};
       const grupos = U.agrupar(p.efectos, e => e.p);
       const pos = U.clamp(50 + (p.pop + p.presion) * 1.4, 3, 97);
       const bancadas = Object.values(E.partidos).filter(x => !x.especial && !x.futuro).map(pa => ({ pa, pos: p.bancadas[pa.id] || L.posicionBancada(E, pa.id, p) }));
-      return `<div class="grid g3">
+      const sem = C.Corte && p.estado !== 'archivado' && p.plantilla !== 'presupuesto' && p.plantilla !== 'ratificaciontratado' ? C.Corte.semaforo(E, p) : null;
+      const dem = C.Corte ? C.Corte.demandaDe(E, p.id) : null;
+      const corte = sem ? `<div class="tarjeta" style="margin-bottom:14px"><div class="fila" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><h3 style="margin:0">⚖ Riesgo ante la Corte Constitucional</h3><div class="tenue" style="font-size:12px;max-width:640px">Probabilidad de que la tumben si la demandan; depende de qué tan lejos queda su orientación de la mayoría de los magistrados, de su trámite y de la tensión de la Corte con el Ejecutivo.${p.corte ? ` La Corte ya la declaró: <b>${esc(C.Corte.RESULTADOS[p.corte.resultado])}</b>.` : dem && dem.estado === 'admitida' ? ' Hay una demanda en curso.' : ''}</div></div><span class="etq ${sem.clase}" style="font-size:13px">${sem.nivel} · ${Math.round(sem.riesgo * 100)}%</span></div></div>` : '';
+      return `${corte}<div class="grid g3">
         <div class="tarjeta"><h3>Costo fiscal</h3><div class="kpi"><span class="v">${p.costo >= 0 ? '' : '−'}$${U.d1(Math.abs(p.costo))} bill.</span><span class="l">${p.costo >= 0 ? 'gasto anual' : 'recaudo anual'}</span><span class="d ${deficit > 0 ? 'mal' : 'bien'}">${U.signo(deficit, 1)} pp de déficit (% del PIB)</span></div>
           <div style="margin-top:12px">${Comp.ideoBarra(p.eco, p.soc)}<div class="tenue" style="font-size:11.5px;margin-top:4px">Orientación: ${Comp.etiquetaIdeo(p.eco)} · ${p.soc > 25 ? 'conservador' : p.soc < -25 ? 'progresista' : 'moderado'} en lo social</div></div></div>
         <div class="tarjeta"><h3>Opinión pública</h3>${G.medidor(pos, { tam: 130, etq: 'APOYO CIUDADANO', color: pos > 55 ? 'var(--bien)' : pos > 45 ? 'var(--alerta)' : 'var(--mal)' })}
@@ -208,11 +211,12 @@ window.CURUL = window.CURUL || {};
       const quitar = () => { E.ui.sancionesPendientes = (E.ui.sancionesPendientes || []).filter(x => x !== id); };
       if (!p || p.sub !== 'decisionPresidente') { quitar(); return; }
       const m = UI.modal({ titulo: 'Despacho presidencial', icono: '✒', sinCerrar: true, cuerpo: `<p>El Congreso aprobó <b>«${esc(p.titulo)}»</b>. Como Presidente, puedes sancionarlo o devolverlo con objeciones.</p>${P.tabImpacto(E, p)}`,
-        pie: `<button class="btn" data-d="objetar">⛔ Objetar</button><button class="btn prim" data-d="sancionar">✒ Sancionar como ley</button>` });
+        pie: `<button class="btn" data-d="objetar">⛔ Objetar</button>${C.Corte ? '<button class="btn" data-d="inconst">⚖ Objetar por inconstitucional</button>' : ''}<button class="btn prim" data-d="sancionar">✒ Sancionar como ley</button>` });
       m.el.addEventListener('click', e => {
         const b = e.target.closest('[data-d]'); if (!b) return;
         quitar();
         if (b.dataset.d === 'sancionar') L.convertirEnLey(E, p);
+        else if (b.dataset.d === 'inconst') { const r = C.Corte.objecionInconstitucional(E, p); UI.toast(r.acepta ? 'La Corte acoge tu objeción: el proyecto se hunde' : 'La Corte rechaza tu objeción: la ley queda sancionada', r.acepta ? 'ok' : ''); }
         else { p.etapas.splice(p.etapa + 1, 0, 'objecion'); p.etapa++; p.sub = 'agenda'; p.esperaHasta = E.fecha.t + 2; L.hist(E, p, 'El Presidente objeta el proyecto', 'negado'); }
         m.cerrar(); C.App.refrescar(); C.App.revisarPendientes();
       });

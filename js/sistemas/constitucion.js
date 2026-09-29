@@ -13,7 +13,9 @@ window.CURUL = window.CURUL || {};
     edadMinimaPresidencia: { nombre: 'Edad mínima para ser presidente', valores: [25, 30, 35], defecto: 30,
       etiqueta: v => v + ' años' },
     autonomiaTerritorial: { nombre: 'Autonomía territorial', valores: ['unitaria', 'descentralizada', 'federal'], defecto: 'unitaria',
-      etiqueta: v => v === 'federal' ? 'Estado federal' : v === 'descentralizada' ? 'Unitaria descentralizada' : 'Unitaria centralista' }
+      etiqueta: v => v === 'federal' ? 'Estado federal' : v === 'descentralizada' ? 'Unitaria descentralizada' : 'Unitaria centralista' },
+    revocatoriaPresidencial: { nombre: 'Revocatoria del mandato presidencial', valores: ['no', 'si'], defecto: 'no',
+      etiqueta: v => v === 'si' ? 'Habilitada' : 'No existe (sólo alcaldes y gobernadores)' }
   };
   const SEM_REFERENDO = 16, SEM_ELECCION_CONST = 8, SEM_REDACCION_MAX = 14, SEM_RATIFICACION = 10;
 
@@ -49,7 +51,9 @@ window.CURUL = window.CURUL || {};
         if (E.fecha.t - r.t >= SEM_REFERENDO) {
           const exito = U.chance(U.clamp(r.apoyo / 100, 0.05, 0.92));
           const art = ARTICULOS[r.articulo];
-          if (exito) {
+          if (exito && C.Corte && C.Corte.tumbaReforma(E, r.articulo, 'referendo')) {
+            E.constitucion.historial.push({ t: E.fecha.t, articulo: r.articulo, valor: r.valor, via: 'referendo (tumbada por la Corte)' });
+          } else if (exito) {
             K.aplicar(E, r.articulo, r.valor, 'referendo');
             E.opinion.aprobacionPres = U.clamp(E.opinion.aprobacionPres + U.rf(2, 6), 3, 95);
             C.Medios.noticia(E, { tipo: 'constitucion', titular: `El referendo pasa: ${art.nombre} queda en «${art.etiqueta(r.valor)}»`, tono: 1, importante: true, jugador: true });
@@ -74,7 +78,7 @@ window.CURUL = window.CURUL || {};
           if (E.fecha.t - c.tRatificacion >= SEM_RATIFICACION) {
             const exito = U.chance(U.clamp(c.apoyo / 100, 0.05, 0.9));
             if (exito) {
-              for (const p of c.propuestas) K.aplicar(E, p.articulo, p.valor, 'constituyente');
+              for (const p of c.propuestas) { if (C.Corte && C.Corte.tumbaReforma(E, p.articulo, 'constituyente')) continue; K.aplicar(E, p.articulo, p.valor, 'constituyente'); }
               E.opinion.aprobacionPres = U.clamp(E.opinion.aprobacionPres + U.rf(4, 10), 3, 95);
               C.Medios.noticia(E, { tipo: 'constitucion', titular: `Colombia estrena nueva Constitución: se ratifican ${c.propuestas.length} cambio(s)`, tono: 1, importante: true, jugador: true });
             } else {

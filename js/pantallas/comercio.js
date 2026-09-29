@@ -56,14 +56,14 @@ window.CURUL = window.CURUL || {};
       const perfil = Tlc.perfil(E, n.socio, n), S = Co.sectores();
       cuerpo = `<div class="grid g2"><div><h4 class="sub-h" style="margin-top:0">Lo que baja Colombia</h4>${G.barrasH(S.map(s => ({ etq: s.icono + ' ' + s.nombre.split(' (')[0], v: (perfil.red[s.id] || 0) * 100, color: 'var(--oro)' })), { max: 100, fmt: v => Math.round(v) + '%', anchoEtq: '140px' })}</div>
         <div><h4 class="sub-h" style="margin-top:0">Lo que consigue a cambio</h4>${G.barrasH(S.map(s => ({ etq: s.icono + ' ' + s.nombre.split(' (')[0], v: (perfil.acc[s.id] || 0) * 100, color: 'var(--bien)' })), { max: 100, fmt: v => Math.round(v) + '%', anchoEtq: '140px' })}</div></div>
-        <div class="tenue" style="font-size:12px;margin:8px 0">Se desgrava en ${perfil.anios} años. Riesgo de que la Corte lo tumbe: <b>${Math.round(Tlc.riesgoCorte(n) * 100)}%</b>${n.consulta ? ' (ya se hizo la consulta previa)' : ' — la consulta previa lo baja'}.${n.intentosCongreso ? ` Ya se hundió ${n.intentosCongreso} ${n.intentosCongreso === 1 ? 'vez' : 'veces'} en el Congreso.` : ''}</div>
+        <div class="tenue" style="font-size:12px;margin:8px 0">Se desgrava en ${perfil.anios} años. Riesgo de que la Corte lo tumbe: <b>${Math.round(Tlc.riesgoCorte(n, E) * 100)}%</b>${n.consulta ? ' (ya se hizo la consulta previa)' : ' — la consulta previa lo baja'}.${n.intentosCongreso ? ` Ya se hundió ${n.intentosCongreso} ${n.intentosCongreso === 1 ? 'vez' : 'veces'} en el Congreso.` : ''}</div>
         <div class="fila" style="gap:8px">${UI.botonAccion('consultaPreviaTLC', { socio: n.socio }, null, 'chico')}${UI.botonAccion('firmarTLC', { socio: n.socio }, null, 'chico prim')}${UI.botonAccion('abandonarTLC', { socio: n.socio }, null, 'chico peligro')}</div>`;
     } else if (n.estado === 'ratificacion') {
       const pl = E.proyectos[n.proyecto];
       cuerpo = `<div class="tenue" style="font-size:12px">El tratado está en el Senado${pl ? ` (${esc(pl.numero)}) · etapa ${pl.etapa + 1} de ${pl.etapas.length}` : ''}. Sigue su trámite en la pestaña Proyectos. ${n.consulta ? '' : 'Aún puedes adelantar la consulta previa:'}</div>
         ${n.consulta ? '' : `<div style="margin-top:6px">${UI.botonAccion('consultaPreviaTLC', { socio: n.socio }, null, 'chico')}</div>`}`;
     } else if (n.estado === 'control') {
-      cuerpo = `<div class="tenue" style="font-size:12px">El Congreso lo aprobó. La Corte Constitucional decide en ${Math.max(0, n.controlHasta - E.fecha.t)} semanas · riesgo de inexequibilidad ${Math.round(Tlc.riesgoCorte(n) * 100)}%.</div>`;
+      cuerpo = `<div class="tenue" style="font-size:12px">El Congreso lo aprobó. La Corte Constitucional decide en ${Math.max(0, n.controlHasta - E.fecha.t)} semanas · riesgo de inexequibilidad ${Math.round(Tlc.riesgoCorte(n, E) * 100)}%.</div>`;
     }
     return `<div class="tarjeta" style="margin-top:14px"><div class="t-cab"><h3>TLC con ${esc(p.nombre)}</h3><span class="etq ${n.estado === 'cerrada' ? 'oro' : ''}">${ESTADO_NEG[n.estado]}</span></div>${cuerpo}</div>`;
   };

@@ -279,7 +279,9 @@ window.CURUL = window.CURUL || {};
       m.agenda = m.agenda.filter(it => it.estado === 'pendiente' || E.fecha.t - it.hasta < 60);
       const adh = m.adhesion;
       if (adh && adh.fase === 'corte' && E.fecha.t >= adh.controlHasta) {
-        if (U.chance(0.05)) { Mer.fracasarAdhesion(E, 'la Corte Constitucional declara inexequible el protocolo'); }
+        const tumba = U.chance(0.05 * (C.Corte ? C.Corte.factorEco(E, Mer.ecoDelProtocolo(adh)) : 1) * (E.participacion && E.participacion.refrendos && E.participacion.refrendos.apertura ? 0.6 : 1));
+        if (C.Corte) C.Corte.registrarFallo(E, { tipo: 'tratado', titulo: 'Protocolo de adhesión al Mercosur', resultado: tumba ? 'inexequible' : 'exequible', gobierno: true });
+        if (tumba) { Mer.fracasarAdhesion(E, 'la Corte Constitucional declara inexequible el protocolo'); }
         else Mer.iniciarRatificaciones(E);
       } else if (adh && adh.fase === 'ratificacion') {
         for (const [id, r] of Object.entries(adh.ratificaciones)) {

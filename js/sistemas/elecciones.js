@@ -139,7 +139,7 @@ window.CURUL = window.CURUL || {};
       const gasto = cam ? Math.min(30, Math.sqrt(cam.gastado / 10)) : 0;
       const inc = (J.cargo === 'senador' || J.cargo === 'representante') ? 15 : 0;
       const coal = cam && cam.coalicion ? U.suma(cam.coalicion.map(c => (E.partidos[c.partido] ? E.partidos[c.partido].popularidad : 0) * 0.45)) : 0;
-      return 10 + rec * 0.55 + fav * 0.35 + est * 0.3 + gasto + inc + (J.atributos.carisma - 50) * 0.15 + coal;
+      return 10 + rec * 0.55 + fav * 0.35 + est * 0.3 + gasto + inc + (J.atributos.carisma - 50) * 0.15 + coal + (C.Vice ? C.Vice.bonusFormula(E, dId) : 0);
     },
     /* Candidatos de un partido para una lista. Los incumbentes van primero (buscan reelección);
        los aspirantes se ordenan por su peso interno en el partido, porque cuando la dirección
@@ -317,12 +317,12 @@ window.CURUL = window.CURUL || {};
 
     /* ── Elección presidencial ─────────────────────────────── */
     candidatosPresidencia(E) {
-      const cands = [], usados = new Set();
+      const cands = [], usados = new Set(), viceUsados = [];
       const J = E.jugador, cam = E.elecciones.campana;
       const grandes = Object.values(E.partidos).filter(p => !p.especial && !p.futuro && p.popularidad >= 3.5).sort((a, b) => b.popularidad - a.popularidad);
       for (const pa of grandes) {
         if (cands.length >= 6) break;
-        if (cam && cam.eleccion === 'presidencial' && cam.partido === pa.id) { cands.push({ pol: 'J', partido: pa.id }); usados.add(pa.id); continue; }
+        if (cam && cam.eleccion === 'presidencial' && cam.partido === pa.id) { cands.push({ pol: 'J', partido: pa.id, vice: C.Vice ? C.Vice.formulaDeJ(E) : null }); usados.add(pa.id); continue; }
         // Partidos pequeños pueden adherir a un candidato afín en lugar de postular
         if (pa.popularidad < 6 && cands.some(c => U.distIdeo(E.partidos[c.partido] || J.ideologia, pa) < 0.18) && U.chance(0.7)) continue;
         const aspirantes = Object.values(E.politicos).filter(p => p.activo && p.partido === pa.id && p.id !== 'J' && El.edadOK(p) && (!p.cargo || p.cargo.tipo !== 'presidente'));
@@ -331,9 +331,9 @@ window.CURUL = window.CURUL || {};
         const cand = avalado && aspirantes.includes(avalado) ? avalado : aspirantes.sort((a, b) => (b.r.car + b.r.amb + b.fuerza + (b.id === pa.lider ? 30 : 0) + ambPres(b)) - (a.r.car + a.r.amb + a.fuerza + (a.id === pa.lider ? 30 : 0) + ambPres(a)))[0];
         if (!cand) continue;
         cand.aspiraOtro = 'presidencia';
-        cands.push({ pol: cand.id, partido: pa.id }); usados.add(pa.id);
+        cands.push({ pol: cand.id, partido: pa.id, vice: C.Vice ? C.Vice.formulaNPC(E, { pol: cand.id, partido: pa.id }, viceUsados) : null }); usados.add(pa.id);
       }
-      if (cam && cam.eleccion === 'presidencial' && cam.partido === 'MOV') cands.push({ pol: 'J', partido: 'MOV' });
+      if (cam && cam.eleccion === 'presidencial' && cam.partido === 'MOV') cands.push({ pol: 'J', partido: 'MOV', vice: C.Vice ? C.Vice.formulaDeJ(E) : null });
       return cands;
     },
     /* Fuerza de un candidato presidencial (jugador o NPC), reutilizada tanto por la elección real
@@ -347,6 +347,7 @@ window.CURUL = window.CURUL || {};
       let s = (pa ? pa.popularidad : 3) + p.r.car * 0.12 + p.fuerza * 0.05;
       if (c.partido === gob.partido) s *= U.clamp(aprob / 42, 0.4, 1.6);
       for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
+      if (C.Vice) s += C.Vice.bonusNPC(E, c);
       if (fnGana) s *= c.partido === fnGana ? 2.4 : 0.55;
       return s;
     },
@@ -380,9 +381,9 @@ window.CURUL = window.CURUL || {};
       }
       const validosTot = U.suma(Object.values(res.porDepto).map(x => x.validos));
       res.participacion = vt / el;
-      res.candidatos = base.map(c => ({ pol: c.pol, partido: c.partido, votos: tot[c.pol], pct: tot[c.pol] / validosTot * 100 })).sort((a, b) => b.votos - a.votos);
+      res.candidatos = base.map(c => ({ pol: c.pol, partido: c.partido, vice: c.vice || null, votos: tot[c.pol], pct: tot[c.pol] / validosTot * 100 })).sort((a, b) => b.votos - a.votos);
       res.ganador = res.candidatos[0].pct > 50 || vuelta === 2 ? res.candidatos[0].pol : null;
-      res.segunda = !res.ganador ? res.candidatos.slice(0, 2).map(c => ({ pol: c.pol, partido: c.partido })) : null;
+      res.segunda = !res.ganador ? res.candidatos.slice(0, 2).map(c => ({ pol: c.pol, partido: c.partido, vice: c.vice })) : null;
       const iJ = res.candidatos.findIndex(c => c.pol === 'J');
       if (iJ >= 0) res.jugador = { cargo: 'presidencia', electo: res.ganador === 'J', votos: res.candidatos[iJ].votos, puesto: iJ + 1, pct: res.candidatos[iJ].pct, pasa: !!(res.segunda && res.segunda.some(c => c.pol === 'J')) };
       return res;
@@ -519,12 +520,12 @@ window.CURUL = window.CURUL || {};
       } else if (ev.tipo === 'presidencial' && ev.vuelta === 1) {
         const cands = El.candidatosPresidencia(E);
         res = El.presidencial(E, 1, cands);
-        if (res.ganador) E.gobierno.electo = { pol: res.ganador, partido: res.candidatos[0].partido, segundo: res.candidatos[1] };
+        if (res.ganador) E.gobierno.electo = { pol: res.ganador, partido: res.candidatos[0].partido, vice: res.candidatos[0].vice || null, segundo: res.candidatos[1] };
         else E.elecciones.segundaVuelta = res.segunda;
       } else if (ev.tipo === 'presidencial' && ev.vuelta === 2) {
         if (!E.elecciones.segundaVuelta) return;
         res = El.presidencial(E, 2, E.elecciones.segundaVuelta);
-        E.gobierno.electo = { pol: res.ganador, partido: res.candidatos[0].partido, segundo: res.candidatos[1] };
+        E.gobierno.electo = { pol: res.ganador, partido: res.candidatos[0].partido, vice: res.candidatos[0].vice || null, segundo: res.candidatos[1] };
         E.elecciones.segundaVuelta = null;
       } else if (ev.tipo === 'regional') {
         res = El.regional(E);
