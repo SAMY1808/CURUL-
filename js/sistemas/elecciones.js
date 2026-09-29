@@ -105,7 +105,7 @@ window.CURUL = window.CURUL || {};
       let tot = 0;
       for (const pa of Object.values(E.partidos)) {
         if (pa.especial || pa.futuro) continue;
-        let s = pa.popularidad * (pa.fuertes[dId] || 1) * El.afinidad(d, pa) * (1 + d.maq * (pa.estructura - 0.5));
+        let s = pa.popularidad * (pa.fuertes[dId] || 1) * El.afinidad(d, pa) * (1 + d.maq * (C.FinPartido.estructuraEf(pa) - 0.5));
         if (d.gobernador && E.politicos[d.gobernador] && E.politicos[d.gobernador].partido === pa.id) s *= 1.12;
         if (pa.id === 'MIS' && !(pa.fuertes[dId] > 1.5)) s *= 0.25;
         if (conRuido) s *= Math.exp(U.gauss(0, 0.12));

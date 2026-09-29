@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 22 completas)
+## Qué hay en esta versión (Fases 1 a 23 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -215,6 +215,9 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   **revocatoria del mandato** de alcaldes, gobernadores y —si reformas la Constitución— del Presidente.
   Umbrales de participación reales, control de la Corte, campañas, posturas de cada partido (tú las fijas
   si diriges el tuyo) y elección atípica cuando un funcionario es revocado.
+- **Finanzas del partido**: la caja del partido tiene vida propia; puedes donar de tu bolsillo (con el tope legal),
+  hacer grandes recaudos —cenas, aportes ciudadanos, donantes, gremios, o dinero irregular con su riesgo— y girar
+  fondos a tu campaña. Una caja fuerte mejora la maquinaria; los donantes cobran tarde o temprano.
 
 ## Arquitectura
 

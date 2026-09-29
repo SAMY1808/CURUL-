@@ -16,6 +16,23 @@ window.CURUL = window.CURUL || {};
   /* Padrinazgo: a quién puedes apadrinar y tu red de protegidos, con la opción de pedirles un
      cupo para un copartidario sin puesto o para un hijo adulto. Sólo tiene sentido viendo tu
      propio partido, así que el llamador la muestra sólo en ese caso. */
+  /* Caja del partido: aportes propios, grandes recaudos y giro a la campaña. */
+  const finanzasHTML = E => {
+    const J = E.jugador, F = C.FinPartido, pa = E.partidos[J.partido]; if (!pa) return '';
+    const f = F.asegurar(pa), peso = F.pesoJ(E), restante = Math.max(0, F.TOPE_ANUAL - F.donadoEsteAnio(pa));
+    const bono = Math.round((F.estructuraEf(pa) - pa.estructura) * 100);
+    const montos = F.DONACIONES.map(m => `<option value="${m}">${U.cop(m)}</option>`).join('');
+    return `<div class="tarjeta" style="margin-top:14px"><h3>💰 Finanzas del partido</h3>
+      <div class="grid g4">${Comp.kpi('Caja', U.cop(pa.finanzas))}${Comp.kpi('Maquinaria por caja', (bono >= 0 ? '+' : '') + bono, '<span class="tenue">puntos de estructura</span>')}${Comp.kpi('Tus aportes', U.cop(f.aportesJ), `<span class="tenue">te quedan ${U.cop(restante)} este año</span>`)}${Comp.kpi('Compromisos con donantes', f.compromisos, `<span class="${f.compromisos ? 'mal' : 'tenue'}">${f.irregular > 0 ? 'y dinero irregular en el rastro' : 'los donantes cobran tarde o temprano'}</span>`)}</div>
+      <div class="grid g2" style="margin-top:12px">
+        <div><h4 class="sub-h" style="margin-top:0">Donar de tu bolsillo</h4><div class="tenue" style="font-size:12px;margin-bottom:6px">Sales de tu efectivo (${U.cop(J.patrimonio)}); mejora tu relación con la dirección y, con ella, tu peso interno. La ley limita tus aportes a ${U.cop(F.TOPE_ANUAL)} por año.</div>
+          <div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="monto">${montos}</select>${UI.botonAccion('donarAlPartido', {})}</div>
+          <h4 class="sub-h">Girar a mi campaña</h4><div class="tenue" style="font-size:12px;margin-bottom:6px">${pa.lider === 'J' ? 'Como director, dispones de la caja.' : 'Sólo si tienes la confianza de la dirección (relación ≥ 40).'} Respeta el tope legal de gastos.</div>
+          <div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="monto">${montos}</select>${UI.botonAccion('girarACampana', {})}</div></div>
+        <div><h4 class="sub-h" style="margin-top:0">Grandes recaudos</h4><div class="lista">${Object.entries(F.TIPOS).map(([k, t]) => { const u = f.ult[k], esp = u != null ? Math.max(0, t.enfria - (E.fecha.t - u)) : 0;
+          return `<div class="it"><span style="font-size:20px">${t.icono}</span><div class="cuerpo"><b>${esc(t.n)}</b><span style="white-space:normal">${esc(t.desc)}${t.minPeso && peso < t.minPeso ? ' Requiere más peso interno.' : ''}${esp ? ' · disponible en ' + esp + ' sem.' : ''}</span></div>${UI.botonAccion('recaudarParaPartido', { tipo: k }, null, 'chico')}</div>`; }).join('')}</div></div>
+      </div></div>`;
+  };
   const padrinazgoHTML = (E) => {
     const J = E.jugador, Pad = C.Padrinazgo;
     const candidatos = Pad.candidatosApadrinar(E);
@@ -145,7 +162,7 @@ window.CURUL = window.CURUL || {};
           <div class="curules-mini grande">${C.Hemiciclo.ordenar(E, cong).map(p => `<span class="curul-mini" data-pol="${p.id}" style="background:${pa.color};${p.cargo.tipo === 'senador' ? 'border-radius:3px' : ''}${p.id === 'J' ? ';outline:2px solid #FFF3C4' : ''}"></span>`).join('')}</div>
           <div class="tenue" style="font-size:11.5px">Cuadrados: senadores · círculos: representantes</div>
         </div>
-        ${J.partido === pa.id ? direccionHTML(E) + padrinazgoHTML(E) : ''}`;
+        ${J.partido === pa.id ? direccionHTML(E) + finanzasHTML(E) + padrinazgoHTML(E) : ''}`;
       el.onchange = e => { const sel = e.target.closest('[data-dirdepto]'); if (sel) { E.ui.dirDepto = sel.value; C.App.refrescar(); } };
       el.onclick = e => {
         if (e.target.closest('[data-accion], select, input')) return;   // los botones de acción tienen su propio manejador

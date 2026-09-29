@@ -236,7 +236,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **5** | Disputar la dirección nacional del partido (congreso interno real); presionar por un ministerio como director de un partido de la coalición de gobierno (cuota burocrática); mesa de trabajo del ministerio | **completa** |
 | **6** | Hijos con vida propia (educación, relación, potencial político); retiro o fallecimiento del jugador con sucesión (heredar la carrera en un hijo adulto) o fin de partida con resumen; propiedades que rentan y suben o bajan de valor; riesgo de escándalo por patrimonio no explicado | **completa** |
 | **7** | Gabinete local con secretarios nombrados a dedo, programas de política pública y Consejo de gobierno; fundar un partido nuevo (firmas y costo); coaliciones preelectorales que negocian puestos, con consulta interpartidista para Presidencia, Congreso, Gobernación y Alcaldía | **completa** |
-| **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa (esta entrega)** |
+| **8** | Reelección presidencial histórica; encuestas de aprobación por tema; corrupción (financiación irregular de campañas y mermelada parlamentaria); sistema judicial con investigaciones que pueden costar la investidura o terminar la carrera; orden público con grupos armados, ofensivas y mesas de paz; diplomacia con países ficticios, cumbres y tratados | **completa** |
 | **9** | Diplomacia con los 193 países reales (192 miembros de la ONU distintos de Colombia, más Kosovo) en vez de países ficticios, y organismos multilaterales reales (los que Colombia integra y los que no) | **completa** |
 | **10** | Constitución reformable por referendo o Asamblea Constituyente; federalización gradual e irreversible por transferencia de competencias; protocolo de paz con agenda de puntos, verificación e implementación post-acuerdo con riesgo de disidencias | **completa** |
 | **11** | Balance del orden público; listas conjuntas reales para coaliciones en el Congreso; redes sociales como canal propio; encuestas de campaña presidencial en tiempo real ("carrera de caballos"); políticos NPC con ambición, rivalidades y escándalos propios; partidos que nacen y mueren orgánicamente | **completa** |
@@ -250,7 +250,21 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **19** | Padrinazgo político: usar el peso interno de partido para apadrinar a copartidarios más pequeños, que se vuelven protegidos con una lealtad propia; pedirles luego un cupo real (una plaza que sólo alguien con cargo o la dirección del partido puede repartir) para un copartidario sin puesto o para un hijo adulto, con riesgo de que se cuestione por nepotismo | **completa** |
 | **20** | Comercio exterior sofisticado: flujos por sector y socio, aranceles, dólar, balanza y recaudo; negociación de TLC capítulo por capítulo con ratificación en el Congreso y control de la Corte; Mercosur como unión aduanera real (adhesión por consenso, Arancel Externo Común, choque con TLC previos, cumbres y presidencia pro tempore); y, si diriges tu partido, armar las listas al Congreso y otorgar o negar avales para cualquier cargo | **completa** |
 | **21** | Corte Constitucional activa (nueve magistrados con ideología, activismo y periodo; terna del Presidente, la Corte Suprema y el Consejo de Estado, elección en el Senado; control de leyes, tratados, reformas, objeciones y estado de cosas inconstitucional) y vicepresidencia real (fórmula en la campaña, encargo, lealtad, ruptura y sucesión por falta absoluta) | **completa** |
-| **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa (esta entrega)** |
+| **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa** |
+| **23** | Finanzas del partido: la caja (`pa.finanzas`) recibe financiación estatal y paga la operación; el jugador puede donar de su bolsillo (con el tope legal anual), hacer grandes recaudos (cenas, aportes ciudadanos, donantes, gremios, dinero irregular) y girar la caja a su campaña; la caja mueve la maquinaria del partido | **completa (esta entrega)** |
+
+### Notas de la Fase 23
+
+- **Finanzas del partido** (`js/sistemas/finanzaspartido.js`, tarjeta en la ficha del partido): la caja sube con
+  `6 × popularidad + militancia` y baja con la operación y un 0,6 % semanal, así que cada partido converge a
+  una caja proporcional a su tamaño. `estructuraEf` suma o resta hasta unos puntos de maquinaria según la caja
+  frente a lo que corresponde al tamaño del partido (`Elecciones.cuotas` la usa).
+- **Donar** (`donarAlPartido`): sale del efectivo del jugador, tope legal de 1.000 millones por año; sube la
+  relación con la dirección (y con ella el peso interno). **Grandes recaudos** (`recaudarParaPartido`): cena,
+  aportes ciudadanos (suman militantes), donantes y gremios (dejan compromisos que luego cobran, con costo
+  de cohesión y honestidad) y dinero irregular (riesgo judicial y escándalo que puede reventar). Cada uno
+  tiene enfriamiento; los gremios exigen peso interno. **Girar a mi campaña** respeta el tope legal.
+- Estado en `pa.fondos`, creado de forma perezosa: no requiere migración.
 
 ### Notas de la Fase 22
 
