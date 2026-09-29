@@ -141,7 +141,7 @@ window.CURUL = window.CURUL || {};
       const m = UI.modal({ titulo: 'Radicar proyecto de ley', icono: '📥', clase: 'ancho', cuerpo: '' });
       const pintar = () => {
         if (!cfg.plantilla) {
-          const pls = C.DATA.plantillasProyectos.filter(x => !x.gobierno || E.gobierno.presidente === 'J');
+          const pls = C.DATA.plantillasProyectos.filter(x => !x.interno && (!x.gobierno || E.gobierno.presidente === 'J'));
           const porSector = U.agrupar(pls, x => x.sector);
           m.cuerpo.innerHTML = `<p class="tenue" style="margin-top:0">Elige la iniciativa. Los temas que coinciden con tus intereses aparecen resaltados.</p>
             ${Object.entries(porSector).map(([s, arr]) => `<h3 class="sub-h">${C.DATA.sectores[s].icono} ${C.DATA.sectores[s].nombre} <span class="tenue">· Comisión ${C.DATA.comisiones[C.DATA.sectores[s].comision - 1].nombre}</span></h3>

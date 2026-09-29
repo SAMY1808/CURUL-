@@ -121,17 +121,19 @@ window.CURUL = window.CURUL || {};
       const p = U.pesado(cands, x => x.r.amb * x.r.amb);
       if (!p) return;
       const destino = P.ESCALON[p.cargo.tipo];
+      // El escalón a la presidencia se llama 'presidencia' aquí pero el cargo se llama 'presidente'.
+      const nombreDestino = C.DATA.cargos[destino === 'presidencia' ? 'presidente' : destino].nombre;
       p.aspiraAnuncio = { destino, t: E.fecha.t };
       const rival = p.partido ? Object.values(E.politicos).find(o => o.activo && o.id !== p.id && o.partido === p.partido && o.aspiraAnuncio && o.aspiraAnuncio.destino === destino && !o.rivalCon && !p.rivalCon) : null;
       if (rival) {
         p.rivalCon = rival.id; rival.rivalCon = p.id;
         p.relJ = U.clamp((p.relJ || 0) - 3, -100, 100); rival.relJ = U.clamp((rival.relJ || 0) - 3, -100, 100);
-        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} y ${rival.nombre} chocan por la candidatura del ${E.partidos[p.partido].sigla} a ${C.DATA.cargos[destino].nombre}`, tono: 0, importante: true });
-        P.anotar(p, `Rivalidad con ${rival.nombre} por ${C.DATA.cargos[destino].nombre}`);
-        P.anotar(rival, `Rivalidad con ${p.nombre} por ${C.DATA.cargos[destino].nombre}`);
+        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} y ${rival.nombre} chocan por la candidatura del ${E.partidos[p.partido].sigla} a ${nombreDestino}`, tono: 0, importante: true });
+        P.anotar(p, `Rivalidad con ${rival.nombre} por ${nombreDestino}`);
+        P.anotar(rival, `Rivalidad con ${p.nombre} por ${nombreDestino}`);
       } else {
-        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} deja ver su ambición: aspira a ${C.DATA.cargos[destino].nombre}`, tono: 0 });
-        P.anotar(p, `Anuncia aspiraciones a ${C.DATA.cargos[destino].nombre}`);
+        C.Medios.noticia(E, { tipo: 'partidos', titular: `${p.nombre} deja ver su ambición: aspira a ${nombreDestino}`, tono: 0 });
+        P.anotar(p, `Anuncia aspiraciones a ${nombreDestino}`);
       }
     },
     /* Escándalos propios de los políticos NPC (no sólo del jugador): más probable cuanto menos
@@ -186,7 +188,7 @@ window.CURUL = window.CURUL || {};
     },
 
     transfuguismo(E) {
-      const cands = [...P.deCamara(E, 'senado'), ...P.deCamara(E, 'camara')].filter(p => p.id !== 'J' && p.partido && p.partido !== 'IND' && !p.proximoPartido);
+      const cands = [...P.deCamara(E, 'senado'), ...P.deCamara(E, 'camara')].filter(p => p.id !== 'J' && p.partido && p.partido !== 'IND' && E.partidos[p.partido] && !p.proximoPartido);
       const p = U.pesado(cands, p => {
         const pa = E.partidos[p.partido];
         return U.distIdeo(p, pa) * (100 - p.r.dis) * (p.r.amb / 50);

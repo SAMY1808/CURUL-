@@ -101,9 +101,12 @@ CURUL.DATA.plantillasProyectos = [
     eco:-15, soc:-10, costo:2.5, pop:9, apoyan:['Universidades','Científicos'], opuestos:['Hacienda'],
     efectos:[{v:'crecimiento',d:0.3,p:'l'},{v:'educacion',d:1,p:'l'},{v:'deficit',d:0.25,p:'m'}] },
   { id:'presupuesto', titulo:'Presupuesto General de la Nación', sector:'presupuesto', tipo:'organica',
-    eco:0, soc:0, costo:0, pop:0, apoyan:['Gobierno'], opuestos:[], gobierno:true, anual:true,
+    eco:0, soc:0, costo:0, pop:0, apoyan:['Gobierno'], opuestos:[], gobierno:true, anual:true, interno:true,
     efectos:[{v:'confianza',d:0.5,p:'i'}] },
   { id:'nuevoministerio', titulo:'Creación de un nuevo ministerio', sector:'politica', tipo:'ordinaria',
-    eco:0, soc:0, costo:0.4, pop:1, apoyan:['Gobierno'], opuestos:['Hacienda'], gobierno:true,
+    eco:0, soc:0, costo:0.4, pop:1, apoyan:['Gobierno'], opuestos:['Hacienda'], gobierno:true, interno:true,
+    efectos:[{v:'confianza',d:0.2,p:'i'}] },
+  { id:'ratificaciontratado', titulo:'Aprobación de un tratado internacional', sector:'exteriores', tipo:'ordinaria',
+    eco:30, soc:0, costo:0.1, pop:0, apoyan:['Gobierno','Gremios'], opuestos:['Sindicatos','Agro'], gobierno:true, interno:true,
     efectos:[{v:'confianza',d:0.2,p:'i'}] }
 ];

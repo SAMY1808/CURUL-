@@ -129,6 +129,7 @@ window.CURUL = window.CURUL || {};
     /* Probabilidad de que el partido otorgue aval al jugador para un cargo */
     probAval(E, pid, cargo) {
       const pa = E.partidos[pid], J = E.jugador; if (!pa) return 0;
+      if (pa.lider === 'J') return 0.97;   // el director del partido no le pide el aval a nadie
       const dom = Pa.dominante(pa);
       const afin = 1 - U.distIdeo(J.ideologia, pa);
       const nivel = { concejo: 0, asamblea: 0.05, alcaldia: 0.15, camara: 0.1, gobernacion: 0.25, senado: 0.2, presidencia: 0.45 }[cargo] || 0.1;

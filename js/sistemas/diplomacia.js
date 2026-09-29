@@ -50,9 +50,6 @@ window.CURUL = window.CURUL || {};
         const st = D.paises[p.id];
         st.relacion = U.clamp(st.relacion + (BASE_REGION[p.region] - st.relacion) * 0.01 + U.gauss(0, 0.25), 3, 97);
       }
-      let comercios = 0;
-      for (const p of C.DATA.paises) if (D.paises[p.id].tratados.includes('comercio')) comercios++;
-      if (comercios) C.Economia.aplicarDelta(E, 'crecimiento', comercios * 0.0015);
       // organismos: postulaciones de ingreso en curso
       for (const o of C.DATA.organismos) {
         const st = D.organismos[o.id];
@@ -83,7 +80,6 @@ window.CURUL = window.CURUL || {};
     firmarTratado(E, pid, tipo) {
       const st = E.diplomacia.paises[pid];
       st.tratados.push(tipo);
-      if (tipo === 'comercio') C.Economia.aplicarDelta(E, 'crecimiento', 0.15);
       if (tipo === 'cooperacion') for (const d of Object.values(E.deptos)) if (U.chance(0.4)) d.educacion = U.clamp(d.educacion + U.rf(0.3, 1), 1, 99);
       if (tipo === 'defensa') for (const d of Object.values(E.deptos)) d.seguridad = U.clamp(d.seguridad + U.rf(0.2, 0.6), 1, 99);
       st.relacion = U.clamp(st.relacion + U.rf(3, 6), 3, 97);
@@ -111,6 +107,7 @@ window.CURUL = window.CURUL || {};
         ejecutar(E, a) {
           const st = E.diplomacia.paises[a.pais]; if (!st) return { ok: false, msg: 'Elige un país' };
           if (!TRATADOS[a.tipo]) return { ok: false, msg: 'Elige un tipo de tratado' };
+          if (a.tipo === 'comercio') return { ok: false, msg: 'Los tratados de libre comercio se negocian capítulo por capítulo en la pestaña Comercio' };
           if (st.tratados.includes(a.tipo)) return { ok: false, msg: 'Ya existe ese tratado con este país' };
           if (st.relacion < 45) return { ok: false, msg: 'La relación bilateral es demasiado baja para negociar un tratado' };
           const p = Dip.pais(a.pais); Dip.firmarTratado(E, a.pais, a.tipo);
@@ -120,6 +117,7 @@ window.CURUL = window.CURUL || {};
         disponible(E, a) {
           if (esPresidente(E) !== true) return esPresidente(E);
           const o = Dip.organismo(a.organismo); if (!o) return 'Elige un organismo';
+          if (a.organismo === 'mercosur') return 'La adhesión al Mercosur se negocia con el bloque en la pestaña Comercio';
           const st = E.diplomacia.organismos[a.organismo];
           if (st.miembro) return 'Colombia ya es miembro';
           if (!o.puedeUnirse) return 'Colombia no es elegible para hacer parte de este organismo';
@@ -137,6 +135,7 @@ window.CURUL = window.CURUL || {};
         disponible(E, a) {
           if (esPresidente(E) !== true) return esPresidente(E);
           const o = Dip.organismo(a.organismo); if (!o) return 'Elige un organismo';
+          if (a.organismo === 'mercosur') return 'La salida del Mercosur se decide en la pestaña Comercio';
           const st = E.diplomacia.organismos[a.organismo];
           if (!st.miembro) return 'Colombia no es miembro';
           if (!o.puedeRetirarse) return 'No es una decisión que el Gobierno pueda tomar por sí solo';

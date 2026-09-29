@@ -247,7 +247,8 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **16** | Poder real de la mesa directiva sobre el orden del día: adelantar o aplazar cualquier proyecto en trámite en la cámara que se preside; presidir la cámara donde tramita un proyecto del Gobierno da una prima al negociar cambios con su propia bancada | **completa** |
 | **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa** |
 | **18** | Gabinete local 2.0 (secretarías con gestión, iniciativas y crisis propias, como los ministros de la Fase 13); regalías del Gobierno Nacional con tensión centro-región; obra bandera (megaproyecto con riesgo de sobrecostos si se acelera); paro cívico local ligado a la gestión propia; rendición de cuentas periódica | **completa** |
-| **19** | Padrinazgo político: usar el peso interno de partido para apadrinar a copartidarios más pequeños, que se vuelven protegidos con una lealtad propia; pedirles luego un cupo real (una plaza que sólo alguien con cargo o la dirección del partido puede repartir) para un copartidario sin puesto o para un hijo adulto, con riesgo de que se cuestione por nepotismo | **completa (esta entrega)** |
+| **19** | Padrinazgo político: usar el peso interno de partido para apadrinar a copartidarios más pequeños, que se vuelven protegidos con una lealtad propia; pedirles luego un cupo real (una plaza que sólo alguien con cargo o la dirección del partido puede repartir) para un copartidario sin puesto o para un hijo adulto, con riesgo de que se cuestione por nepotismo | **completa** |
+| **20** | Comercio exterior sofisticado: flujos por sector y socio, aranceles, dólar, balanza y recaudo; negociación de TLC capítulo por capítulo con ratificación en el Congreso y control de la Corte; Mercosur como unión aduanera real (adhesión por consenso, Arancel Externo Común, choque con TLC previos, cumbres y presidencia pro tempore); y, si diriges tu partido, armar las listas al Congreso y otorgar o negar avales para cualquier cargo | **completa (esta entrega)** |
 
 ### Notas de la Fase 18
 
@@ -317,6 +318,62 @@ indicador afectado y el secretario responsable, y filtrado por población con
 obras en curso o ya guardadas con la forma anterior (sólo `sector`, sin `obraId`) se siguen
 mostrando correctamente gracias a `GL.nombreObra`, que si no encuentra el `obraId` cae de vuelta a
 buscar por `sector`.
+
+### Notas de la Fase 20
+
+- **Comercio exterior** (`data/comercio.js`, `js/sistemas/comercio.js`): siete sectores (café, petróleo y
+  minería, flores y agroexportación, agro sensible, industria, confecciones, servicios) y trece socios
+  (Estados Unidos, China, Unión Europea, los cuatro del Mercosur, México, Chile, Perú, Ecuador,
+  Venezuela y "resto del mundo") con afinidades sectoriales propias. Todo cambio se mide **contra la
+  partida base** (`E.comercio.base`, una foto de las tarifas al empezar): un multiplicador de 1 significa
+  que nada cambió, así una partida arranca neutra sin importar cuántos acuerdos históricos traiga.
+  Las tarifas efectivas salen del arancel general, las recargas de salvaguardia y la desgravación
+  gradual de cada acuerdo (`Comercio.reduccion`); el volumen reacciona con la elasticidad de cada
+  sector. Los totales macro (`E.economia.exportaciones`, `E.comercio.impTot`) sólo reciben el *cambio*
+  que producen las políticas (método del delta), para no pisar la dinámica que ya tenía la economía.
+  Además: precio de la energía y dólar (que reacciona a la balanza, la inflación, el déficit y la
+  confianza), recaudo por aranceles, y una *tensión* por sector que compite con importaciones que
+  alimenta el ánimo del campo, la CUT y los gremios (Movilización) y el desempleo.
+- **Acuerdos históricos**: una partida arranca con los acuerdos reales que ya existían ese año (CAN,
+  México, Chile, ACE 59 con el Mercosur, Canadá/EFTA/Corea, Estados Unidos, Unión Europea).
+  `Diplomacia` ya no suma crecimiento por firmar un "TLC" genérico: esos tratados viejos se traducen a
+  acuerdos comerciales moderados en `Comercio.migrarTratadosViejos`.
+- **TLC** (`js/sistemas/tlc.js`): seis capítulos (industria, agro, servicios, propiedad intelectual,
+  laboral/ambiental, origen y solución de controversias). Cada uno se negocia con una postura
+  defensiva, moderada o ambiciosa frente a lo que espera el socio (`demandasTLC`); la probabilidad de
+  cerrarlo suma la relación bilateral, tu capacidad de negociación y qué tanto igualas la demanda
+  del socio. Cada concesión tiene su costo político inmediato (`COSTO`). Cerrado el último capítulo se
+  firma y se radica en el Senado como proyecto real (plantilla `ratificaciontratado`, `interno` para
+  que no salga en el menú de radicar), con un `eco` que depende de cuánto se abrió: la izquierda tiende
+  a oponerse. Al aprobarse pasa a control de la Corte, con riesgo que sube por arbitraje inversionista-
+  Estado ambicioso, propiedad intelectual ambiciosa o laboral defensiva y baja con la consulta previa.
+  Al entrar en vigor se crea el acuerdo con el cronograma de desgravación que salió de la negociación.
+- **Mercosur** (`js/sistemas/mercosur.js`): estados ninguno / asociado / adhesión / miembro / retirado
+  según la época (existe desde 1991, unión aduanera desde 1995, Colombia asociada desde 2004). La
+  adhesión exige **consenso**: cada miembro vota según su relación con Colombia, su dureza y el
+  paquete ofrecido (años de convergencia, normativa completa, aporte al FOCEM, hasta dos excepciones);
+  luego protocolo, Senado, Corte y ratificación de los parlamentos del bloque. Miembro: converge al
+  Arancel Externo Común (`turnoConvergencia`), abre el comercio con los cuatro socios, pierde la
+  libertad de fijar aranceles (`puedeFijarArancel`) y de negociar TLC solo (`bloqueaTLC`, con
+  autorización del bloque), y **sus TLC anteriores chocan con las reglas** (`conflictos`): excepción
+  del bloque o denuncia al vencer el plazo, con trato más fácil para los socios andinos. Cada semestre hay
+  cumbre con presidencia pro tempore rotativa y decisiones (rebajar o subir el AEC, cerrar el acuerdo con
+  la UE, más excepciones, flexibilizar el bloque) que el Presidente puede respaldar o vetar; si no se
+  pronuncia, se decide con una probabilidad base afectada por la dificultad de cada punto.
+- **Director del partido** (`js/sistemas/directorpartido.js`): sólo si `pa.lider === 'J'`. *Listas*:
+  `Elecciones.formarLista` respeta a quien inscribió y a quien vetó, y `multLista` sube o baja los
+  votos de la lista completa según la fuerza de los inscritos; se puede fichar a un líder regional, una
+  figura mediática o un técnico pagando con las finanzas del partido. Vetar a un congresista ambicioso
+  puede llevarlo a otro partido. *Avales*: `avalUni` fija a quién presenta el partido a la Presidencia,
+  cada gobernación y cada alcaldía (`candidatosPresidencia` y `regional` lo consultan); negar el aval a un
+  aspirante ambicioso puede volverlo disidente que corre como `IND` y le quita votos al oficial.
+  `probAval` para el propio jugador pasa a 97 % cuando dirige el partido.
+- **Migración y errores de partidas anteriores**: `Comercio.migrar` (vía `Estado.migrar`) crea todo el
+  comercio en partidas guardadas antes de esta fase, con los acuerdos que existían en su fecha actual.
+  Al probarlo aparecieron dos fallos que ya estaban: `Politicos.anuncioAmbicion` fallaba con el escalón
+  hacia la presidencia (`'presidencia'` no es una clave de `DATA.cargos`, es `'presidente'`) y
+  `Politicos.transfuguismo` fallaba si el congresista pertenecía a un partido inexistente; ambos
+  abortaban el turno de políticos ese día.
 
 ### Notas de la Fase 19
 

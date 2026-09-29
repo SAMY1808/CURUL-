@@ -40,6 +40,42 @@ window.CURUL = window.CURUL || {};
       </div></div>`;
   };
 
+  /* Herramientas del director del partido: listas al Congreso y avales uninominales. Sólo se
+     muestran si el jugador dirige el partido que está viendo. */
+  const direccionHTML = E => {
+    const Dir = C.Director, pa = Dir.partido(E);
+    if (!Dir.esDirector(E)) return '';
+    Dir.asegurar(pa);
+    const tab = E.ui.dirTab || 'senado', depto = E.ui.dirDepto || E.jugador.residencia, d = E.deptos[depto];
+    const selDepto = `<select data-dirdepto>${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(x => `<option value="${x.id}" ${x.id === depto ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>`;
+    const tabs = [['senado', 'Lista al Senado'], ['camara', 'Lista a la Cámara'], ['avales', 'Avales']];
+    let cuerpo;
+    if (tab === 'senado' || tab === 'camara') {
+      const camara = tab, dId = camara === 'camara' ? depto : null, l = Dir.lista(pa, camara, dId), mult = Dir.multLista(E, pa.id, camara, dId);
+      const filas = Dir.pool(E, camara, dId);
+      const efecto = mult === 1 ? '<span class="tenue">sin efecto todavía: inscribe candidatos</span>' : `<b class="${mult > 1 ? 'bien' : 'mal'}">${mult > 1 ? '+' : ''}${U.d1((mult - 1) * 100)} % de votos</b> por la calidad de tu lista`;
+      cuerpo = `<div class="fila" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div class="tenue" style="font-size:12px">Curules esperadas: <b class="num" style="color:var(--texto)">${U.d1(Dir.curulesEsperadas(E, camara, dId))}</b> · Inscritos: <b class="num" style="color:var(--texto)">${l.inscritos.length}</b> · Efecto: ${efecto}</div>${camara === 'camara' ? selDepto : ''}</div>
+        <div class="tenue" style="font-size:11.5px;margin-bottom:8px">«Aporte» estima cuántos votos suma cada nombre. Sin tu intervención el partido completa la lista con quienes más pesan; con ella, tus inscritos van primero, tus vetados quedan por fuera y los nombres fuertes empujan la votación de todo el partido.</div>
+        <div class="lista">${filas.length ? filas.map(f => `<div class="it" data-ficha="${f.p.id}" style="cursor:pointer">${Comp.avatar(E, f.p, 30)}<div class="cuerpo"><b>${esc(f.p.nombre)}</b><span class="tenue">${esc(C.Politicos.etiquetaCargo(E, f.p))} · aporte <b class="num" style="color:var(--texto)">${f.est}</b>${f.incumbente ? ' · busca reelección' : ''}${f.p.fichaje ? ' · fichaje' : ''}</span></div>
+            <div class="fila" style="gap:6px">${f.estado === 'inscrito' ? '<span class="etq verde">Inscrito</span>' : f.estado === 'vetado' ? '<span class="etq rojo">Vetado</span>' : ''}${UI.botonAccion('inscribirEnLista', { pol: f.p.id, camara, depto: dId }, null, 'chico')}${UI.botonAccion('vetarEnLista', { pol: f.p.id, camara, depto: dId }, null, 'chico peligro')}</div></div>`).join('') : '<div class="tenue" style="font-size:12px">No hay candidatos disponibles en esta lista: ficha a alguien.</div>'}</div>
+        <h4 class="sub-h" style="margin-top:12px">Fichar a alguien que sume votos</h4>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="tipo">${Object.entries(Dir.FICHAJES).map(([k, f]) => `<option value="${k}">${esc(f.n)} · $${U.n(f.costo)} M</option>`).join('')}</select>${UI.botonAccion('ficharCandidato', { camara, depto: dId }, null, 'chico')}<span class="tenue" style="font-size:11.5px">Finanzas del partido: ${U.cop(pa.finanzas)}</span></div>`;
+    } else {
+      const seccion = (cargo, dId, titulo) => {
+        const av = Dir.avalUni(E, pa.id, cargo, dId), filas = Dir.aspirantes(E, cargo, dId);
+        return `<h4 class="sub-h" style="margin-top:12px">${titulo} <span class="tenue" style="font-weight:400">· aval hoy: ${av ? '<b style="color:var(--oro2)">' + esc(av.nombre) + '</b>' : 'ninguno (el partido decide solo)'}</span></h4>
+          <div class="lista">${filas.length ? filas.map(f => `<div class="it" data-ficha="${f.p.id}" style="cursor:pointer">${Comp.avatar(E, f.p, 30)}<div class="cuerpo"><b>${esc(f.p.nombre)}</b><span class="tenue">${esc(C.Politicos.etiquetaCargo(E, f.p))} · aporte <b class="num" style="color:var(--texto)">${f.est}</b>${f.ambicion ? ' · ha anunciado su ambición' : ''}${f.p.disidente ? ' · disidente' : ''}</span></div>
+              <div class="fila" style="gap:6px">${f.avalado ? '<span class="etq verde">Avalado</span>' : f.negado ? '<span class="etq rojo">Aval negado</span>' : ''}${UI.botonAccion('otorgarAval', { pol: f.p.id, cargo, depto: dId }, null, 'chico')}${UI.botonAccion('negarAval', { pol: f.p.id, cargo, depto: dId }, null, 'chico peligro')}</div></div>`).join('') : '<div class="tenue" style="font-size:12px">No hay aspirantes de tu partido para este cargo.</div>'}</div>`;
+      };
+      cuerpo = `<div class="fila" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div class="tenue" style="font-size:12px;max-width:640px">Otorgar el aval te gana lealtad y da arrastre al candidato. Negárselo a un aspirante ambicioso puede volverlo disidente: irá por firmas y le quitará votos al candidato oficial. Elige el departamento para ver la gobernación y la alcaldía de su capital.</div>${selDepto}</div>
+        ${seccion('presidencia', null, 'Presidencia de la República')}${seccion('gobernacion', depto, 'Gobernación de ' + esc(d.nombre))}${seccion('alcaldia', depto, 'Alcaldía de ' + esc(d.capital))}`;
+    }
+    return `<div class="tarjeta" style="margin-top:14px"><h3>🎖 Dirección del partido</h3>
+      <div class="tenue" style="font-size:12px;margin-bottom:10px">Diriges el ${esc(pa.sigla)}: tú armas las listas y repartes los avales.</div>
+      <div class="tabs">${tabs.map(([k, n]) => `<button data-dirtab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
+      <div style="margin-top:12px">${cuerpo}</div></div>`;
+  };
+
   C.Pantallas.partidos = {
     render(el, params) {
       const E = C.E, J = E.jugador;
@@ -109,8 +145,11 @@ window.CURUL = window.CURUL || {};
           <div class="curules-mini grande">${C.Hemiciclo.ordenar(E, cong).map(p => `<span class="curul-mini" data-pol="${p.id}" style="background:${pa.color};${p.cargo.tipo === 'senador' ? 'border-radius:3px' : ''}${p.id === 'J' ? ';outline:2px solid #FFF3C4' : ''}"></span>`).join('')}</div>
           <div class="tenue" style="font-size:11.5px">Cuadrados: senadores · círculos: representantes</div>
         </div>
-        ${J.partido === pa.id ? padrinazgoHTML(E) : ''}`;
+        ${J.partido === pa.id ? direccionHTML(E) + padrinazgoHTML(E) : ''}`;
+      el.onchange = e => { const sel = e.target.closest('[data-dirdepto]'); if (sel) { E.ui.dirDepto = sel.value; C.App.refrescar(); } };
       el.onclick = e => {
+        if (e.target.closest('[data-accion], select, input')) return;   // los botones de acción tienen su propio manejador
+        const dt = e.target.closest('[data-dirtab]'); if (dt) { E.ui.dirTab = dt.dataset.dirtab; return C.App.refrescar(); }
         const r = e.target.closest('[data-part]'); if (r) return C.App.ir('partidos', { partido: r.dataset.part });
         const f = e.target.closest('[data-ficha],.curul-mini'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha || f.dataset.pol);
       };

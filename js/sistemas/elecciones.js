@@ -172,6 +172,15 @@ window.CURUL = window.CURUL || {};
       }
       const ambSenado = p => p.aspiraAnuncio && p.aspiraAnuncio.destino === 'senador' ? 20 : 0;
       aspirantes.sort((a, b) => (C.Partidos.peso(E, b)[nivel] + ambSenado(b)) - (C.Partidos.peso(E, a)[nivel] + ambSenado(a)));
+      // Si el jugador dirige el partido, arma la lista él: sus inscritos van primero y sus vetados quedan por fuera.
+      const cfg = C.Director ? C.Director.configLista(E, pid, camara, dId) : null;
+      if (cfg) {
+        const fuera = new Set(cfg.vetados);
+        const dentro = cfg.inscritos.map(id => E.politicos[id]).filter(p => p && p.activo && p.id !== 'J' && (p.proximoPartido || p.partido) === pid && !fuera.has(p.id));
+        const quitar = (arr, pred) => { for (let i = arr.length - 1; i >= 0; i--) if (pred(arr[i])) arr.splice(i, 1); };
+        quitar(lista, p => fuera.has(p.id) || dentro.includes(p)); quitar(aspirantes, p => fuera.has(p.id) || dentro.includes(p));
+        lista.unshift(...dentro);
+      }
       for (const p of aspirantes) { if (lista.length >= cupo) break; lista.push(p); }
       while (lista.length < cupo) lista.push(C.Politicos.crear(E, { partido: pid, depto: dId || undefined, cargo: { tipo: 'aspirante', aspira: camara } }));
       for (const p of lista) if (p.proximoPartido) { p.partido = p.proximoPartido; delete p.proximoPartido; }
@@ -212,6 +221,7 @@ window.CURUL = window.CURUL || {};
       const era = El.era(anio);
       const umbralSenPct = E.constitucion ? C.Constitucion.valor(E, 'umbralSenado') : C.DATA.camaras.senado.umbral;
       const umbralSen = anio >= 2003 ? validosSen * umbralSenPct : 0;
+      if (C.Director) for (const pid of Object.keys(votosSen)) { const m = C.Director.multLista(E, pid, 'senado', null); if (m !== 1) votosSen[pid] = Math.round(votosSen[pid] * m); }
       const poolSen = El.poolCoalicion(E, 'senado', null);
       const curSen = El.dhondt(El.votosConPool(votosSen, poolSen), 100, umbralSen);
       El.subApportionCoalicion(curSen, votosSen, poolSen);
@@ -244,6 +254,7 @@ window.CURUL = window.CURUL || {};
       for (const d of Object.values(E.deptos)) {
         const pd = res.porDepto[d.id];
         const votos = Object.assign({}, pd.votos);
+        if (C.Director) for (const pid of Object.keys(votos)) { const m = C.Director.multLista(E, pid, 'camara', d.id); if (m !== 1) votos[pid] = Math.round(votos[pid] * m); }
         if (movJ && jugCamara === 'senado') delete votos.MOV;
         const cociente = pd.validos / d.camara;
         const umbral = anio >= 1991 ? cociente * (d.camara > 2 ? C.DATA.camaras.camara.umbralMayor : C.DATA.camaras.camara.umbralMenor) : 0;
@@ -316,7 +327,8 @@ window.CURUL = window.CURUL || {};
         if (pa.popularidad < 6 && cands.some(c => U.distIdeo(E.partidos[c.partido] || J.ideologia, pa) < 0.18) && U.chance(0.7)) continue;
         const aspirantes = Object.values(E.politicos).filter(p => p.activo && p.partido === pa.id && p.id !== 'J' && El.edadOK(p) && (!p.cargo || p.cargo.tipo !== 'presidente'));
         const ambPres = p => p.aspiraAnuncio && p.aspiraAnuncio.destino === 'presidencia' ? 20 : 0;
-        const cand = aspirantes.sort((a, b) => (b.r.car + b.r.amb + b.fuerza + (b.id === pa.lider ? 30 : 0) + ambPres(b)) - (a.r.car + a.r.amb + a.fuerza + (a.id === pa.lider ? 30 : 0) + ambPres(a)))[0];
+        const avalado = C.Director ? C.Director.avalUni(E, pa.id, 'presidencia', null) : null;
+        const cand = avalado && aspirantes.includes(avalado) ? avalado : aspirantes.sort((a, b) => (b.r.car + b.r.amb + b.fuerza + (b.id === pa.lider ? 30 : 0) + ambPres(b)) - (a.r.car + a.r.amb + a.fuerza + (a.id === pa.lider ? 30 : 0) + ambPres(a)))[0];
         if (!cand) continue;
         cand.aspiraOtro = 'presidencia';
         cands.push({ pol: cand.id, partido: pa.id }); usados.add(pa.id);
@@ -398,6 +410,18 @@ window.CURUL = window.CURUL || {};
             if (named) { named.aspiraOtro = tipo; return { pol: named.id, partido: pid, s: s * 1.25 }; }
             return { pol: C.Politicos.crear(E, { partido: pid, depto: d.id, cargo: { tipo: 'aspirante', aspira: tipo } }).id, partido: pid, s };
           });
+          // El partido que dirige el jugador presenta a quien él avaló; los aspirantes a quienes negó el aval
+          // pueden ir por firmas y le quitan votos al candidato oficial.
+          for (const c of cands) {
+            const av = C.Director ? C.Director.avalUni(E, c.partido, tipo, d.id) : null;
+            if (av && av.id !== c.pol) { if (E.politicos[c.pol]) E.politicos[c.pol].aspiraOtro = null; av.aspiraOtro = tipo; c.pol = av.id; c.s *= 1.2; }
+          }
+          for (const p of Object.values(E.politicos)) {
+            if (p.activo && p.disidente && p.disidente.cargo === tipo && p.disidente.depto === d.id && !cands.some(c => c.pol === p.id)) {
+              cands.push({ pol: p.id, partido: 'IND', s: (top[0] ? top[0][1] : 0.1) * 0.5 });
+            }
+            if (p.disidente && p.disidente.cargo === tipo && p.disidente.depto === d.id) p.disidente = null;
+          }
           if (cam && cam.eleccion === 'regional' && cam.cargo === tipo && cam.depto === d.id) {
             // Si el jugador ganó la consulta interna de su partido, es el único candidato de esa
             // colectividad (no compite consigo mismo contra otro nombre de su propio partido).

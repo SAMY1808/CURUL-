@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 19 completas)
+## Qué hay en esta versión (Fases 1 a 20 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -195,6 +195,15 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   A un protegido que ejerce un cargo o dirige el partido le puedes pedir un cupo real: una plaza
   para un copartidario sin puesto propio, o un puesto para uno de tus hijos adultos (con algo de
   riesgo de que se cuestione por nepotismo).
+- **Comercio exterior y Mercosur**: qué vende y qué compra Colombia, a quién y con qué aranceles;
+  dólar, balanza y recaudo; sectores que se movilizan cuando las importaciones se disparan. Negocias
+  TLC capítulo por capítulo (con costo político en el campo, la CUT y los gremios), los tramitas en el
+  Senado y esperas a la Corte Constitucional. Puedes pedir la adhesión al Mercosur —se decide por
+  consenso, cualquiera puede vetar—, converger al Arancel Externo Común, lidiar con el choque contra
+  tus TLC anteriores, pedir excepciones y vetar o respaldar las decisiones de cada cumbre.
+- **Director de partido con poder real**: si diriges tu partido armas las listas al Senado y la
+  Cámara (inscribes, vetas o fichas a gente que suma votos) y otorgas o niegas avales para la
+  Presidencia, las gobernaciones y las alcaldías; un aval negado puede volver disidente a un aspirante.
 
 ## Arquitectura
 
