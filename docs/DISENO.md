@@ -248,7 +248,72 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **17** | Movilización social: cinco actores sociales permanentes (CUT, gremios, movimiento estudiantil, indígena y agrario) con descontento propio ligado a indicadores reales del país; si nadie los atiende convocan un paro con un pliego concreto, resuelto dialogando, cediendo por completo o dispersándolo por la fuerza (con riesgo judicial real si se va la mano) | **completa** |
 | **18** | Gabinete local 2.0 (secretarías con gestión, iniciativas y crisis propias, como los ministros de la Fase 13); regalías del Gobierno Nacional con tensión centro-región; obra bandera (megaproyecto con riesgo de sobrecostos si se acelera); paro cívico local ligado a la gestión propia; rendición de cuentas periódica | **completa** |
 | **19** | Padrinazgo político: usar el peso interno de partido para apadrinar a copartidarios más pequeños, que se vuelven protegidos con una lealtad propia; pedirles luego un cupo real (una plaza que sólo alguien con cargo o la dirección del partido puede repartir) para un copartidario sin puesto o para un hijo adulto, con riesgo de que se cuestione por nepotismo | **completa** |
-| **20** | Comercio exterior sofisticado: flujos por sector y socio, aranceles, dólar, balanza y recaudo; negociación de TLC capítulo por capítulo con ratificación en el Congreso y control de la Corte; Mercosur como unión aduanera real (adhesión por consenso, Arancel Externo Común, choque con TLC previos, cumbres y presidencia pro tempore); y, si diriges tu partido, armar las listas al Congreso y otorgar o negar avales para cualquier cargo | **completa (esta entrega)** |
+| **20** | Comercio exterior sofisticado: flujos por sector y socio, aranceles, dólar, balanza y recaudo; negociación de TLC capítulo por capítulo con ratificación en el Congreso y control de la Corte; Mercosur como unión aduanera real (adhesión por consenso, Arancel Externo Común, choque con TLC previos, cumbres y presidencia pro tempore); y, si diriges tu partido, armar las listas al Congreso y otorgar o negar avales para cualquier cargo | **completa** |
+| **21** | Corte Constitucional activa (nueve magistrados con ideología, activismo y periodo; terna del Presidente, la Corte Suprema y el Consejo de Estado, elección en el Senado; control de leyes, tratados, reformas, objeciones y estado de cosas inconstitucional) y vicepresidencia real (fórmula en la campaña, encargo, lealtad, ruptura y sucesión por falta absoluta) | **completa** |
+| **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa (esta entrega)** |
+
+### Notas de la Fase 22
+
+- **Motor común** (`js/sistemas/participacion.js`, datos en `data/participacion.js`): seis mecanismos
+  que recorren etapas y se cierran en una votación, todos en `E.participacion.activos` (`historial`,
+  `hundidos`, `refrendos`, `ultimo` y `resultadosPendientes` completan el estado). Cada uno tiene su
+  umbral: referendo derogatorio 40 % del censo, aprobatorio 25 %, plebiscito 13 % del censo *a favor*,
+  consulta popular 33 % y revocatoria 40 %. Gana el Sí sólo si se alcanza el umbral **y** supera el 50 %.
+  Antes de la Constitución de 1991 sólo existe el plebiscito (`P.habilitado`); la revocatoria además exige
+  gobernadores y alcaldes de elección popular.
+- **Etapas**: recolección de firmas (referendos y revocatoria) o aval del Senado (plebiscito y consulta
+  nacional) o concepto favorable de la Asamblea o el Concejo (consulta local); control de la Corte
+  Constitucional, que puede tumbar la pregunta según qué tan lejos queda su orientación de la mediana
+  de los magistrados (`Corte.factorEco`); verificación de la Registraduría en la revocatoria; y campaña.
+  Los procesos de otros actores avanzan solos (`iniciativasNPC`): la oposición intenta derogar leyes
+  impopulares o del Gobierno con baja aprobación, comités ciudadanos reviven proyectos populares que el
+  Congreso hundió o piden revocar a alcaldes y gobernadores impopulares, y un presidente NPC con
+  aprobación decente convoca plebiscitos o consultas que le convienen ideológicamente.
+- **Apoyo**: parte de qué tan lejos queda el texto del centro del electorado (`apoyoInicial`), de la
+  popularidad de la ley o de la aprobación del funcionario, y deriva hacia `apoyoBase + postura de los
+  partidos × 12 + campaña × 0,5`. La postura de cada partido sale de su ideología frente a la de la
+  pregunta (`posturaPartido`); el director del partido la puede fijar (`fijarPosturaPartido`), a costa
+  de cohesión si choca con su ideología. La participación depende de la participación regional base del
+  departamento, del tema y de cuánta campaña haya, de cualquiera de los dos lados.
+- **Consecuencias**: un derogatorio ganado deroga la ley y revierte sus efectos reusando
+  `Corte.anularEfectos` (la ley pasa a estado `derogada`); un aprobatorio la convierte en ley por la vía
+  normal; un plebiscito o consulta programa los efectos del Sí o del No en la economía (`Economia.programar`)
+  y mueve la aprobación del Presidente; el plebiscito sobre la apertura comercial blinda los tratados
+  ante la Corte (riesgo × 0,6 durante 208 semanas, `Corte.riesgoLey`) o, si pierde, congela las
+  negociaciones de TLC y la adhesión al Mercosur. Las consultas locales tocan la economía del
+  territorio, el descontento del gobierno local y la obra bandera; el cabildo abierto baja el descontento.
+- **Revocatoria**: sólo entre la semana 52 y la 156 de cada periodo regional (`puedeRevocar`) y una vez por
+  periodo por funcionario. Si gana, el funcionario deja el cargo y `Elecciones.vacanteRegional(…, { atipica:
+  true })` escoge a su reemplazo por los votos del departamento, con el partido del revocado debilitado
+  (×0,45). Al Presidente sólo se le puede revocar si la Constitución tiene el artículo
+  `revocatoriaPresidencial` en «sí»; entonces asume el vicepresidente (`Vice.faltaAbsoluta('revocatoria')`).
+- **Interfaz** (`js/pantallas/participacion.js`, «Democracia directa»): cuatro pestañas (En curso,
+  Convocar, Revocatoria, Historial) y la modal `nocheVotacion`, que se cola en `App.revisarPendientes` y
+  detiene el avance múltiple (`Tiempo.bloqueo` devuelve `'votacion'`). Los formularios leen su `<select>`
+  al hacer clic y, como manda la regla de la Fase 11, toda validación que depende de él vive en `ejecutar`.
+- **Migración**: `Participacion.migrar` (vía `Estado.migrar`) crea el estado vacío en partidas anteriores.
+  Ningún cálculo de pantalla gasta números aleatorios (`apoyoInicial(E, m, true)` es la estimación sin ruido).
+
+### Notas de la Fase 21
+
+- **Corte Constitucional** (`js/sistemas/corte.js`, `js/pantallas/corte.js`): nueve magistrados con
+  ideología, activismo, prestigio y periodo de ocho años; al quedar una vacante, quien la propone
+  (Presidente, Corte Suprema o Consejo de Estado) arma una terna y el Senado elige por afinidad
+  ideológica (`apoyoSenado`). El riesgo de una ley (`riesgoLey`) sale de la distancia entre su
+  orientación y la mediana de la Corte, el activismo medio, la tensión Corte–Ejecutivo, la urgencia y
+  un ruido estable por hash del proyecto, para que el semáforo no cambie cada vez que se abre.
+- **Control activo**: toda ley sancionada puede recibir una demanda (ciudadano, oposición, gremio o el
+  jugador); el fallo es exequible, condicionado (pierde la mitad de sus efectos) o inexequible (los
+  revierte todos, `anularEfectos`, usando los plazos de `Economia.PLAZOS`). El Presidente puede objetar
+  por inconstitucionalidad, y los tratados (TLC y Mercosur) y las reformas constitucionales pasan por la
+  misma Corte. El estado de cosas inconstitucional fija un plazo al Gobierno para un sector abandonado.
+- **Vicepresidencia** (`js/sistemas/vicepresidencia.js`): la fórmula se escoge en la campaña
+  (`cam.formula`) y pesa en los votos; el vicepresidente recibe un encargo, tiene lealtad y gestión
+  propias y puede romper con el Presidente. `Vice.faltaAbsoluta(E, motivo)` centraliza la sucesión por
+  muerte, renuncia, pérdida de investidura, fin de carrera del jugador o revocatoria; quien queda
+  vacante la vicepresidencia la llena el Congreso a las ocho semanas (`g.viceVacante`).
+- **Migración**: `Corte.migrar` crea los magistrados y el historial en partidas anteriores;
+  `Vice.asegurar` completa la ficha del vicepresidente de forma perezosa.
 
 ### Notas de la Fase 18
 

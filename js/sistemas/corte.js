@@ -103,7 +103,9 @@ window.CURUL = window.CURUL || {};
       const c = E.corte, med = K.mediana(E), dist = U.distIdeo(p, med);
       const r = 0.05 + dist * 0.5 + (K.activismoMedio(E) - 50) * 0.002 + (p.urgencia ? 0.04 : 0) + (p.gobierno ? c.tension * 0.0012 : 0)
         + (p.pop < 0 ? 0.03 : 0) + (K.hash(p.id) - 0.5) * 0.12;
-      return U.clamp(r, 0.02, 0.85);
+      // Un plebiscito ganado sobre la apertura comercial blinda los tratados durante cuatro años.
+      const ref = p.ratifica && E.participacion && E.participacion.refrendos.apertura;
+      return U.clamp(ref && ref.si && E.fecha.t - ref.t < 208 ? r * 0.6 : r, 0.02, 0.85);
     },
     semaforo(E, p) {
       const r = K.riesgoLey(E, p);

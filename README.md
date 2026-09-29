@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 20 completas)
+## Qué hay en esta versión (Fases 1 a 22 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -204,6 +204,17 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Director de partido con poder real**: si diriges tu partido armas las listas al Senado y la
   Cámara (inscribes, vetas o fichas a gente que suma votos) y otorgas o niegas avales para la
   Presidencia, las gobernaciones y las alcaldías; un aval negado puede volver disidente a un aspirante.
+- **Corte Constitucional activa**: nueve magistrados con ideología, activismo y periodo propios, elegidos
+  por el Senado de ternas del Presidente, la Corte Suprema y el Consejo de Estado. Controla leyes,
+  tratados, reformas y objeciones; un fallo adverso revierte los efectos de una ley, y ante un sector
+  abandonado declara el estado de cosas inconstitucional. Hay un semáforo de riesgo antes de firmar.
+- **Vicepresidencia**: escoges tu fórmula en la campaña (copartidario, aliado o independiente), le
+  asignas un encargo, cuidas su lealtad —puede romper contigo— y es quien asume si falta el Presidente.
+- **Democracia directa**: referendos derogatorio y aprobatorio por firmas, plebiscitos y consultas
+  populares del Presidente, consultas locales y cabildos abiertos de gobernadores y alcaldes, y
+  **revocatoria del mandato** de alcaldes, gobernadores y —si reformas la Constitución— del Presidente.
+  Umbrales de participación reales, control de la Corte, campañas, posturas de cada partido (tú las fijas
+  si diriges el tuyo) y elección atípica cuando un funcionario es revocado.
 
 ## Arquitectura
 

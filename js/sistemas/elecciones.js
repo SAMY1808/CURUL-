@@ -572,14 +572,27 @@ window.CURUL = window.CURUL || {};
        Gobierno designa a un sucesor interino del mismo partido, igual que Gobierno.vacante hace con
        una curul del Congreso, para no dejar el departamento o el municipio sin gobernante hasta la
        próxima elección regional. */
-    vacanteRegional(E, depto, tipo) {
-      const d = E.deptos[depto], clave = tipo;
+    vacanteRegional(E, depto, tipo, opts) {
+      const d = E.deptos[depto], clave = tipo, atipica = !!(opts && opts.atipica);
       const saliente = E.politicos[d[clave]];
-      const partido = saliente ? saliente.partido : null;
+      let partido = saliente ? saliente.partido : null;
+      if (atipica) {
+        // Elección atípica: nadie hereda el cargo; gana quien el electorado prefiera hoy, y el partido
+        // del funcionario revocado llega debilitado.
+        const cuo = El.cuotas(E, depto, true); delete cuo.BLANCO;
+        if (partido) cuo[partido] = (cuo[partido] || 0) * 0.45;
+        partido = U.pesado(Object.keys(cuo), k => cuo[k]) || partido;
+      }
       const sucesor = C.Politicos.crear(E, { partido, depto, cargo: { tipo, depto } });
       d[clave] = sucesor.id;
-      C.Politicos.anotar(sucesor, `Asume como ${tipo} encargado/a tras la vacancia de ${saliente ? saliente.nombre : 'su antecesor'}`);
-      C.Medios.noticia(E, { tipo: 'regional', titular: `${sucesor.nombre} asume como ${tipo} encargado/a de ${tipo === 'alcalde' ? d.capital : d.nombre} tras la vacancia`, tono: 0 });
+      const lugar = tipo === 'alcalde' ? d.capital : d.nombre;
+      if (atipica) {
+        C.Politicos.anotar(sucesor, `Gana la elección atípica como ${tipo} tras la revocatoria de ${saliente ? saliente.nombre : 'su antecesor'}`);
+        C.Medios.noticia(E, { tipo: 'regional', titular: `${sucesor.nombre} gana la elección atípica y es el nuevo ${tipo === 'alcalde' ? 'alcalde' : 'gobernador'} de ${lugar}`, tono: 0, importante: true });
+      } else {
+        C.Politicos.anotar(sucesor, `Asume como ${tipo} encargado/a tras la vacancia de ${saliente ? saliente.nombre : 'su antecesor'}`);
+        C.Medios.noticia(E, { tipo: 'regional', titular: `${sucesor.nombre} asume como ${tipo} encargado/a de ${lugar} tras la vacancia`, tono: 0 });
+      }
       return sucesor;
     },
     posesionRegional(E, res) {

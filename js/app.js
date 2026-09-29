@@ -5,7 +5,7 @@ window.CURUL = window.CURUL || {};
   C.Pantallas = C.Pantallas || {};
   const NAV = [
     ['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa'], ['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos'],
-    ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'], ['comercio', '🚢', 'Comercio exterior'], ['corte', '⚖', 'Corte Constitucional'],
+    ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'], ['comercio', '🚢', 'Comercio exterior'], ['corte', '⚖', 'Corte Constitucional'], ['participacion', '🗳', 'Democracia directa'],
     ['medios', '📰', 'Medios'], ['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama'], null, ['partidas', '💾', 'Partidas']
   ];
 
@@ -137,6 +137,7 @@ window.CURUL = window.CURUL || {};
       if (E.elecciones.consultaPendiente) { const r = E.elecciones.consultaPendiente; E.elecciones.consultaPendiente = null; C.Pantallas.elecciones.nocheConsultaInterpartidista(r); return; }
       if (E.elecciones.direccionPendiente) { const r = E.elecciones.direccionPendiente; E.elecciones.direccionPendiente = null; C.Pantallas.partidos.congresoInterno(r); return; }
       if (E.elecciones.nochePendiente) { const id = E.elecciones.nochePendiente; E.elecciones.nochePendiente = null; C.Pantallas.elecciones.noche(id); return; }
+      if (E.participacion && E.participacion.resultadosPendientes.length) { C.Pantallas.participacion.nocheVotacion(E.participacion.resultadosPendientes.shift()); return; }
       if ((E.ui.sancionesPendientes || []).length) C.Pantallas.proyectos.sancion(E.ui.sancionesPendientes[0]);
     },
     modalEvento(ev) {

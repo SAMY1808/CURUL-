@@ -32,6 +32,7 @@ window.CURUL = window.CURUL || {};
       if (E.ui.sucesionPendiente) return 'sucesion';
       if (E.eventos.pendientes.length) return 'evento';
       if (E.elecciones.nochePendiente) return 'noche';
+      if (E.participacion && E.participacion.resultadosPendientes.length) return 'votacion';
       return null;
     }
   };
