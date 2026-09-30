@@ -50,6 +50,31 @@ window.CURUL = window.CURUL || {};
         <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:8px"><select data-arg="causa">${Object.entries(L.CAUSAS).map(([k, c]) => `<option value="${k}">${c.icono} ${esc(c.n)}</option>`).join('')}</select>${UI.botonAccion('crearFundacion', {}, 'Crear fundación ($250 M)', 'chico')}</div>
         <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:6px"><select data-arg="tema">${Object.entries(L.LIBROS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('escribirLibro', {}, null, 'chico')}</div></div></div>`;
   };
+  const familiaHTML = E => {
+    const J = E.jugador, F = C.Familia; F.asegurarDatos(E);
+    const par = F.pareja(E), din = F.dinastiaResumen(E), aspiraOpts = (lista) => lista.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+    const cargoTxt = p => p.cargo ? (p.cargo.tipo === 'aspirante' ? 'Aspirante' : (C.Politicos.etiquetaCargo ? C.Politicos.etiquetaCargo(E, p) : p.cargo.tipo)) : '—';
+    const parejaHTML = par ? `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">💞</span><div><b>${esc(par.nombre)}</b><div class="tenue" style="font-size:12px">Pareja · ${par.edad} años · ${esc(par.profesion)}${par.tipo && F.TIPOS_PAREJA[par.tipo] ? ' · ' + esc(F.TIPOS_PAREJA[par.tipo].n.toLowerCase()) : ''}</div></div></div>
+        <div class="tt-f" style="margin-top:6px"><span class="tenue">Relación contigo</span><b>${Math.round(par.relacion)}/100</b></div><div class="tt-f"><span class="tenue">Papel</span><b>${esc(F.PAPELES[par.papel].n)}</b></div>
+        ${par.politicoId && E.politicos[par.politicoId] ? `<div class="tt-f"><span class="tenue">En política</span><b>${esc(cargoTxt(E.politicos[par.politicoId]))}</b></div>` : ''}
+        <div class="fila accion-form" style="margin-top:8px;gap:4px;flex-wrap:wrap"><select data-arg="papel">${Object.entries(F.PAPELES).map(([k, v]) => `<option value="${k}" ${k === par.papel ? 'selected' : ''}>${esc(v.n)}</option>`).join('')}</select><select data-arg="aspira" title="Si es carrera propia">${aspiraOpts([['concejo', 'Concejo'], ['asamblea', 'Asamblea'], ['camara', 'Cámara']])}</select>${UI.botonAccion('papelPareja', {}, 'Definir', 'chico')}${UI.botonAccion('divorciarse', {}, 'Terminar', 'chico peligro')}</div></div>`
+      : `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">💍</span><div><b>Sin pareja</b><div class="tenue" style="font-size:12px">Formalizar una pareja da apoyos, patrimonio o bienestar, y abre la posibilidad de tener hijos.</div></div></div>
+        <div class="fila accion-form" style="margin-top:8px;gap:4px"><select data-arg="tipo">${Object.entries(F.TIPOS_PAREJA).map(([k, v]) => `<option value="${k}">${esc(v.n)}</option>`).join('')}</select>${UI.botonAccion('casarse', {}, 'Casarme', 'chico')}</div></div>`;
+    const hijosHTML = J.familia.filter(f => f.rol !== 'Pareja').map(f => {
+      const esHijo = f.rol === 'Hijo' || f.rol === 'Hija', icono = { Hijo: '👦', Hija: '👧', Madre: '👩‍🦳', Padre: '👨‍🦳' }[f.rol] || '👤';
+      if (!esHijo) return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años</div></div></div></div>`;
+      const adulto = F.adulto(f), pol = f.politicoId && E.politicos[f.politicoId];
+      return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años · ${esc(f.educacion || 'Ninguna')}</div></div></div>
+        <div class="tt-f" style="margin-top:6px"><span class="tenue">Relación contigo</span><b>${Math.round(f.relacion)}/100</b></div>
+        ${adulto ? `<div class="tt-f"><span class="tenue">Potencial político</span><b>${F.potencial(f)}/100</b></div>` : ''}${pol ? `<div class="tt-f"><span class="tenue">En política</span><b>${esc(cargoTxt(pol))} · fuerza ${Math.round(pol.fuerza)}</b></div>` : ''}
+        <div class="fila accion-form" style="margin-top:8px;gap:4px;flex-wrap:wrap">${UI.botonAccion('pasarTiempoHijo', { hijo: f.id }, 'Pasar tiempo', 'chico')}${UI.botonAccion('pagarEducacionHijo', { hijo: f.id }, 'Educación', 'chico')}
+          ${pol ? UI.botonAccion('apadrinarHijo', { hijo: f.id }, 'Apadrinar', 'chico') : f.edad >= 21 ? `<select data-arg="aspira">${aspiraOpts([['concejo', 'Concejo'], ['asamblea', 'Asamblea'], ['camara', 'Cámara'], ['alcaldia', 'Alcaldía']])}</select>${UI.botonAccion('lanzarHijoPolitica', { hijo: f.id }, 'Lanzar a la política', 'chico')}` : ''}</div></div>`;
+    }).join('');
+    const dinHTML = din.miembros.length ? `<div class="tarjeta" style="margin-top:10px;padding:10px"><h4 class="sub-h" style="margin:0 0 6px">👑 Dinastía · ${din.puntos} puntos</h4><div class="lista">${din.miembros.map(x => `<div class="it"><div class="cuerpo"><b>${esc(x.p.nombre)}</b><span>${esc(x.f.rol)} · ${esc(cargoTxt(x.p))}${x.p.activo ? '' : ' · retirado'}</span></div></div>`).join('')}</div><div class="tenue" style="font-size:11.5px;margin-top:6px">Cada familiar con cargo suma puntos de dinastía: pesan en el legado y el heredero llega con más reconocimiento.</div></div>` : '';
+    return `<div class="tarjeta" style="margin-top:14px"><div class="t-cab"><h3>Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3>${UI.botonAccion('tenerHijo', {}, '👶 Tener un hijo', 'chico')}</div>
+      <div class="grid g3">${parejaHTML}${hijosHTML}</div>${dinHTML}</div>`;
+  };
+
   C.Pantallas.personaje = {
     render(el) {
       const E = C.E, J = E.jugador, S = E.series;
@@ -91,17 +116,7 @@ window.CURUL = window.CURUL || {};
           <h3 style="margin-top:12px">Escándalos y reconocimientos</h3><div class="lista">${[...J.escandalos.map(x => ({ ...x, i: '🔎', txt: x.titulo })), ...J.reconocimientos.map(x => ({ ...x, i: '🏅' }))].sort((a, b) => b.t - a.t).map(x => `<div class="it"><span>${x.i}</span><div class="cuerpo"><b style="white-space:normal">${esc(x.txt)}</b><span>${U.fmtT(x.t)}</span></div></div>`).join('') || '<div class="vacio">Hoja de vida limpia y sin distinciones aún.</div>'}</div></div>
       </div>
       ${escenarioHTML(E)}${saludLegadoHTML(E)}
-      <div class="tarjeta" style="margin-top:14px"><h3>Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3>
-        <div class="grid g3">${J.familia.map(f => {
-          const esHijo = f.rol === 'Hijo' || f.rol === 'Hija';
-          const icono = { Pareja: '💞', Hijo: '👦', Hija: '👧', Madre: '👩‍🦳', Padre: '👨‍🦳' }[f.rol] || '👤';
-          if (!esHijo) return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años</div></div></div></div>`;
-          const adulto = C.Familia.adulto(f);
-          return `<div class="tarjeta" style="padding:10px"><div class="fila"><span style="font-size:22px">${icono}</span><div><b>${esc(f.nombre)}</b><div class="tenue" style="font-size:12px">${f.rol} · ${f.edad} años · ${esc(f.educacion || 'Ninguna')}</div></div></div>
-            <div class="tt-f" style="margin-top:6px"><span class="tenue">Relación contigo</span><b>${Math.round(f.relacion)}/100</b></div>
-            ${adulto ? `<div class="tt-f"><span class="tenue">Potencial político</span><b>${C.Familia.potencial(f)}/100</b></div>` : ''}
-            <div class="fila" style="margin-top:8px;gap:4px">${UI.botonAccion('pasarTiempoHijo', { hijo: f.id }, 'Pasar tiempo', 'chico')}${UI.botonAccion('pagarEducacionHijo', { hijo: f.id }, 'Educación', 'chico')}</div></div>`;
-        }).join('') || '<div class="vacio">Aún no tienes hijos.</div>'}</div></div>
+      ${familiaHTML(E)}
       <div class="tarjeta" style="margin-top:14px"><h3>Cambiar de rumbo</h3><div class="fila accion-form"><select data-arg="oficio">${Object.entries(C.Personaje.ORIGENES).filter(([k, o]) => !o.electo && !o.oculto).map(([k, o]) => `<option value="${k}">${o.icono} ${o.n}</option>`).join('')}</select>${UI.botonAccion('cambiarOficio', {})}
         <select data-arg="partido">${Object.values(E.partidos).filter(p => !p.especial && !p.futuro).map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('afiliarse', {})}</div>
         <p class="tenue" style="font-size:12px">La vida sigue fuera de los cargos: academia, periodismo, gremios u ONG te mantienen vigente para volver a la arena electoral.</p></div>`;
