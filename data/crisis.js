@@ -94,4 +94,14 @@ CURUL.DATA = CURUL.DATA || {};
         { t: 'No cerrar la economía', fn(E) { E.mundoEco.pandemia.medida = 'abierta'; E.opinion.aprobacionPres = clamp(E.opinion.aprobacionPres - 1, 3, 95); return 'La economía sigue, los hospitales se llenan'; } }
       ] }
   );
+
+  C.DATA.eventos.push(
+    { id: 'paroEmpresa', sistema: true, forzar: true, tipo: 'regional', icono: '✊', alcance: 'jugador', peso: 0,
+      titulo: 'Paro sindical en {empresa}', texto: 'El sindicato paraliza {empresa} exigiendo mejores salarios y garantías. El servicio se resiente y la ciudadanía te mira.',
+      opciones: [
+        { t: 'Negociar y ceder en lo salarial', fn(E, ev) { const e = E.empresas.lista.find(x => x.id === ev.ctx.emp); if (e) { e.paro = null; e.sindicato = Math.max(25, e.sindicato - 22); e.rentabilidad -= 0.8; } return 'Se levanta el paro; sube el costo laboral'; } },
+        { t: 'Mantener la línea dura', fn(E, ev) { const e = E.empresas.lista.find(x => x.id === ev.ctx.emp); if (e) { e.sindicato = clamp(e.sindicato + 6, 0, 100); e.calidad = clamp(e.calidad - 3, 15, 98); } E.opinion.escandalos = (E.opinion.escandalos || 0) + 0.2; return 'El paro se prolonga y el servicio se deteriora'; } },
+        { t: 'Recurrir a la fuerza pública y contratar reemplazos', fn(E, ev) { const e = E.empresas.lista.find(x => x.id === ev.ctx.emp); if (e) { e.paro = null; e.sindicato = clamp(e.sindicato + 10, 0, 100); } C.Opinion.moverImagen(E, { seg: { bajos: -2, formales: -2 } }); return 'Rompes el paro, pero pierdes apoyo entre los trabajadores'; } }
+      ] }
+  );
 })(window.CURUL);

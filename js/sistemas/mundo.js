@@ -35,7 +35,7 @@ window.CURUL = window.CURUL || {};
       // 1. Territorio
       for (const d of C.DATA.departamentos) E.deptos[d.id] = Object.assign({}, d, { gobernador: null, alcalde: null, ajusteAprob: 0 });
       // 2. Instituciones y sistemas base
-      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E); C.Corte.init(E); C.Participacion.init(E); C.Encuestas.init(E); C.Inteligencia.init(E); C.Control.init(E); C.Exterior.init(E); C.Territorio.init(E); C.MundoEco.init(E);
+      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E); C.Corte.init(E); C.Participacion.init(E); C.Encuestas.init(E); C.Inteligencia.init(E); C.Control.init(E); C.Exterior.init(E); C.Territorio.init(E); C.MundoEco.init(E); C.Empresas.init(E);
       // 3. Jugador
       C.Personaje.crear(E, cfg.jugador);
       const J = E.jugador;

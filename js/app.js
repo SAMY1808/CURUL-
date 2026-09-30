@@ -7,7 +7,7 @@ window.CURUL = window.CURUL || {};
   const SECCIONES = [
     { id: 'inicio', n: null, items: [['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa']] },
     { id: 'legislativo', n: 'Poder legislativo', ic: '🏛', items: [['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos']] },
-    { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio']] },
+    { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio'], ['empresas', '🏭', 'Empresas públicas']] },
     { id: 'justicia', n: 'Justicia y control', ic: '⚖', items: [['corte', '⚖', 'Corte y órganos de control'], ['inteligencia', '🕶', 'Inteligencia']] },
     { id: 'politica', n: 'Política y elecciones', ic: '🗳', items: [['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['encuestas', '📊', 'Encuestas'], ['participacion', '🗳', 'Democracia directa'], ['medios', '📰', 'Medios']] },
     { id: 'mundo', n: 'Mundo y economía', ic: '🌎', items: [['diplomacia', '🌎', 'Diplomacia'], ['comercio', '🚢', 'Comercio exterior'], ['mundoeco', '📈', 'Economía global']] },
