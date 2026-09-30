@@ -96,22 +96,7 @@ window.CURUL = window.CURUL || {};
       U.serie('jug:favorabilidad', J.popularidad);
       U.serie('jug:reconocimiento', J.reconocimiento);
 
-      // Encuesta mensual (primera semana de cada mes)
-      if (U.hoy().getUTCDate() <= 7) O.encuesta(E);
-    },
-    encuesta(E) {
-      const firmas = ['Invamer Andino', 'Centro Nacional de Consultoría Pública', 'Datexco Sur', 'GAD Opinión'];
-      const e = {
-        t: E.fecha.t, firma: U.pick(firmas), margen: U.d1(U.rf(2.2, 3.4)),
-        aprobacion: U.clamp(E.opinion.aprobacionPres + U.gauss(0, 1.8), 1, 99),
-        temas: Object.fromEntries(Object.keys(TEMAS).map(t => [t, U.clamp(E.opinion.aprobTemas[t] + U.gauss(0, 1.5), 1, 99)])),
-        partidos: {}, jugador: { fav: E.jugador.popularidad + U.gauss(0, 2), rec: E.jugador.reconocimiento + U.gauss(0, 2) }
-      };
-      for (const p of Object.values(E.partidos)) if (!p.especial && !p.futuro) e.partidos[p.id] = Math.max(0.2, p.popularidad + U.gauss(0, 0.9));
-      E.opinion.encuestas.push(e); if (E.opinion.encuestas.length > 60) E.opinion.encuestas.shift();
-      E.opinion.ultimaEncuesta = e;
-      C.Medios.noticia(E, { tipo: 'encuesta', titular: `Encuesta ${e.firma}: aprobación del presidente en ${U.d1(e.aprobacion)} %`, tono: e.aprobacion > 50 ? 1 : -1 });
-      C.Bus.emit('encuesta', e);
+      // Las encuestas periódicas las hace ahora el sistema de Encuestas (js/sistemas/encuestas.js).
     }
   };
 

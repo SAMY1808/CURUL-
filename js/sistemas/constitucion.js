@@ -14,6 +14,12 @@ window.CURUL = window.CURUL || {};
       etiqueta: v => v + ' años' },
     autonomiaTerritorial: { nombre: 'Autonomía territorial', valores: ['unitaria', 'descentralizada', 'federal'], defecto: 'unitaria',
       etiqueta: v => v === 'federal' ? 'Estado federal' : v === 'descentralizada' ? 'Unitaria descentralizada' : 'Unitaria centralista' },
+    votoObligatorio: { nombre: 'Voto obligatorio', valores: ['no', 'si'], defecto: 'no',
+      etiqueta: v => v === 'si' ? 'Obligatorio (multa a quien no vota)' : 'Voluntario' },
+    financiacionCampanas: { nombre: 'Financiación de las campañas', valores: ['privada', 'mixta', 'publica'], defecto: 'privada',
+      etiqueta: v => v === 'publica' ? 'Pública (topes bajos, dinero del Estado)' : v === 'mixta' ? 'Mixta (aportes privados y reposición estatal)' : 'Predominantemente privada' },
+    sistemaListas: { nombre: 'Listas al Congreso', valores: ['preferente', 'cerrada'], defecto: 'preferente',
+      etiqueta: v => v === 'cerrada' ? 'Cerradas y bloqueadas (manda la dirección del partido)' : 'Voto preferente (manda el voto por persona)' },
     revocatoriaPresidencial: { nombre: 'Revocatoria del mandato presidencial', valores: ['no', 'si'], defecto: 'no',
       etiqueta: v => v === 'si' ? 'Habilitada' : 'No existe (sólo alcaldes y gobernadores)' }
   };

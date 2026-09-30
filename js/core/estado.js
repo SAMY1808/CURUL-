@@ -69,6 +69,10 @@ window.CURUL = window.CURUL || {};
       if (C.Corte && (!E.corte || !E.corte.magistrados)) { const prev = C.E; C.E = E; C.Corte.migrar(E); C.E = prev; }
       // Partidas previas a la Fase 22 no traen la democracia directa (referendos, consultas, revocatoria).
       if (C.Participacion && (!E.participacion || !E.participacion.activos)) { const prev = C.E; C.E = E; C.Participacion.migrar(E); C.E = prev; }
+      // Partidas previas a la Fase 24 no traen el registro de encuestadoras.
+      if (C.Encuestas && !E.encuestas) { const prev = C.E; C.E = E; C.Encuestas.migrar(E); C.E = prev; }
+      if (C.Inteligencia && !E.inteligencia) { const prev = C.E; C.E = E; C.Inteligencia.migrar(E); C.E = prev; }
+      if (C.Control && (!E.control || !E.control.organos)) { const prev = C.E; C.E = E; C.Control.migrar(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

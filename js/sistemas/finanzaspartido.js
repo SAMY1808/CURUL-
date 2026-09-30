@@ -27,6 +27,7 @@ window.CURUL = window.CURUL || {};
     /* Bonus (o castigo) a la maquinaria por caja: ±3-6 puntos de estructura frente a lo que le corresponde por su tamaño. */
     estructuraEf(pa) { return pa.estructura + U.clamp(((pa.finanzas || 0) / Math.max(300, pa.popularidad * 1200) - 1) * 0.05, -0.03, 0.06); },
     pesoJ(E) { return C.Partidos.peso(E, E.politicos.J).nac; },
+    factorEstado(E) { const v = E.constitucion ? C.Constitucion.valor(E, 'financiacionCampanas') : 'privada'; return v === 'publica' ? 1.8 : v === 'mixta' ? 1.3 : 1; },
     esMiembro(E) { const pa = E.partidos[E.jugador.partido]; return pa && !pa.especial ? pa : null; },
     donadoEsteAnio(pa) { const f = F.asegurar(pa); return f.donado.anio === U.anio() ? f.donado.monto : 0; },
     tope(E, pa, tipo) { return F.TIPOS[tipo]; },
@@ -36,7 +37,7 @@ window.CURUL = window.CURUL || {};
         if (pa.especial || pa.futuro || pa.finanzas == null) continue;
         const f = F.asegurar(pa);
         // Financiación estatal y aportes de la militancia frente a la operación del partido.
-        pa.finanzas = Math.max(0, pa.finanzas + 6 * pa.popularidad + 0.00002 * (pa.militantes || 0) - 5 - pa.finanzas * 0.006);
+        pa.finanzas = Math.max(0, pa.finanzas + 6 * F.factorEstado(E) * pa.popularidad + 0.00002 * (pa.militantes || 0) - 5 - pa.finanzas * 0.006);
         if (f.compromisos > 0 && U.chance(0.02 * f.compromisos)) F.cobranDonantes(E, pa);
         if (f.irregular > 0) {
           if (U.chance(Math.min(0.02, 0.00004 * f.irregular))) F.escandalo(E, pa);

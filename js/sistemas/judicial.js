@@ -20,7 +20,8 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador;
       if (J.investigacion) { Jud.avanzar(E); return; }
       const riesgo = J.riesgoJudicial || 0;
-      if (riesgo < 12 || !U.chance(U.clamp((riesgo - 10) / 900, 0, 0.05))) return;
+      const hf = C.Control ? C.Control.hostilJ(E, 'fiscal') : 1;
+      if (riesgo < 12 || !U.chance(U.clamp((riesgo - 10) / 900 * hf, 0, 0.07))) return;
       Jud.abrir(E);
     },
     abrir(E) {
@@ -31,7 +32,8 @@ window.CURUL = window.CURUL || {};
     },
     avanzar(E) {
       const J = E.jugador, inv = J.investigacion;
-      const ritmo = Math.max(0.5, U.rf(2, 5) - (J.defensaJudicial || 0) * 0.3);
+      const hf = C.Control ? C.Control.hostilJ(E, 'fiscal') : 1;
+      const ritmo = Math.max(0.5, U.rf(2, 5) * (0.85 + (hf - 1) * 0.5) - (J.defensaJudicial || 0) * 0.3);
       inv.avance = U.clamp(inv.avance + ritmo, 0, 100);
       const idx = Math.min(ETAPAS.length - 1, Math.floor(inv.avance / 34));
       if (ETAPAS[idx] !== inv.etapa) {
@@ -42,7 +44,7 @@ window.CURUL = window.CURUL || {};
     },
     resolver(E) {
       const J = E.jugador, inv = J.investigacion, riesgo = J.riesgoJudicial || 0;
-      const probCondena = U.clamp(0.15 + riesgo / 160 - (J.rep.transparencia - 50) / 220, 0.05, 0.85);
+      const probCondena = U.clamp(0.15 + riesgo / 160 - (J.rep.transparencia - 50) / 220 + (C.Control ? (C.Control.hostilJ(E, 'fiscal') - 1) * 0.08 : 0), 0.05, 0.9);
       J.investigacion = null; J.defensaJudicial = 0;
       if (!U.chance(probCondena)) {
         J.riesgoJudicial = U.clamp(riesgo * 0.3, 0, 100);

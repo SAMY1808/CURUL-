@@ -251,7 +251,37 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **20** | Comercio exterior sofisticado: flujos por sector y socio, aranceles, dólar, balanza y recaudo; negociación de TLC capítulo por capítulo con ratificación en el Congreso y control de la Corte; Mercosur como unión aduanera real (adhesión por consenso, Arancel Externo Común, choque con TLC previos, cumbres y presidencia pro tempore); y, si diriges tu partido, armar las listas al Congreso y otorgar o negar avales para cualquier cargo | **completa** |
 | **21** | Corte Constitucional activa (nueve magistrados con ideología, activismo y periodo; terna del Presidente, la Corte Suprema y el Consejo de Estado, elección en el Senado; control de leyes, tratados, reformas, objeciones y estado de cosas inconstitucional) y vicepresidencia real (fórmula en la campaña, encargo, lealtad, ruptura y sucesión por falta absoluta) | **completa** |
 | **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa** |
-| **23** | Finanzas del partido: la caja (`pa.finanzas`) recibe financiación estatal y paga la operación; el jugador puede donar de su bolsillo (con el tope legal anual), hacer grandes recaudos (cenas, aportes ciudadanos, donantes, gremios, dinero irregular) y girar la caja a su campaña; la caja mueve la maquinaria del partido | **completa (esta entrega)** |
+| **23** | Finanzas del partido: la caja (`pa.finanzas`) recibe financiación estatal y paga la operación; el jugador puede donar de su bolsillo (con el tope legal anual), hacer grandes recaudos (cenas, aportes ciudadanos, donantes, gremios, dinero irregular) y girar la caja a su campaña; la caja mueve la maquinaria del partido | **completa** |
+| **24** | Encuestas 2.0 (seis firmas con muestra, margen y sesgo propios; promedio ponderado; intención de voto por partido y candidato; imagen por segmentos; encargar encuestas honestas o «cocinadas»); inteligencia (DAS/DNI) con interceptaciones, expedientes, filtraciones y presión; guerra sucia (campaña negra, bots); Fiscal, Procurador y Contralor con ternas y elección; reforma política (voto obligatorio, financiación de campañas, listas cerradas) | **completa (esta entrega)** |
+
+### Notas de la Fase 24
+
+- **Encuestas** (`data/encuestas.js`, `js/sistemas/encuestas.js`, `js/pantallas/encuestas.js`): seis firmas con muestra,
+  sesgo de casa (a favor del Gobierno y a la derecha o izquierda) y reputación dinámica. Cada encuesta trae margen
+  (`1,96·√(0,25/n)·1,3`, ajustado por la reputación), aprobación con NS/NR, rumbo del país, problemas que más
+  preocupan, aprobación por tema, intención de voto por partido, carrera presidencial (cuando faltan menos de dos
+  años, con un campo de candidatos calculado sin efectos secundarios) y tu imagen por segmentos. Salen dos al mes y
+  una por semana antes de las elecciones. La reputación de cada firma se actualiza al comparar su última encuesta
+  con el resultado real (`evaluarFirmas`, evento `eleccion`). El **promedio** pondera por muestra, reputación y
+  antigüedad. **Encargar** (`encargarEncuesta`): eliges firma, muestra, enfoque (honesta o «a tu favor», que cuesta
+  50 % más y puede destaparse) y si se publica. Lectura sin azar; sólo `realizar` gasta números aleatorios.
+  Estado en `E.encuestas` (`lista`, `firmas`, `privadas`), creado de forma perezosa.
+- **Inteligencia y guerra sucia** (`js/sistemas/inteligencia.js`): la agencia se llama DAS (1960-2011) o DNI; el
+  Presidente la usa (capacidad 0-100), los demás contratan detectives. `interceptar` produce expedientes
+  (`E.inteligencia.expedientes`) que se filtran (el blanco se hunde y puede renunciar), se usan para presionar
+  (cede, pero puede denunciar el chantaje) o se archivan; pierden valor con el tiempo. Cada operación suma
+  `riesgo`, que puede estallar como el escándalo de las «chuzadas» (aprobación, riesgo judicial, tensión con la
+  Corte). También: `campanaNegra`, `ejercitoBots` y `denunciarChuzadas` (cuando el Gobierno te espía).
+- **Órganos de control** (`js/sistemas/control.js`, pestaña de la Corte): Fiscal, Procurador y Contralor con
+  ideología, independencia, agresividad y periodo de cuatro años. Al vencer, se arma una terna
+  (`Corte.generarCandidatos`) y elige la Corte Suprema, el Senado o el Congreso; el Presidente puede hacer lobby.
+  La hostilidad del Fiscal escala la apertura, el avance y la condena de los casos judiciales
+  (`Control.hostilJ` en `judicial.js`); el Procurador destituye NPC y puede abrir un proceso disciplinario contra el
+  jugador si es gobernador o alcalde (26 semanas, con defensa contratable); el Contralor deja hallazgos fiscales.
+- **Reforma política**: tres artículos nuevos en la Constitución reformable: `votoObligatorio` (+14 puntos de
+  participación), `financiacionCampanas` (privada, mixta o pública: cambia los topes de gasto, el riesgo de la
+  financiación irregular y la financiación estatal de los partidos) y `sistemaListas` (preferente o cerrada:
+  con listas cerradas los votos caen por posición, así que manda quien arma la lista).
 
 ### Notas de la Fase 23
 

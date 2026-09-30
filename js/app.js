@@ -5,7 +5,7 @@ window.CURUL = window.CURUL || {};
   C.Pantallas = C.Pantallas || {};
   const NAV = [
     ['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa'], ['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos'],
-    ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'], ['comercio', '🚢', 'Comercio exterior'], ['corte', '⚖', 'Corte Constitucional'], ['participacion', '🗳', 'Democracia directa'],
+    ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'], ['comercio', '🚢', 'Comercio exterior'], ['corte', '⚖', 'Corte Constitucional'], ['participacion', '🗳', 'Democracia directa'], ['encuestas', '📊', 'Encuestas'], ['inteligencia', '🕶', 'Inteligencia'],
     ['medios', '📰', 'Medios'], ['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama'], null, ['partidas', '💾', 'Partidas']
   ];
 

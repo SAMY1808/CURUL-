@@ -66,8 +66,8 @@ window.CURUL = window.CURUL || {};
     render(el, params) {
       const E = C.E, tab = (params && params.tab) || E.ui.corteTab || 'magistrados';
       E.ui.corteTab = tab;
-      const tabs = [['magistrados', 'Magistrados'], ['expedientes', 'Demandas y fallos'], ['leyes', 'Leyes demandables'], ['mandatos', 'Mandatos']];
-      const cuerpo = { magistrados, expedientes, leyes, mandatos }[tab](E);
+      const tabs = [['magistrados', 'Magistrados'], ['expedientes', 'Demandas y fallos'], ['leyes', 'Leyes demandables'], ['mandatos', 'Mandatos'], ['control', 'Órganos de control']];
+      const cuerpo = { magistrados, expedientes, leyes, mandatos, control: C.Pantallas.controlTab }[tab](E);
       el.innerHTML = `<div class="cab"><div><h1>Corte Constitucional</h1><div class="sub">Nueve magistrados que controlan leyes, tratados y reformas. Sus fallos pueden tumbar lo que apruebe el Congreso.</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
         <div style="margin-top:14px">${cuerpo}</div>`;

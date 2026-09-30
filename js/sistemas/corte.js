@@ -186,7 +186,7 @@ window.CURUL = window.CURUL || {};
 
     /* ── Control de reformas constitucionales (sustitución de la Constitución) ── */
     tumbaReforma(E, articulo, via) {
-      const extra = { reeleccion: 0.10, autonomiaTerritorial: 0.08, revocatoriaPresidencial: 0.10, umbralSenado: 0.03, edadMinimaPresidencia: 0.02 }[articulo] || 0.03;
+      const extra = { reeleccion: 0.10, autonomiaTerritorial: 0.08, revocatoriaPresidencial: 0.10, umbralSenado: 0.03, edadMinimaPresidencia: 0.02, votoObligatorio: 0.05, financiacionCampanas: 0.05, sistemaListas: 0.05 }[articulo] || 0.03;
       const p = U.clamp(((via === 'constituyente' ? 0.03 : 0.04) + extra) * (0.6 + K.activismoMedio(E) / 100), 0.02, 0.4);
       const art = C.Constitucion.ARTICULOS[articulo];
       const tumba = U.chance(p);

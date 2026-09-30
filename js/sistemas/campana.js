@@ -94,7 +94,7 @@ window.CURUL = window.CURUL || {};
       const cam = E.elecciones.campana, J = E.jugador;
       const monto = Math.round((25 + J.redes * 10) * f(E) * (cam.cargo === 'presidencia' ? 8 : cam.cargo === 'senado' || cam.cargo === 'gobernacion' ? 2.5 : 1) * U.rf(0.8, 1.4));
       cam.caja += monto; cam.irregular = (cam.irregular || 0) + monto;
-      J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(3, 6), 0, 100);
+      J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(3, 6) * (C.Constitucion.valor(E, 'financiacionCampanas') === 'publica' ? 1.6 : 1), 0, 100);
       E.opinion.corrupcionAcum = (E.opinion.corrupcionAcum || 0) + 0.4;
       J.rep.transparencia = U.clamp(J.rep.transparencia - U.rf(1, 3), 0, 100);
       return { ok: true, msg: `Consigues ${U.cop(monto)} por fuera del tope legal, sin dejar factura` };

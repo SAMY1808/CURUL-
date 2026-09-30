@@ -96,7 +96,8 @@ window.CURUL = window.CURUL || {};
     participacionBase(E, d, tipo) {
       const base = tipo === 'presidencial' ? 0.55 : tipo === 'regional' ? 0.58 : 0.47;
       const reg = { Caribe: -0.02, Andina: 0.03, Pacífico: -0.05, Amazonía: -0.03, Orinoquía: -0.02, Insular: -0.08 }[d.region] || 0;
-      return U.clamp(base + reg + U.gauss(0, 0.02), 0.25, 0.8);
+      const obl = E.constitucion && C.Constitucion.valor(E, 'votoObligatorio') === 'si' ? 0.14 : 0;
+      return U.clamp(base + reg + obl + U.gauss(0, 0.02), 0.25, 0.9);
     },
 
     /* Cuotas de voto por partido en un departamento para listas (Congreso, asambleas…) */
@@ -120,6 +121,11 @@ window.CURUL = window.CURUL || {};
 
     /* ── Candidaturas ──────────────────────────────────────── */
     /* Fuerza personal de un candidato en una lista (voto preferente) */
+    /* Con listas cerradas el orden lo fija la dirección del partido: los votos caen por posición. */
+    pesoLista(E, p, dId, i) {
+      if (E.constitucion && C.Constitucion.valor(E, 'sistemaListas') === 'cerrada') return Math.pow(0.86, i) * 100;
+      return El.pesoPreferente(E, p, dId);
+    },
     pesoPreferente(E, p, dId) {
       if (p.id === 'J') {
         const cam = E.elecciones.campana;
@@ -236,7 +242,7 @@ window.CURUL = window.CURUL || {};
         const lista = El.formarLista(E, pid, 'senado', null, Math.min(100, Math.ceil(n * 1.4) + 3));
         const forzado = opts.forzarJugador === 'senado' && J.partido === pid;
         if ((jugCamara === 'senado' && cam.partido === pid) || forzado) lista.push(E.politicos.J);
-        const pesos = lista.map(p => El.pesoPreferente(E, p, null)), tp = U.suma(pesos);
+        const pesos = lista.map((p, i) => El.pesoLista(E, p, null, i)), tp = U.suma(pesos);
         const ranking = lista.map((p, i) => ({ pol: p.id, partido: pid, circ: 'NAC', votos: Math.round(votosSen[pid] * 0.7 * pesos[i] / tp) }))
           .sort((a, b) => b.votos - a.votos);
         if (forzado) { const iJ = ranking.findIndex(r => r.pol === 'J'); const [rJ] = ranking.splice(iJ, 1); rJ.votos = Math.max(rJ.votos, ranking[0] ? ranking[0].votos + 1500 : rJ.votos); ranking.unshift(rJ); }
@@ -274,7 +280,7 @@ window.CURUL = window.CURUL || {};
           const lista = El.formarLista(E, pid, 'camara', d.id, Math.min(d.camara + 1, n + 2));
           const conJ = (jugCamara === 'camara' && cam.partido === pid && cam.depto === d.id) || (opts.forzarJugador === 'camara' && J.partido === pid && J.residencia === d.id);
           if (conJ) lista.push(E.politicos.J);
-          const pesos = lista.map(p => El.pesoPreferente(E, p, d.id)), tp = U.suma(pesos);
+          const pesos = lista.map((p, i) => El.pesoLista(E, p, d.id, i)), tp = U.suma(pesos);
           const ranking = lista.map((p, i) => ({ pol: p.id, partido: pid, circ: d.id, votos: Math.round(votos[pid] * 0.75 * pesos[i] / tp) })).sort((a, b) => b.votos - a.votos);
           if (opts.forzarJugador === 'camara' && conJ) { const iJ = ranking.findIndex(r => r.pol === 'J'); const [rJ] = ranking.splice(iJ, 1); ranking.unshift(rJ); }
           ranking.forEach((c, i) => { c.puesto = i + 1; c.electo = i < n; });
@@ -617,6 +623,7 @@ window.CURUL = window.CURUL || {};
     },
 
     /* ── Campaña del jugador ───────────────────────────────── */
+    factorTope(E) { const v = E.constitucion ? C.Constitucion.valor(E, 'financiacionCampanas') : 'privada'; return v === 'publica' ? 0.75 : v === 'mixta' ? 0.9 : 1; },
     TOPES: { concejo: 250, asamblea: 450, alcaldia: 1500, camara: 900, gobernacion: 4000, senado: 3500, presidencia: 30000 }, // millones COP
     tipoEleccion: cargo => ({ senado: 'congreso', camara: 'congreso', presidencia: 'presidencial', gobernacion: 'regional', alcaldia: 'regional', asamblea: 'regional', concejo: 'regional' }[cargo]),
     CARGOS_CAMPANA: {
@@ -639,7 +646,7 @@ window.CURUL = window.CURUL || {};
       E.elecciones.campana = {
         cargo, depto: cargo === 'senado' || cargo === 'presidencia' ? null : (depto || J.residencia),
         eleccion: ev.tipo, fecha: ev.fecha.getTime(), anio: ev.anio, partido, via,
-        recaudado: 0, gastado: 0, caja: Math.round(Math.min(J.patrimonio * 0.1, 200)), tope: El.TOPES[cargo],
+        recaudado: 0, gastado: 0, caja: Math.round(Math.min(J.patrimonio * 0.1, 200)), tope: Math.round(El.TOPES[cargo] * El.factorTope(E)),
         equipo: {}, voluntarios: 20 + Math.round(J.redes * 3), estructura: 8 + (J.cargo === 'representante' || J.cargo === 'senador' ? 12 : 0),
         actividades: [], encuestas: [], inicio: E.fecha.t, firmas: via === 'firmas' ? 0 : null
       };

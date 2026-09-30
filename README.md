@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 23 completas)
+## Qué hay en esta versión (Fases 1 a 24 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -218,6 +218,15 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Finanzas del partido**: la caja del partido tiene vida propia; puedes donar de tu bolsillo (con el tope legal),
   hacer grandes recaudos —cenas, aportes ciudadanos, donantes, gremios, o dinero irregular con su riesgo— y girar
   fondos a tu campaña. Una caja fuerte mejora la maquinaria; los donantes cobran tarde o temprano.
+- **Encuestas**: seis firmas con sesgos, márgenes de error y reputación propios; promedio ponderado con
+  bandas de error, intención de voto por partido y por candidato presidencial, tu imagen por segmentos y
+  la posibilidad de encargar encuestas propias (o «cocinarlas», con riesgo de que se descubra).
+- **Inteligencia y guerra sucia**: interceptaciones (DAS/DNI o detectives), expedientes que filtras o usas para
+  presionar, campañas negras, bots y el escándalo de las «chuzadas» si te descubren.
+- **Fiscal, Procurador y Contralor**: se eligen por ternas y pesan de verdad en las investigaciones, las
+  destituciones y los hallazgos fiscales; el Presidente hace lobby por su candidato.
+- **Reforma política**: voto obligatorio, financiación pública o mixta de campañas y listas cerradas, por
+  reforma constitucional.
 
 ## Arquitectura
 
