@@ -40,7 +40,7 @@ window.CURUL = window.CURUL || {};
         pa.finanzas = Math.max(0, pa.finanzas + 6 * F.factorEstado(E) * pa.popularidad + 0.00002 * (pa.militantes || 0) - 5 - pa.finanzas * 0.006);
         if (f.compromisos > 0 && U.chance(0.02 * f.compromisos)) F.cobranDonantes(E, pa);
         if (f.irregular > 0) {
-          if (U.chance(Math.min(0.02, 0.00004 * f.irregular))) F.escandalo(E, pa);
+          if (U.chance(Math.min(0.02, 0.00004 * f.irregular) * (C.Organica && pa.organica ? 1 - 0.5 * C.Organica.eficacia(E, pa, 'juridica') : 1))) F.escandalo(E, pa);
           f.irregular = f.irregular < 5 ? 0 : f.irregular * 0.985;
         }
       }
