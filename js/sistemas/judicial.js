@@ -28,6 +28,7 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador, tipo = U.pick(Object.keys(TIPOS));
       J.investigacion = { t: E.fecha.t, tipo, etapa: ETAPAS[0], avance: 0 };
       C.Personaje.anotar(E, `La Fiscalía abre indagación preliminar por ${TIPOS[tipo]}`);
+      if (C.Crisis) C.Crisis.escandalo(E, { titulo: `La Fiscalía abre indagación contra ti por ${TIPOS[tipo]}`, texto: 'La noticia abre los noticieros. Tus rivales piden explicaciones y tus aliados esperan que reacciones.', grav: 2 });
       C.Medios.noticia(E, { tipo: 'judicial', titular: `La Fiscalía abre indagación preliminar contra ${J.nombre} por ${TIPOS[tipo]}`, tono: -1, importante: true, jugador: true });
     },
     avanzar(E) {

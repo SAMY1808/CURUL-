@@ -54,6 +54,7 @@ window.CURUL = window.CURUL || {};
         leyesAprobadas: (J.historialLegislativo || []).filter(h => h.resultado === 'ley').length,
         patrimonio: J.patrimonio + (C.Propiedades ? C.Propiedades.valorTotal(E) : 0)
       };
+      if (C.Legado) { const lp = C.Legado.puntos(E); resumen.legadoPuntos = lp; resumen.veredicto = C.Legado.titulo(lp); }
       // Si eres Presidente, la Presidencia pasa al vicepresidente: la familia sólo hereda el apellido.
       if (E.gobierno.presidente === 'J' && C.Vice) C.Vice.faltaAbsoluta(E, motivo === 'condena' ? 'condena' : motivo === 'retiro' ? 'retiro' : 'fallecimiento');
       const candidatos = Fam.candidatosSucesion(E);

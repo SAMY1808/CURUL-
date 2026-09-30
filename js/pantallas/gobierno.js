@@ -104,22 +104,9 @@ window.CURUL = window.CURUL || {};
         }).join('') || '<div class="vacio">Sin grupos armados activos.</div>'}</div></div>
         <div class="tarjeta"><h3>Diplomacia</h3>
           <div class="tenue" style="font-size:11px;letter-spacing:.1em;margin-bottom:4px">RELACIONES DESTACADAS</div>
-          ${G.barrasH(C.Diplomacia.destacados().map(p => ({ etq: p.nombre, v: Math.round(E.diplomacia.paises[p.id].relacion), color: E.diplomacia.paises[p.id].relacion > 55 ? 'var(--bien)' : E.diplomacia.paises[p.id].relacion > 35 ? 'var(--alerta)' : 'var(--mal)', tt: E.diplomacia.paises[p.id].tratados.map(t => C.Diplomacia.TRATADOS[t]).join(', ') || 'Sin tratados vigentes' })), { marca: 50, max: 100, fmt: v => v + '%', anchoEtq: '150px' })}
-          ${(() => {
-            const porRegion = U.agrupar(C.Diplomacia.paises(), p => p.region);
-            const opcionesPaises = Object.entries(porRegion).map(([reg, ps]) => `<optgroup label="${esc(reg)}">${ps.map(p => `<option value="${p.id}">${esc(p.nombre)} (${Math.round(E.diplomacia.paises[p.id].relacion)}%)</option>`).join('')}</optgroup>`).join('');
-            return g.presidente === 'J' ? `<div class="tenue" style="font-size:11px;letter-spacing:.1em;margin:10px 0 4px">BUSCAR UN PAÍS (escribe para filtrar)</div>
-              <div class="fila accion-form"><select data-arg="pais" style="max-width:220px">${opcionesPaises}</select>${UI.botonAccion('cumbreBilateral', {})}</div>
-              <div class="fila accion-form" style="margin-top:6px"><select data-arg="pais" style="max-width:220px">${opcionesPaises}</select><select data-arg="tipo">${Object.entries(C.Diplomacia.TRATADOS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('firmarTratado', {})}</div>` : '';
-          })()}
-          <div class="tenue" style="font-size:11px;letter-spacing:.1em;margin:12px 0 4px">ORGANISMOS MULTILATERALES</div>
-          <div class="lista">${C.Diplomacia.organismos().map(o => {
-            const st = E.diplomacia.organismos[o.id];
-            return `<div class="it"><div class="cuerpo"><b>${esc(o.sigla)}</b><span class="tenue">${esc(o.nombre)}${o.nota ? ' · ' + esc(o.nota) : ''}${st.postulacion ? ` · postulación en curso (${Math.round(st.postulacion.avance)}%)` : ''}</span></div>
-              <span class="etq ${st.miembro ? 'verde' : ''}">${st.miembro ? 'Miembro' : 'No es miembro'}</span>
-              ${g.presidente === 'J' && !st.miembro && o.puedeUnirse ? UI.botonAccion('ingresarOrganismo', { organismo: o.id }, 'Solicitar ingreso', 'chico') : ''}
-              ${g.presidente === 'J' && st.miembro && o.puedeRetirarse ? UI.botonAccion('retirarseOrganismo', { organismo: o.id }, 'Retirarse', 'chico peligro') : ''}</div>`;
-          }).join('')}</div></div>
+          ${G.barrasH(C.Diplomacia.destacados().slice(0, 8).map(p => ({ etq: p.nombre, v: Math.round(E.diplomacia.paises[p.id].relacion), color: E.diplomacia.paises[p.id].relacion > 55 ? 'var(--bien)' : E.diplomacia.paises[p.id].relacion > 35 ? 'var(--alerta)' : 'var(--mal)' })), { marca: 50, max: 100, fmt: v => v + '%', anchoEtq: '150px' })}
+          <div class="tenue" style="font-size:12px;margin:8px 0">${C.Exterior.abiertas(E).length} embajadas abiertas · relación media ${Math.round(C.Exterior.relMedia(E))}%</div>
+          <button class="btn chico prim" data-ir="diplomacia">🌎 Abrir Diplomacia</button></div>
         <div class="tarjeta"><h3>Constitución</h3><div class="lista">${Object.entries(C.Constitucion.ARTICULOS).map(([id, art]) => `<div class="it"><div class="cuerpo"><b>${esc(art.nombre)}</b><span class="tenue">Vigente: ${esc(art.etiqueta(C.Constitucion.valor(E, id)))}</span></div></div>`).join('')}</div>
           ${(() => {
             const K_ = E.constitucion;
@@ -305,6 +292,7 @@ window.CURUL = window.CURUL || {};
         ${tab === 'centro' ? centroGobierno(E) : tab === 'consejo' ? consejoMinistros(E) : tab === 'social' ? movilizacionSocial(E) : tab === 'presupuesto' ? presupuesto(E) : tab === 'economia' ? economia(E) : oposicion(E)}`;
       el.onclick = e => {
         const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('gobierno', { tab: t.dataset.tab });
+        const irP = e.target.closest('[data-ir]'); if (irP) return C.App.ir(irP.dataset.ir);
         const irTab = e.target.closest('[data-ir-tab]'); if (irTab) return C.App.ir('gobierno', { tab: irTab.dataset.irTab });
         const f = e.target.closest('[data-ficha]'); if (f) return Comp.fichaPolitico(E, f.dataset.ficha);
         const p = e.target.closest('[data-proy]'); if (p) return C.Pantallas.proyectos.expediente(p.dataset.proy);

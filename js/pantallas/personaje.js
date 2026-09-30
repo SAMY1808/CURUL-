@@ -31,6 +31,20 @@ window.CURUL = window.CURUL || {};
     return s + '</svg>';
   };
 
+  const saludLegadoHTML = E => {
+    const J = E.jugador, Sa = C.Salud.asegurar(J), L = C.Legado, l = L.asegurar(J), pts = L.puntos(E);
+    const col = v => v >= 60 ? 'var(--si)' : v >= 35 ? 'var(--alerta)' : 'var(--no)';
+    return `<div class="grid g2" style="margin-top:14px">
+      <div class="tarjeta"><h3>🩺 Salud y bienestar</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">El desgaste del cargo, las campañas y los escándalos pasa factura. Con poca salud o poco ánimo rindes menos puntos de agenda cada semana.</div>
+        ${G.barrasH([{ etq: 'Salud', v: J.salud, color: col(J.salud) }, { etq: 'Bienestar', v: J.bienestar, color: col(J.bienestar) }], { max: 100, fmt: v => Math.round(v) + '', anchoEtq: '80px' })}
+        <div class="fila" style="gap:6px;flex-wrap:wrap;margin-top:10px">${UI.botonAccion('descansarSalud', {}, null, 'chico')}${UI.botonAccion('chequeoMedico', {}, null, 'chico')}${UI.botonAccion('tomarVacaciones', {}, null, 'chico')}</div></div>
+      <div class="tarjeta"><h3>🏛 Legado · ${esc(L.titulo(pts))}</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">${pts} puntos: suman leyes, cargos, elecciones, fundaciones, libros y aprobación como Presidente; restan los escándalos.</div>
+        <div class="lista">${l.fundaciones.map(f => `<div class="it"><span>${L.CAUSAS[f.causa].icono}</span><div class="cuerpo"><b>Fundación · ${esc(L.CAUSAS[f.causa].n)}</b><span>nivel ${f.nivel}/5</span></div>${f.nivel < 5 ? UI.botonAccion('aportarFundacion', { causa: f.causa }, 'Aportar ' + U.cop(100 * f.nivel), 'chico') : ''}</div>`).join('')}
+          ${l.libros.map(x => `<div class="it"><span>📖</span><div class="cuerpo"><b>${esc(L.LIBROS[x.tema])}</b><span>publicado ${esc(U.fmtT(x.t))}</span></div></div>`).join('')}
+          ${l.enCurso ? `<div class="it"><span>✍</span><div class="cuerpo"><b>Escribiendo: ${esc(L.LIBROS[l.enCurso.tema])}</b><span>saldrá en ${Math.max(0, 12 - (E.fecha.t - l.enCurso.t0))} semanas</span></div></div>` : ''}</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:8px"><select data-arg="causa">${Object.entries(L.CAUSAS).map(([k, c]) => `<option value="${k}">${c.icono} ${esc(c.n)}</option>`).join('')}</select>${UI.botonAccion('crearFundacion', {}, 'Crear fundación ($250 M)', 'chico')}</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:6px"><select data-arg="tema">${Object.entries(L.LIBROS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('escribirLibro', {}, null, 'chico')}</div></div></div>`;
+  };
   C.Pantallas.personaje = {
     render(el) {
       const E = C.E, J = E.jugador, S = E.series;
@@ -71,6 +85,7 @@ window.CURUL = window.CURUL || {};
           <h3 style="margin-top:12px">Historial legislativo</h3><div class="lista">${J.historialLegislativo.slice().reverse().slice(0, 8).map(h => `<div class="it"><span>${h.resultado === 'ley' ? '📜' : '🗄'}</span><div class="cuerpo"><b style="white-space:normal">${esc(h.titulo)}</b><span>${h.rol} · ${h.resultado === 'ley' ? 'Ley ' + h.ley : esc(h.motivo || 'archivado')}</span></div></div>`).join('') || '<div class="vacio">Sin iniciativas concluidas.</div>'}</div>
           <h3 style="margin-top:12px">Escándalos y reconocimientos</h3><div class="lista">${[...J.escandalos.map(x => ({ ...x, i: '🔎', txt: x.titulo })), ...J.reconocimientos.map(x => ({ ...x, i: '🏅' }))].sort((a, b) => b.t - a.t).map(x => `<div class="it"><span>${x.i}</span><div class="cuerpo"><b style="white-space:normal">${esc(x.txt)}</b><span>${U.fmtT(x.t)}</span></div></div>`).join('') || '<div class="vacio">Hoja de vida limpia y sin distinciones aún.</div>'}</div></div>
       </div>
+      ${saludLegadoHTML(E)}
       <div class="tarjeta" style="margin-top:14px"><h3>Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3>
         <div class="grid g3">${J.familia.map(f => {
           const esHijo = f.rol === 'Hijo' || f.rol === 'Hija';
@@ -111,7 +126,7 @@ window.CURUL = window.CURUL || {};
       const cuerpo = r ? `<p style="margin-top:0">${esc(r.nombre)} ${motivoTxt} después de una carrera de ${r.anios} años.</p>
         <div class="grid g2">
           ${Comp.kpi('Cargo más alto', esc(r.cargoFinal))}${Comp.kpi('Elecciones ganadas', r.eleccionesGanadas)}
-          ${Comp.kpi('Leyes aprobadas', r.leyesAprobadas)}${Comp.kpi('Patrimonio final', U.cop(r.patrimonio))}
+          ${Comp.kpi('Leyes aprobadas', r.leyesAprobadas)}${Comp.kpi('Patrimonio final', U.cop(r.patrimonio))}${r.veredicto ? Comp.kpi('Veredicto de la historia', esc(r.veredicto), `<span class="tenue">${r.legadoPuntos} puntos de legado</span>`) : ''}
         </div>
         <p class="tenue" style="font-size:12.5px;margin-top:10px">${r.cargosOcupados.length ? 'Ocupó: ' + r.cargosOcupados.join(', ') + '.' : ''} Sin herederos adultos que continúen la carrera política de la familia.</p>` : '<p>La carrera política de la familia llega a su fin.</p>';
       const cuerpoFinal = cuerpo + `<div class="fila" style="margin-top:14px;justify-content:flex-end"><button class="btn prim" id="fin-menu">Volver al menú</button></div>`;

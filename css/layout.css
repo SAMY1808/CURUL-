@@ -52,3 +52,19 @@
   .logo small,.chip-cargo .txt span{display:none}
   .cab h1{font-size:23px}
 }
+
+/* Menú agrupado en secciones plegables */
+.nav .nav-cab{width:100%;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tenue);padding:8px 12px;margin-top:4px}
+.nav .nav-cab .flecha{margin-left:auto;font-size:10px}
+.nav .nav-cab:hover{color:var(--texto)}
+.nav .nav-sec.abierta .nav-cab{color:var(--texto2)}
+.nav .nav-items{display:none;flex-direction:column;gap:1px;padding-left:10px;margin-left:9px;border-left:1px solid var(--borde)}
+.nav .nav-sec.abierta .nav-items{display:flex}
+.nav .nav-items button{padding:7px 10px;font-size:13px}
+.nav .pto-aviso{width:7px;height:7px;border-radius:50%;background:var(--rojo);margin-left:4px}
+@media (max-width:760px){
+  .nav .nav-sec{display:contents}
+  .nav .nav-cab{display:none}
+  .nav .nav-items{display:contents}
+  .nav .nav-items button{padding:6px 8px;font-size:10px}
+}

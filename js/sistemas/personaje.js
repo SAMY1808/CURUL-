@@ -94,6 +94,7 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador, cam = E.elecciones.campana;
       let m = 4 + (C.DATA.cargos[J.cargo].nivel >= 3 ? 1 : 0) + (cam && cam.equipo.gerente ? 1 : 0);
       if ((J.bienestar || 60) < 25) m -= 1;
+      if ((J.salud == null ? 80 : J.salud) < 35) m -= 1;
       return m;
     },
     turno(E) {

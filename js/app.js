@@ -3,10 +3,16 @@ window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U, UI = C.UI, esc = U.esc;
   C.Pantallas = C.Pantallas || {};
-  const NAV = [
-    ['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa'], ['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos'],
-    ['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['gobierno', '🦅', 'Gobierno y oposición'], ['comercio', '🚢', 'Comercio exterior'], ['corte', '⚖', 'Corte Constitucional'], ['participacion', '🗳', 'Democracia directa'], ['encuestas', '📊', 'Encuestas'], ['inteligencia', '🕶', 'Inteligencia'],
-    ['medios', '📰', 'Medios'], ['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama'], null, ['partidas', '💾', 'Partidas']
+  /* Menú lateral agrupado en secciones plegables. Las pantallas que aún no existen se omiten. */
+  const SECCIONES = [
+    { id: 'inicio', n: null, items: [['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa']] },
+    { id: 'legislativo', n: 'Poder legislativo', ic: '🏛', items: [['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos']] },
+    { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio']] },
+    { id: 'justicia', n: 'Justicia y control', ic: '⚖', items: [['corte', '⚖', 'Corte y órganos de control'], ['inteligencia', '🕶', 'Inteligencia']] },
+    { id: 'politica', n: 'Política y elecciones', ic: '🗳', items: [['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['encuestas', '📊', 'Encuestas'], ['participacion', '🗳', 'Democracia directa'], ['medios', '📰', 'Medios']] },
+    { id: 'mundo', n: 'Mundo y economía', ic: '🌎', items: [['diplomacia', '🌎', 'Diplomacia'], ['comercio', '🚢', 'Comercio exterior'], ['economia', '📈', 'Economía global']] },
+    { id: 'yo', n: 'Mi carrera', ic: '👤', items: [['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama']] },
+    { id: 'sistema', n: null, items: [['partidas', '💾', 'Partidas']] }
   ];
 
   const App = {
@@ -68,23 +74,30 @@ window.CURUL = window.CURUL || {};
       UI.$$('[data-ir]', document.getElementById('barra')).forEach(b => b.onclick = () => App.ir(b.dataset.ir));
     },
     nav() {
-      const E = C.E;
-      const nav = NAV.slice();
-      if (E.jugador.cargo === 'gobernador' || E.jugador.cargo === 'alcalde') {
-        const i = nav.findIndex(n => n && n[0] === 'gobierno');
-        nav.splice(i + 1, 0, ['local', '🏘', E.jugador.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']);
-      }
-      if (E.jugador.cargo === 'diputado' || E.jugador.cargo === 'concejal') {
-        const i = nav.findIndex(n => n && n[0] === 'congreso');
-        nav.splice(i + 1, 0, ['corporacion', '🏘', E.jugador.cargo === 'diputado' ? 'Asamblea' : 'Concejo']);
-      }
-      if (E.jugador.cargo === 'ministro') {
-        const i = nav.findIndex(n => n && n[0] === 'gobierno');
-        nav.splice(i + 1, 0, ['ministerio', '🗂', 'Mi ministerio']);
-      }
-      const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '' };
-      document.getElementById('nav').innerHTML = nav.map(n => n ? `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>` : '<div class="sep"></div>').join('');
-      UI.$$('#nav button').forEach(b => b.onclick = () => App.ir(b.dataset.p));
+      const E = C.E, J = E.jugador;
+      const secs = SECCIONES.map(x => ({ ...x, items: x.items.slice() }));
+      const en = (sec, despuesDe, item) => { const s = secs.find(x => x.id === sec), k = s.items.findIndex(n => n[0] === despuesDe); s.items.splice(k + 1, 0, item); };
+      if (J.cargo === 'gobernador' || J.cargo === 'alcalde') en('ejecutivo', 'gobierno', ['local', '🏘', J.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']);
+      if (J.cargo === 'diputado' || J.cargo === 'concejal') en('legislativo', 'congreso', ['corporacion', '🏘', J.cargo === 'diputado' ? 'Asamblea' : 'Concejo']);
+      if (J.cargo === 'ministro') en('ejecutivo', 'gobierno', ['ministerio', '🗂', 'Mi ministerio']);
+      const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '', crisis: '' };
+      if (E.crisis && E.crisis.abiertas && E.crisis.abiertas.length) badges.gobierno = E.crisis.abiertas.length;
+      E.ui.navAbierto = E.ui.navAbierto || {};
+      const boton = n => `<button data-p="${n[0]}" class="${E.ui.pantalla === n[0] ? 'activo' : ''}"><span class="ic">${n[1]}</span><span>${n[2]}</span>${badges[n[0]] ? `<span class="badge">${badges[n[0]]}</span>` : ''}</button>`;
+      document.getElementById('nav').innerHTML = secs.map(sec => {
+        const items = sec.items.filter(n => C.Pantallas[n[0]]);
+        if (!items.length) return '';
+        if (!sec.n) return items.map(boton).join('') + (sec.id === 'inicio' ? '<div class="sep"></div>' : '');
+        const contiene = items.some(n => n[0] === E.ui.pantalla), abierto = E.ui.navAbierto[sec.id] != null ? E.ui.navAbierto[sec.id] : contiene;
+        const aviso = !abierto && items.some(n => badges[n[0]]) ? '<span class="pto-aviso"></span>' : '';
+        return `<div class="nav-sec ${abierto ? 'abierta' : ''}"><button class="nav-cab" data-sec="${sec.id}"><span class="ic">${sec.ic}</span><span>${sec.n}</span>${aviso}<span class="flecha">${abierto ? '▾' : '▸'}</span></button><div class="nav-items">${items.map(boton).join('')}</div></div>`;
+      }).join('');
+      UI.$$('#nav button[data-p]').forEach(b => b.onclick = () => App.ir(b.dataset.p));
+      UI.$$('#nav button[data-sec]').forEach(b => b.onclick = () => {
+        const id = b.dataset.sec, sec = secs.find(x => x.id === id), contiene = sec.items.some(n => n[0] === E.ui.pantalla);
+        const actual = E.ui.navAbierto[id] != null ? E.ui.navAbierto[id] : contiene;
+        E.ui.navAbierto[id] = !actual; App.nav();
+      });
     },
     ticker() {
       const E = C.E;
@@ -152,7 +165,7 @@ window.CURUL = window.CURUL || {};
         const r = C.Eventos.resolver(E, ev.id, +b.dataset.op);
         m.cerrar();
         const nombres = { popularidad: 'Popularidad', reconocimiento: 'Reconocimiento', credibilidad: 'Credibilidad', patrimonio: 'Patrimonio', relGob: 'Relación con el Gobierno', partido: 'Relación con tu partido', honestidad: 'Honestidad', transparencia: 'Transparencia', cercania: 'Cercanía', liderazgo: 'Liderazgo', competencia: 'Competencia', director: 'Dirección del partido' };
-        const txt = r.cambios.map(([k, v]) => `${nombres[k] || (k.startsWith('seg:') ? 'Imagen en ' + k.slice(4) : k.startsWith('dep:') ? 'Imagen en ' + E.deptos[k.slice(4)].nombre : k)} ${v > 0 ? '+' : ''}${U.d1(v)}`).join(' · ');
+        const txt = r.cambios.map(([k, v]) => k === 'txt' ? esc(v) : `${nombres[k] || (k.startsWith('seg:') ? 'Imagen en ' + k.slice(4) : k.startsWith('dep:') ? 'Imagen en ' + E.deptos[k.slice(4)].nombre : k)} ${v > 0 ? '+' : ''}${U.d1(v)}`).join(' · ');
         UI.toast('<b>Decisión tomada.</b> ' + (txt || 'Sin efectos inmediatos'), 'bien');
         App.refrescar();
         App.revisarPendientes();

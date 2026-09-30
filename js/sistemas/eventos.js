@@ -8,6 +8,7 @@ window.CURUL = window.CURUL || {};
     /* Rellena los textos con el contexto del evento */
     texto(E, s, ctx) {
       return String(s).replace(/\{(\w+)\}/g, (_, k) => {
+        if (ctx.vars && ctx.vars[k] != null) return ctx.vars[k];
         if (k === 'depto') return ctx.depto ? E.deptos[ctx.depto].nombre : 'el país';
         if (k === 'ministerio') return ctx.ministerio ? C.Gobierno.todosMinisterios(E).find(m => m.id === ctx.ministerio).nombre : '';
         if (k === 'medio') return ctx.medio ? C.Medios.medio(E, ctx.medio).nombre : 'Un medio';
@@ -25,7 +26,7 @@ window.CURUL = window.CURUL || {};
       E.eventos.historial.unshift(ev); if (E.eventos.historial.length > 120) E.eventos.historial.length = 120;
       C.Medios.noticia(E, { tipo: 'evento', titular: ev.titulo, tono: (pl.efecto && pl.efecto.aprob < 0) ? -1 : (pl.efecto && pl.efecto.aprob > 0 ? 1 : 0), ref: { evento: ev.id }, jugador: pl.alcance === 'jugador' });
       const J = E.jugador;
-      const relevante = pl.alcance === 'jugador' || J.reconocimiento >= 10 || C.DATA.cargos[J.cargo].nivel >= 2;
+      const relevante = pl.forzar || ctx.forzar || pl.alcance === 'jugador' || J.reconocimiento >= 10 || C.DATA.cargos[J.cargo].nivel >= 2;
       if (pl.opciones && relevante) E.eventos.pendientes.push(ev);
       C.Bus.emit('evento', ev);
       return ev;
@@ -73,6 +74,7 @@ window.CURUL = window.CURUL || {};
         if (gana) { E.partidos[J.partido].liderJugador = true; J.reconocimientos.push({ t: E.fecha.t, txt: 'Elegido director del ' + E.partidos[J.partido].sigla }); cambios.push(['director', 1]); }
       }
       if (pl.tipo === 'escándalo' && pl.alcance === 'jugador') { J.escandalos.push({ t: E.fecha.t, titulo: ev.titulo, respuesta: op.t }); J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(2, 5), 0, 100); }
+      if (op.fn) { const txt = op.fn(E, ev); if (txt) cambios.push(['txt', txt]); }
       ev.cambios = cambios;
       C.Bus.emit('evento:resuelto', ev);
       return { ev, op, cambios };
@@ -80,13 +82,13 @@ window.CURUL = window.CURUL || {};
     turno(E) {
       // Evento del mundo (≈ 35 % de las semanas)
       if (U.chance(0.35)) {
-        const pls = C.DATA.eventos.filter(e => e.alcance !== 'jugador' && (!e.req || e.req(E)));
+        const pls = C.DATA.eventos.filter(e => !e.sistema && e.alcance !== 'jugador' && (!e.req || e.req(E)));
         const pl = U.pesado(pls, e => e.peso);
         if (pl) Ev.disparar(E, pl);
       }
       // Evento personal (≈ 8 %)
       if (U.chance(0.08)) {
-        const pls = C.DATA.eventos.filter(e => e.alcance === 'jugador' && (!e.req || e.req(E)) && !E.eventos.historial.slice(0, 6).some(h => h.plantilla === e.id));
+        const pls = C.DATA.eventos.filter(e => !e.sistema && e.alcance === 'jugador' && (!e.req || e.req(E)) && !E.eventos.historial.slice(0, 6).some(h => h.plantilla === e.id));
         const pl = U.pesado(pls, e => e.peso);
         if (pl) Ev.disparar(E, pl);
       }
