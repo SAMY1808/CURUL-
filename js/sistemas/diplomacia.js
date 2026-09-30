@@ -28,9 +28,9 @@ window.CURUL = window.CURUL || {};
       E.diplomacia = { paises, organismos };
     },
     objetivoRelacion(E, pid) {
-      const dest = C.DATA.paisesDestacados[pid]; if (!dest) return null;
+      const live = E.mundoVivo && E.mundoVivo.paises && E.mundoVivo.paises[pid], dest = live || C.DATA.paisesDestacados[pid]; if (!dest) return null;
       const gob = E.gobierno.presidente === 'J' ? E.jugador.ideologia : (E.politicos[E.gobierno.presidente] || { eco: 0, soc: 0 });
-      return U.clamp(70 - U.distIdeo(gob, dest) * 90, 10, 90);
+      return U.clamp(70 - U.distIdeo(gob, dest) * 90 + (C.MundoVivo ? C.MundoVivo.bonusRel(E, pid) : 0), 8, 92);
     },
     turno(E) {
       const D = E.diplomacia;
@@ -47,8 +47,8 @@ window.CURUL = window.CURUL || {};
       // línea base regional, para que no queden completamente estáticos
       for (const p of C.DATA.paises) {
         if (C.DATA.paisesDestacados[p.id]) continue;
-        const st = D.paises[p.id];
-        st.relacion = U.clamp(st.relacion + (BASE_REGION[p.region] - st.relacion) * 0.01 + U.gauss(0, 0.25), 3, 97);
+        const st = D.paises[p.id], obj = E.mundoVivo ? Dip.objetivoRelacion(E, p.id) : null;
+        st.relacion = U.clamp(st.relacion + (obj != null ? (obj * 0.6 + BASE_REGION[p.region] * 0.4 - st.relacion) * 0.012 : (BASE_REGION[p.region] - st.relacion) * 0.01) + U.gauss(0, 0.25), 3, 97);
       }
       // organismos: postulaciones de ingreso en curso
       for (const o of C.DATA.organismos) {

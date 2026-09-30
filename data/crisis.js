@@ -104,4 +104,31 @@ CURUL.DATA = CURUL.DATA || {};
         { t: 'Recurrir a la fuerza pública y contratar reemplazos', fn(E, ev) { const e = E.empresas.lista.find(x => x.id === ev.ctx.emp); if (e) { e.paro = null; e.sindicato = clamp(e.sindicato + 10, 0, 100); } C.Opinion.moverImagen(E, { seg: { bajos: -2, formales: -2 } }); return 'Rompes el paro, pero pierdes apoyo entre los trabajadores'; } }
       ] }
   );
+
+  /* Geopolítica: presiones de bloques y guerras entre países (los dispara MundoVivo). */
+  const MV = () => C.MundoVivo;
+  C.DATA.eventos.push(
+    { id: 'presionOccidente', sistema: true, forzar: true, tipo: 'diplomacia', icono: '🌐', alcance: 'nacional', peso: 0,
+      titulo: 'Occidente te pide alinearte', texto: 'Washington y sus aliados piden que Colombia respalde nuevas sanciones contra Rusia y China y limite sus inversiones estratégicas. La cancillería advierte que un «no» tendrá costos.',
+      opciones: [
+        { t: 'Alinearte con Occidente', fn(E) { MV().moverAlin(E, 'occidente', 7); MV().moverAlin(E, 'multipolar', -6); return 'Ganas la confianza de Occidente y pierdes terreno con Rusia y China'; } },
+        { t: 'Mantener la autonomía', fn(E) { MV().moverAlin(E, 'occidente', -3); E.opinion.aprobacionPres = clamp(E.opinion.aprobacionPres + 0.5, 3, 95); return 'Defiendes la autonomía: te miran con reservas'; } },
+        { t: 'Pedir concesiones a cambio', fn(E) { if (C.U.chance(0.5)) { MV().moverAlin(E, 'occidente', 4); C.Economia.programar(E, [{ v: 'inversion', d: 0.08, p: 'm' }], 'concesion'); return 'Consigues cooperación e inversión a cambio de tu apoyo'; } MV().moverAlin(E, 'occidente', -3); return 'Se niegan a negociar y se enfrían los ánimos'; } }
+      ] },
+    { id: 'presionMultipolar', sistema: true, forzar: true, tipo: 'diplomacia', icono: '🌏', alcance: 'nacional', peso: 0,
+      titulo: 'China y Rusia te tientan', texto: 'Beijing ofrece inversión en infraestructura y mercados para tu café y tu petróleo si Colombia respalda su iniciativa de integración. En Washington ya se enteraron.',
+      opciones: [
+        { t: 'Sumarte a su iniciativa', fn(E) { MV().moverAlin(E, 'multipolar', 7); MV().moverAlin(E, 'occidente', -6); C.Economia.programar(E, [{ v: 'inversion', d: 0.1, p: 'm' }, { v: 'exportaciones', d: 0.6, p: 'l' }], 'seda'); return 'Llegan inversiones... y la incomodidad de Washington'; } },
+        { t: 'Declinar cortésmente', fn(E) { MV().moverAlin(E, 'multipolar', -3); return 'Declinas con diplomacia: sin costos mayores'; } },
+        { t: 'Neutralidad activa', fn(E) { MV().moverAlin(E, 'multipolar', 1); MV().moverAlin(E, 'occidente', 1); return 'Te mantienes equidistante y ambos lados lo valoran un poco'; } }
+      ] },
+    { id: 'conflictoPosicion', sistema: true, forzar: true, tipo: 'diplomacia', icono: '⚔', alcance: 'nacional', peso: 0,
+      titulo: 'Estalla la guerra: {conflicto}', texto: 'Se enfrentan {a} y {b}. El mundo espera la posición de cada país en la ONU y el precio del petróleo se mueve. ¿Qué hace Colombia?',
+      opciones: [
+        { t: 'Condenar a {a}', fn(E, ev) { MV().mover(E, [ev.ctx.aId], -9); MV().mover(E, [ev.ctx.bId], 5); const al = MV().alin(ev.ctx.aId); if (al) MV().moverAlin(E, al, -2); return 'Tu condena tiene un costo con ' + al; } },
+        { t: 'Condenar a {b}', fn(E, ev) { MV().mover(E, [ev.ctx.bId], -9); MV().mover(E, [ev.ctx.aId], 5); const al = MV().alin(ev.ctx.bId); if (al) MV().moverAlin(E, al, -2); return 'Tu condena tiene un costo con ' + al; } },
+        { t: 'Neutralidad activa', fn(E, ev) { MV().mover(E, [ev.ctx.aId, ev.ctx.bId], -0.5); E.opinion.aprobacionPres = clamp(E.opinion.aprobacionPres + 0.3, 3, 95); return 'Pides el cese al fuego sin tomar partido'; } },
+        { t: 'Ofrecer mediación', fn(E, ev) { const c = E.mundoVivo.conflictos.find(x => x.id === ev.ctx.cid); if (c && C.U.chance(0.35)) { c.t = Math.max(5, c.t - 12); c.mediacion += 20; E.opinion.aprobacionPres = clamp(E.opinion.aprobacionPres + 1, 3, 95); return 'Tu mediación abre una vía de diálogo'; } return 'Las partes ignoran tu oferta'; } }
+      ] }
+  );
 })(window.CURUL);

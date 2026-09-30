@@ -10,7 +10,7 @@ window.CURUL = window.CURUL || {};
     { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio'], ['empresas', '🏭', 'Empresas públicas']] },
     { id: 'justicia', n: 'Justicia y control', ic: '⚖', items: [['corte', '⚖', 'Corte y órganos de control'], ['inteligencia', '🕶', 'Inteligencia']] },
     { id: 'politica', n: 'Política y elecciones', ic: '🗳', items: [['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['encuestas', '📊', 'Encuestas'], ['participacion', '🗳', 'Democracia directa'], ['medios', '📰', 'Medios']] },
-    { id: 'mundo', n: 'Mundo y economía', ic: '🌎', items: [['diplomacia', '🌎', 'Diplomacia'], ['comercio', '🚢', 'Comercio exterior'], ['mundoeco', '📈', 'Economía global']] },
+    { id: 'mundo', n: 'Mundo y economía', ic: '🌎', items: [['mundo', '🗺', 'Mapa mundial'], ['diplomacia', '🌎', 'Diplomacia'], ['comercio', '🚢', 'Comercio exterior'], ['mundoeco', '📈', 'Economía global']] },
     { id: 'yo', n: 'Mi carrera', ic: '👤', items: [['personaje', '👤', 'Mi carrera'], ['historia', '🎖', 'Salón de la Fama']] },
     { id: 'sistema', n: null, items: [['partidas', '💾', 'Partidas']] }
   ];
