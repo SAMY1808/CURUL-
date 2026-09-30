@@ -22,6 +22,10 @@ window.CURUL = window.CURUL || {};
     plebiscito: { nombre: 'Plebiscito', icono: '📣', umbral: null, etapas: ['senado', 'corte', 'campana'], camp: 10 },
     consulta: { nombre: 'Consulta popular nacional', icono: '🗣', umbral: 0.33, etapas: ['senado', 'corte', 'campana'], camp: 10 },
     local: { nombre: 'Consulta popular local', icono: '🏘', umbral: 0.33, etapas: ['concepto', 'campana'], camp: 6 },
+    constitucional: { nombre: 'Referendo constitucional', icono: '🏛', umbral: 0.25, etapas: ['senado', 'corte', 'campana'], camp: 12 },
+    constitucionalPopular: { nombre: 'Reforma constitucional por iniciativa popular', icono: '🏛', umbral: 0.25, etapas: ['firmas', 'corte', 'campana'], camp: 12 },
+    constituyente: { nombre: 'Consulta para convocar una Constituyente', icono: '📜', umbral: 0.33, etapas: ['senado', 'corte', 'campana'], camp: 12 },
+    ratificacion: { nombre: 'Referendo de ratificación constitucional', icono: '✅', umbral: 0.25, etapas: ['campana'], camp: 8 },
     revocatoria: { nombre: 'Revocatoria del mandato', icono: '🚪', umbral: 0.40, etapas: ['firmas', 'registraduria', 'campana'], camp: 8 }
   };
   const ETAPA = { firmas: 'Recolección de firmas', senado: 'Aval del Senado', corte: 'Control de la Corte Constitucional', concepto: 'Concepto de la corporación local', registraduria: 'Verificación de firmas', campana: 'Campaña', cerrado: 'Cerrado' };
@@ -86,7 +90,9 @@ window.CURUL = window.CURUL || {};
       E.participacion.activos.push(m);
       return m;
     },
+    esConst: tipo => tipo === 'constitucional' || tipo === 'constitucionalPopular' || tipo === 'constituyente' || tipo === 'ratificacion',
     ideoSi(E, m) {
+      if (P.esConst(m.tipo)) return { eco: 0, soc: 0 };
       if (m.tipo === 'derogatorio') { const p = E.proyectos[m.proyecto]; return p ? { eco: -p.eco * 0.6, soc: -p.soc * 0.6 } : { eco: 0, soc: 0 }; }
       if (m.tipo === 'aprobatorio') { const p = E.proyectos[m.proyecto]; return p ? { eco: p.eco, soc: p.soc } : { eco: 0, soc: 0 }; }
       if (m.tipo === 'revocatoria') return { eco: 0, soc: 0 };
@@ -95,6 +101,7 @@ window.CURUL = window.CURUL || {};
     /* `sinRuido` permite mostrar una estimación en pantalla sin gastar números aleatorios. */
     apoyoInicial(E, m, sinRuido) {
       const centro = P.centro(E), ruido = sinRuido ? 0 : U.gauss(0, 2);
+      if (P.esConst(m.tipo)) return C.Constitucion.apoyoReforma(E, m, ruido);
       if (m.tipo === 'derogatorio' || m.tipo === 'aprobatorio') {
         const p = E.proyectos[m.proyecto]; if (!p) return 50;
         const lejos = U.distIdeo(p, centro);
@@ -115,6 +122,7 @@ window.CURUL = window.CURUL || {};
     posturaPartido(E, m, pid) {
       if (m.posturas[pid] != null) return m.posturas[pid];
       const pa = E.partidos[pid]; if (!pa) return 0;
+      if (P.esConst(m.tipo)) return C.Constitucion.posturaPartido(E, m, pid);
       if (m.tipo === 'revocatoria') {
         const of = m.cargo === 'presidente' ? E.politicos[E.gobierno.presidente] : E.politicos[E.deptos[m.depto][m.cargo]];
         const partOf = of && (of.id === 'J' ? E.jugador.partido : of.partido);
@@ -185,7 +193,7 @@ window.CURUL = window.CURUL || {};
       P.siguienteEtapa(E, m);
     },
     resolverCorte(E, m) {
-      const ideo = m.ideoSi, riesgoBase = m.tipo === 'derogatorio' ? 0.07 : m.tipo === 'aprobatorio' ? 0.1 : 0.08;
+      const ideo = m.ideoSi, riesgoBase = m.tipo === 'derogatorio' ? 0.07 : m.tipo === 'aprobatorio' ? 0.1 : P.esConst(m.tipo) ? 0.05 : 0.08;
       const tumba = U.chance(riesgoBase * C.Corte.factorEco(E, ideo.eco));
       C.Corte.registrarFallo(E, { tipo: 'consulta', titulo: `${TIPOS[m.tipo].nombre}: ${m.titulo}`, resultado: tumba ? 'inexequible' : 'exequible', gobierno: m.promotor === 'gobierno' });
       if (tumba) return P.cerrar(E, m, 'la Corte Constitucional tumba la pregunta');
@@ -254,7 +262,8 @@ window.CURUL = window.CURUL || {};
           }
           opin(r.pasa ? U.rf(2, 5) : -U.rf(3, 6), 'El Presidente sale fortalecido', 'El Presidente pierde el plebiscito: golpe político');
         } else if (E.gobierno.presidente === 'J' && m.promotor === 'J') opin(r.pasa ? U.rf(1, 3) : -U.rf(1, 3), 'Sube la aprobación por ganar la consulta', 'Baja la aprobación por perder la consulta');
-      } else if (m.tipo === 'local') P.aplicarLocal(E, m, r, ef);
+      } else if (P.esConst(m.tipo)) C.Constitucion.aplicarResultado(E, m, r, ef, opin);
+      else if (m.tipo === 'local') P.aplicarLocal(E, m, r, ef);
       else if (m.tipo === 'revocatoria') P.aplicarRevocatoria(E, m, r, ef);
     },
     aplicarLocal(E, m, r, ef) {

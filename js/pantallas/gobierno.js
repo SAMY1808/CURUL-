@@ -110,7 +110,7 @@ window.CURUL = window.CURUL || {};
         <div class="tarjeta"><h3>Constitución</h3><div class="lista">${Object.entries(C.Constitucion.ARTICULOS).map(([id, art]) => `<div class="it"><div class="cuerpo"><b>${esc(art.nombre)}</b><span class="tenue">Vigente: ${esc(art.etiqueta(C.Constitucion.valor(E, id)))}</span></div></div>`).join('')}</div>
           ${(() => {
             const K_ = E.constitucion;
-            if (K_.referendo) {
+            if (K_.referendo && K_.referendo.apoyo != null) {
               const art = C.Constitucion.ARTICULOS[K_.referendo.articulo];
               return `<div class="tenue" style="margin-top:8px">Referendo en curso: ${esc(art.nombre)} → ${esc(art.etiqueta(K_.referendo.valor))} · apoyo ${Math.round(K_.referendo.apoyo)}%</div>`;
             }
@@ -120,9 +120,7 @@ window.CURUL = window.CURUL || {};
               return `<div class="tenue" style="margin-top:8px">Asamblea Constituyente: ${esc(fases[c.fase])}${c.fase === 'ratificacion' ? ` · apoyo ${Math.round(c.apoyo)}%` : ''}${c.propuestas.length ? ' · paquete: ' + c.propuestas.map(p => esc(C.Constitucion.ARTICULOS[p.articulo].nombre)).join(', ') : ''}</div>
                 ${g.presidente === 'J' && c.fase === 'redaccion' ? `<div class="fila accion-form" style="margin-top:6px"><select data-arg="articulo">${Object.entries(C.Constitucion.ARTICULOS).map(([id, a]) => `<option value="${id}">${esc(a.nombre)}</option>`).join('')}</select><select data-arg="valor">${Object.values(C.Constitucion.ARTICULOS).flatMap(a => a.valores).filter((v, i, arr) => arr.indexOf(v) === i).map(v => `<option value="${v}">${esc(String(v))}</option>`).join('')}</select>${UI.botonAccion('proponerArticuloConstituyente', {})}</div>` : ''}`;
             }
-            if (g.presidente !== 'J') return '';
-            return `<div class="fila accion-form" style="margin-top:8px"><select data-arg="articulo">${Object.entries(C.Constitucion.ARTICULOS).map(([id, a]) => `<option value="${id}">${esc(a.nombre)}</option>`).join('')}</select><select data-arg="valor">${Object.values(C.Constitucion.ARTICULOS).flatMap(a => a.valores).filter((v, i, arr) => arr.indexOf(v) === i).map(v => `<option value="${v}">${esc(String(v))}</option>`).join('')}</select>${UI.botonAccion('convocarReferendo', {})}</div>
-              <div class="fila" style="margin-top:6px">${UI.botonAccion('convocarConstituyente', {})}</div>`;
+            return `<div class="tenue" style="margin-top:8px;font-size:12px">Las reformas se tramitan por democracia directa: referendo constitucional, iniciativa popular o Constituyente.</div><div class="fila" style="margin-top:6px"><button class="btn chico prim" data-ir="participacion">🗳 Ir a Democracia directa</button></div>`;
           })()}</div>
           ${(() => {
             const auto = C.Constitucion.valor(E, 'autonomiaTerritorial');
