@@ -52,6 +52,20 @@ CURUL.DATA = CURUL.DATA || {};
         { t: 'Votar con Estados Unidos y Europa', fn(E) { rel(E, 'USA', 5); rel(E, 'DEU', 3); rel(E, 'FRA', 3); rel(E, 'RUS', -4); rel(E, 'CHN', -3); return 'Te alineas con Occidente'; } },
         { t: 'Votar con Rusia y China', fn(E) { rel(E, 'RUS', 5); rel(E, 'CHN', 5); rel(E, 'USA', -5); return 'Un giro que sorprende en Washington'; } },
         { t: 'Abstenerse', fn(E) { for (const p of C.Diplomacia.destacados()) rel(E, p.id, -0.4); ap(E, -0.5); return 'Nadie se enoja, nadie aplaude'; } }
+      ] },
+    { id: 'visitaIncidente', sistema: true, forzar: true, tipo: 'diplomacia', icono: '🎩', alcance: 'nacional', peso: 0,
+      titulo: 'Incidente de protocolo en {pais}', texto: 'En plena visita de Estado a {pais}, un desliz del protocolo —una declaración desafortunada, un desplante en la cena— se vuelve viral. La prensa de ambos países lo comenta.',
+      opciones: [
+        { t: 'Pedir disculpas públicas y con humor', fn(E, ev) { const p = clamp(0.4 + q(E, ev) / 200, 0.25, 0.9); if (C.U.chance(p)) { rel(E, ev.ctx.pais, 1); return 'El anfitrión sonríe y el asunto se disuelve'; } rel(E, ev.ctx.pais, -2); ap(E, -0.5); return 'Las disculpas se leen como forzadas'; } },
+        { t: 'Quitarle importancia y seguir con la agenda', fn(E, ev) { const p = clamp(0.3 + q(E, ev) / 250, 0.2, 0.7); if (C.U.chance(p)) return 'Se olvida en dos días'; rel(E, ev.ctx.pais, -3); ap(E, -1); return 'La oposición y la prensa aprovechan el episodio'; } },
+        { t: 'Culpar a la prensa de sacarlo de contexto', fn(E, ev) { ap(E, C.U.chance(0.5) ? 0.8 : -1.2); rel(E, ev.ctx.pais, -1.5); return 'Tus seguidores aplauden; el anfitrión frunce el ceño'; } }
+      ] },
+    { id: 'visitaEntrante', sistema: true, forzar: true, tipo: 'diplomacia', icono: '🛬', alcance: 'nacional', peso: 0,
+      titulo: '{pais} pide visitar Colombia', texto: 'El jefe de Estado de {pais} quiere hacer una visita oficial a Colombia y propone una agenda centrada en {tema}. La cancillería espera tu decisión.',
+      opciones: [
+        { t: 'Recibirlo con honores de Estado', fn(E, ev) { E.jugador.agenda.puntos = Math.max(0, E.jugador.agenda.puntos - 1); rel(E, ev.ctx.pais, 6); ap(E, 0.6); const k = ev.ctx.tema; if (k === 'comercial' || k === 'energia') C.Economia.programar(E, [{ v: 'inversion', d: 0.08, p: 'm' }, { v: 'exportaciones', d: 0.3, p: 'm' }], 'visita'); if (k === 'seguridad') for (const d of Object.values(E.deptos)) d.seguridad = clamp(d.seguridad + 0.3, 1, 99); return 'Una visita de gala que deja acuerdos y buena imagen'; } },
+        { t: 'Reunión de trabajo sin ceremonia', fn(E, ev) { rel(E, ev.ctx.pais, 2.5); return 'Cumples sin gastar capital político'; } },
+        { t: 'Excusarte: que lo reciba el canciller', fn(E, ev) { rel(E, ev.ctx.pais, -3); return 'Lo interpretan como desinterés'; } }
       ] }
   );
 })(window.CURUL);

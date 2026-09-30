@@ -78,6 +78,7 @@ window.CURUL = window.CURUL || {};
       if (C.MundoEco && (!E.mundoEco || !E.mundoEco.petroleo)) { const prev = C.E; C.E = E; C.MundoEco.migrar(E); C.E = prev; }
       if (C.Empresas && (!E.empresas || !E.empresas.lista)) { const prev = C.E; C.E = E; C.Empresas.migrar(E); C.E = prev; }
       if (C.MundoVivo && (!E.mundoVivo || !E.mundoVivo.paises)) { const prev = C.E; C.E = E; C.MundoVivo.migrar(E); C.E = prev; }
+      if (C.Visitas && (!E.visitas || !E.visitas.historial)) { const prev = C.E; C.E = E; C.Visitas.migrar(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

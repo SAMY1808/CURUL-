@@ -61,7 +61,31 @@ window.CURUL = window.CURUL || {};
     return `<div class="tarjeta"><h3>Actuaciones del servicio exterior</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Incidentes diplomáticos en esta partida: ${x.incidentes}.</div>${x.historial.length ? `<div class="lista">${x.historial.map(h => `<div class="it"><div class="cuerpo"><b style="white-space:normal">${esc(h.txt)}</b><span>${esc(U.fmtT(h.t))}</span></div></div>`).join('')}</div>` : '<div class="tenue" style="font-size:12px">Sin actuaciones todavía.</div>'}</div>`;
   };
 
-  const TABS = [['panorama', 'Panorama', panorama], ['embajadas', 'Embajadas', embajadas], ['consulados', 'Diáspora', consulados], ['organismos', 'Organismos y ONU', organismos], ['tratados', 'Tratados y cumbres', tratados], ['historial', 'Historial', historial]];
+  const visitas = E => {
+    const V = C.Visitas, v = V.asegurar(E), pres = V.puede(E) === true, pl = v.plan;
+    const opAg = (sel, vacio) => `<select data-arg="${sel}">${vacio ? '<option value="">— (opcional) —</option>' : ''}${Object.entries(V.AGENDA).map(([k, a]) => `<option value="${k}">${a.icono} ${esc(a.n)}</option>`).join('')}</select>`;
+    const nivelTxt = n => n === 2 ? '<span class="etq verde">Logrado</span>' : n === 1 ? '<span class="etq">A medias</span>' : '<span class="etq rojo">Sin resultado</span>';
+    let plan;
+    if (pl) {
+      const nom = V.nombre(pl.pais), emb = V.embajador(E, pl.pais), sem = Math.max(0, pl.salida - E.fecha.t);
+      plan = `<div class="tarjeta"><h3>🛫 Viaje en preparación: ${esc(nom)}</h3>
+        <div class="tenue" style="font-size:12px;margin-bottom:8px">Sale en ${sem} semana${sem === 1 ? '' : 's'} (${U.fmtT(pl.salida)}) · Delegación ${esc(V.DELEGACIONES[pl.delegacion].n)}. ${emb ? `El embajador ${esc(emb.embajador ? emb.embajador.nombre : 'encargado')} (calidad ${emb.embajador ? emb.embajador.calidad : 30}) prepara el terreno cada semana.` : 'Sin embajada en el país la preparación es lenta y los resultados se enfrían: conviene abrir una.'}</div>
+        ${G.barrasH([{ etq: 'Preparación', v: Math.round(pl.preparado), color: pl.preparado >= 70 ? '#3FBF7A' : 'var(--oro)' }], { max: 100 })}
+        <table class="tabla" style="margin-top:10px"><thead><tr><th>Punto de la agenda</th><th>Probabilidad de éxito hoy</th></tr></thead><tbody>${pl.agenda.map(k => `<tr><td>${V.AGENDA[k].icono} <b>${esc(V.AGENDA[k].n)}</b><div class="tenue" style="font-size:11px">${esc(V.AGENDA[k].r)}</div></td><td class="num">${Math.round(V.prob(E, pl.pais, k, pl) * 100)}%</td></tr>`).join('')}</tbody></table>
+        ${pres ? `<div class="fila" style="gap:6px;flex-wrap:wrap;margin-top:10px">${UI.botonAccion('reforzarPreparacion', {}, 'Reforzar preparación')}${UI.botonAccion('adelantarVisita', {}, 'Adelantar el viaje')}${UI.botonAccion('cancelarVisita', {}, 'Cancelar')}</div>` : ''}</div>`;
+    } else if (pres) {
+      const pre = E.ui.visitaPais && E.diplomacia.paises[E.ui.visitaPais] ? E.ui.visitaPais : '';
+      const ops = opcPaises(E, p => true).replace(`value="${pre}"`, `value="${pre}" selected`);
+      plan = `<div class="tarjeta"><h3>🛫 Planear una visita de Estado</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Elige el país, hasta tres temas y el tipo de delegación. Los embajadores preparan el terreno: con embajada abierta se prepara en 3 semanas y mucho mejor; sin ella tardas el doble y los resultados se enfrían.</div>
+        <div class="col accion-form" style="gap:6px"><select data-arg="pais">${ops}</select>${opAg('a1')}${opAg('a2', true)}${opAg('a3', true)}
+        <select data-arg="delegacion">${Object.entries(V.DELEGACIONES).map(([k, d]) => `<option value="${k}">${esc(d.n)}</option>`).join('')}</select>${UI.botonAccion('planearVisita', {}, 'Planear visita', 'prim')}</div></div>`;
+    } else plan = `<div class="tarjeta"><h3>🛫 Visitas de Estado</h3><div class="tenue">Sólo el Presidente viaja en visita de Estado; aquí puedes ver las que se han hecho y sus resultados.</div></div>`;
+    const seg = v.seg.length ? `<div class="tarjeta"><h3>📈 Resultados en marcha</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Lo acordado en las visitas sigue rindiendo por semanas. Con embajada abierta rinde el doble.</div><div class="lista">${v.seg.map(s => { const emb = V.embajador(E, s.pais); return `<div class="it"><div class="cuerpo"><b>${V.AGENDA[s.k].icono} ${esc(V.nombre(s.pais))}</b><span>${esc(V.AGENDA[s.k].n)} · ${emb ? '🏛 con embajada' : '⚠ sin embajada'}</span></div><div class="tenue" style="font-size:12px">${s.resta} sem.</div></div>`; }).join('')}</div></div>` : '';
+    const hist = `<div class="tarjeta"><h3>Historial de visitas (${v.total})</h3>${v.historial.length ? `<div class="lista">${v.historial.map(h => `<div class="it" style="align-items:flex-start"><div class="cuerpo"><b style="white-space:normal">${esc(h.titulo)}</b><span style="white-space:normal">${U.fmtT(h.t)} · Preparación ${h.prep}% · ${h.embajada ? '🏛 con embajada' : 'sin embajada'}</span><div style="margin-top:4px">${h.res.map(r => `<div style="font-size:12px">${V.AGENDA[r.k].icono} ${esc(V.AGENDA[r.k].n)} ${nivelTxt(r.nivel)}</div>`).join('')}</div></div></div>`).join('')}</div>` : '<div class="tenue">Aún no has hecho ninguna visita de Estado.</div>'}</div>`;
+    return `<div class="grid g2"><div class="col">${plan}${seg}</div><div class="col">${hist}</div></div>`;
+  };
+
+  const TABS = [['panorama', 'Panorama', panorama], ['embajadas', 'Embajadas', embajadas], ['consulados', 'Diáspora', consulados], ['organismos', 'Organismos y ONU', organismos], ['tratados', 'Tratados y cumbres', tratados], ['visitas', 'Visitas de Estado', visitas], ['historial', 'Historial', historial]];
   C.Pantallas.diplomacia = {
     render(el, params) {
       const E = C.E; X().asegurar(E);
