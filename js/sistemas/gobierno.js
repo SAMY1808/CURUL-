@@ -174,7 +174,13 @@ window.CURUL = window.CURUL || {};
     EFECTO_SECTOR: { educacion: 'educacion', salud: 'salud', seguridad: 'seguridad', paz: 'seguridad', infraestructura: 'infraestructura', vivienda: 'infraestructura', tecnologia: 'infraestructura', empleo: 'desempleo' },
     mesaTrabajo(E, minId) {
       const min = G.todosMinisterios(E).find(m => m.id === minId);
-      if (min.sector === 'exteriores' && C.Diplomacia) return C.Diplomacia.mesaExteriores(E);
+      if (min.sector === 'exteriores' && C.Diplomacia) {
+        const r = C.Diplomacia.mesaExteriores(E), g0 = E.gobierno; g0.mesasMinisterio = g0.mesasMinisterio || {};
+        const h0 = (g0.mesasMinisterio[minId] = g0.mesasMinisterio[minId] || []); h0.unshift({ t: E.fecha.t, campo: null, magnitud: 0, txt: r.txt }); if (h0.length > 12) h0.pop();
+        E.opinion.aprobacionPres = U.clamp(E.opinion.aprobacionPres + U.rf(-0.1, 0.4), 0, 100);
+        C.Politicos.anotar(E.politicos.J, `Convoca la mesa de trabajo del Ministerio de ${min.nombre}`);
+        return r;
+      }
       const campo = G.EFECTO_SECTOR[min.sector];
       const signo = min.sector === 'empleo' ? -1 : 1;
       const magnitud = campo ? U.rf(0.3, 0.8) : 0;
@@ -403,7 +409,7 @@ window.CURUL = window.CURUL || {};
         ejecutar(E) {
           const minId = E.jugador.cargoInfo.ministerio;
           const r = G.mesaTrabajo(E, minId);
-          return { ok: true, msg: r.campo ? `Mesa de trabajo realizada: ${U.signo(r.magnitud, 1)} en ${r.campo} (promedio nacional)` : 'Mesa de trabajo realizada: fortalece tu imagen y la del Gobierno' };
+          return { ok: true, msg: r.campo ? `Mesa de trabajo realizada: ${U.signo(r.magnitud, 1)} en ${r.campo} (promedio nacional)` : (r.txt || 'Mesa de trabajo realizada: fortalece tu imagen y la del Gobierno') };
         } });
     }
   };

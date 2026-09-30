@@ -30,7 +30,7 @@ window.CURUL = window.CURUL || {};
           <div class="tarjeta"><h3>Convocar mesa de trabajo</h3>
             <p class="tenue" style="font-size:12.5px">Reúnes a gremios, expertos y sociedad civil del sector para avanzar la agenda del ministerio.${campo ? ' Mejora un poco el promedio nacional de ' + campo + '.' : ''}</p>
             ${UI.botonAccion('convocarMesa', {}, 'Convocar mesa de trabajo', 'prim')}</div>
-          <div class="tarjeta"><h3>Historial de mesas de trabajo</h3><div class="lista">${hist.slice(0, 10).map(h => `<div class="it"><span class="tenue num" style="font-size:11px;width:70px">${U.fmtT(h.t)}</span><div class="cuerpo" style="font-size:12.5px">${h.campo ? `${U.signo(h.magnitud, 1)} en ${esc(h.campo)} (promedio nacional)` : 'Mesa de trabajo sectorial'}</div></div>`).join('') || '<div class="vacio">Aún no has convocado ninguna mesa.</div>'}</div></div>
+          <div class="tarjeta"><h3>Historial de mesas de trabajo</h3><div class="lista">${hist.slice(0, 10).map(h => `<div class="it"><span class="tenue num" style="font-size:11px;width:70px">${U.fmtT(h.t)}</span><div class="cuerpo" style="font-size:12.5px">${h.campo ? `${U.signo(h.magnitud, 1)} en ${esc(h.campo)} (promedio nacional)` : esc(h.txt || 'Mesa de trabajo sectorial')}</div></div>`).join('') || '<div class="vacio">Aún no has convocado ninguna mesa.</div>'}</div></div>
         </div>`;
     }
   };

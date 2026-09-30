@@ -91,7 +91,7 @@ window.CURUL = window.CURUL || {};
       E.jugador.rep.competencia = U.clamp(E.jugador.rep.competencia + 0.4, 0, 100);
       C.Opinion.subirRec(E, 0.3);
       C.Medios.noticia(E, { tipo: 'diplomacia', titular: 'La Cancillería adelanta gestiones con el cuerpo diplomático acreditado', tono: 1, jugador: true });
-      return { campo: null };
+      return { campo: null, txt: 'Gestiones con el cuerpo diplomático: mejora la relación con ' + candidatos.map(p => p.nombre).join(' y ') };
     },
     registrarAcciones() {
       const A = C.Acciones;
