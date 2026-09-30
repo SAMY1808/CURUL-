@@ -25,3 +25,26 @@ CURUL.DATA = CURUL.DATA || {};
       ] }
   );
 })(window.CURUL);
+(function (C) {
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rel = (E, id, d) => { const st = E.diplomacia.paises[id]; if (st) st.relacion = clamp(st.relacion + d, 3, 97); };
+  const ap = (E, d) => { E.opinion.aprobacionPres = clamp(E.opinion.aprobacionPres + d, 3, 95); };
+  C.DATA.eventos.push(
+    { id: 'espionajeExpuesto', sistema: true, forzar: true, tipo: 'diplomacia', icono: '🕵', alcance: 'nacional', peso: 0,
+      titulo: 'Descubren tu operación en {pais}', texto: '{pais} denuncia públicamente que Colombia realizó una operación encubierta ({op}). Su cancillería convoca a nuestro embajador y la prensa pide explicaciones.',
+      opciones: [
+        { t: 'Negar todo', fn(E, ev) { if (C.U.chance(0.5)) { rel(E, ev.ctx.pais, -2); return 'Nadie logra probarlo: el incidente se enfría'; } rel(E, ev.ctx.pais, -8); ap(E, -1.5); E.jugador.credibilidad = clamp(E.jugador.credibilidad - 4, 0, 100); return 'Aparecen pruebas: quedas como mentiroso'; } },
+        { t: 'Reconocer un error y ofrecer disculpas', fn(E, ev) { rel(E, ev.ctx.pais, -3); ap(E, -0.5); return 'Cuesta orgullo, pero se cierra el asunto'; } },
+        { t: 'Sacrificar al jefe de inteligencia', fn(E, ev) { rel(E, ev.ctx.pais, -1); if (C.Inteligencia) { const q = C.Inteligencia.asegurar(E); q.capacidad = clamp(q.capacidad - 8, 10, 100); } ap(E, -0.3); return 'Cae el director: tu círculo queda a salvo, la agencia pierde capacidad'; } },
+        { t: 'Acusar a ese país de espiar primero', fn(E, ev) { const pr = 0.4; if (C.U.chance(pr)) { ap(E, 1.5); rel(E, ev.ctx.pais, -5); return 'Tu contraataque desvía la atención'; } rel(E, ev.ctx.pais, -10); return 'La acusación no convence a nadie'; } }
+      ] },
+    { id: 'espionajeExtranjero', sistema: true, forzar: true, tipo: 'seguridad', icono: '🔎', alcance: 'nacional', peso: 0,
+      titulo: 'Descubren espionaje de {pais}', texto: 'Los servicios de inteligencia detectan {tipo}, atribuido a {pais}. Hubo daños, y la prensa quiere saber qué vas a hacer.',
+      opciones: [
+        { t: 'Denunciarlo públicamente y ante organismos', fn(E, ev) { rel(E, ev.ctx.pais, -6); ap(E, 1); return 'Ganas el apoyo interno y enfrías la relación'; } },
+        { t: 'Expulsar a sus diplomáticos', fn(E, ev) { rel(E, ev.ctx.pais, -9); ap(E, 1.5); if (C.Espionaje) C.Espionaje.asegurar(E).contra = clamp(C.Espionaje.asegurar(E).contra + 5, 10, 95); return 'Respuesta contundente: se corta su red local'; } },
+        { t: 'Reforzar la contrainteligencia en silencio', fn(E) { C.Espionaje.asegurar(E).contra = clamp(C.Espionaje.asegurar(E).contra + 12, 10, 95); return 'La contrainteligencia queda más fuerte'; } },
+        { t: 'Restarle importancia', fn(E) { ap(E, -0.6); return 'La oposición te acusa de ingenuo'; } }
+      ] }
+  );
+})(window.CURUL);

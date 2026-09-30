@@ -39,7 +39,22 @@ window.CURUL = window.CURUL || {};
         ${q.historial.length ? `<div class="lista" style="margin-top:8px">${q.historial.slice(0, 6).map(h => `<div class="it"><div class="cuerpo"><b style="white-space:normal">${esc(h.txt)}</b><span>${esc(U.fmtT(h.t))}</span></div></div>`).join('')}</div>` : ''}</div>`;
   };
 
-  const TABS = [['operaciones', 'Operaciones', operaciones], ['expedientes', 'Expedientes', expedientes], ['guerra', 'Guerra sucia', guerra]];
+  const exterior = E => {
+    const Es = C.Espionaje, e = Es.asegurar(E), pres = Es.puede(E) === true, D = C.Diplomacia;
+    const pre = E.ui.espPais || 'VEN';
+    const opPais = D.paises().map(p => `<option value="${p.id}" ${p.id === pre ? 'selected' : ''}>${esc(p.nombre)}${e.redes[p.id] ? ' · red ' + Math.round(e.redes[p.id]) + '%' : ''}</option>`).join('');
+    const redes = Object.entries(e.redes).sort((a, b) => b[1] - a[1]);
+    const info = redes.filter(([, r]) => r >= 30).slice(0, 8).map(([id]) => { const p = C.MundoVivo.pais(E, id); return `<tr><td><b>${esc(Es.nombre(id))}</b></td><td>${esc(p.lider)}</td><td class="num">${p.militar}</td><td class="num">${Math.round(p.estab)}</td><td>${p.proxElec != null ? U.fmtT(p.proxElec) : '—'}</td></tr>`; }).join('');
+    return `${pres ? '' : '<div class="tenue" style="font-size:12px;margin-bottom:10px">Sólo el Presidente ordena operaciones en el exterior; aquí ves cómo va la contrainteligencia.</div>'}<div class="grid g4">${Comp.kpi('Contrainteligencia', Math.round(e.contra) + '%', '<span class="tenue">frena ataques ajenos</span>')}${Comp.kpi('Redes activas', redes.length, '<span class="tenue">países infiltrados</span>')}${Comp.kpi('Operaciones exitosas', e.exitos, `<span class="tenue">${e.expuestas} descubiertas</span>`)}${Comp.kpi('Ataques recibidos', e.ataquesRecibidos, `<span class="tenue">${e.detenidos} detenidos</span>`)}</div>
+      <div class="grid g2" style="margin-top:14px"><div class="col"><div class="tarjeta"><h3>🕵 Operación encubierta</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Primero infiltra una red; con más red se desbloquean operaciones más fuertes y baja el riesgo de que te descubran. Ya usas las mismas agencias de inteligencia del Estado.</div>
+        <div class="col accion-form" style="gap:8px"><select data-arg="pais">${opPais}</select>${Object.entries(Es.OPS).map(([k, o]) => `<div class="fila" style="gap:8px;align-items:center"><div style="flex:1;font-size:12px"><b>${o.icono} ${esc(o.n)}</b> <span class="tenue">· red ≥ ${o.red}% · riesgo base ${Math.round(o.riesgo * 100)}%</span><div class="tenue" style="font-size:11px">${esc(o.txt)}</div></div>${UI.botonAccion('op_' + k, {}, 'Ordenar', k === 'golpe' ? 'peligro' : '')}</div>`).join('')}</div>
+        <div style="margin-top:10px">${UI.botonAccion('reforzarContrainteligencia', {}, 'Reforzar contrainteligencia')}</div></div></div>
+      <div class="col"><div class="tarjeta"><h3>Redes en el exterior</h3>${redes.length ? `<div class="lista">${redes.map(([id, r]) => `<div class="it"><div class="cuerpo"><b>${esc(Es.nombre(id))}</b></div><div style="width:45%">${G.barrasH([{ etq: '', v: Math.round(r), color: '#7fa8e8' }], { max: 100 })}</div></div>`).join('')}</div>` : '<div class="tenue">Sin redes todavía.</div>'}</div>
+        ${info ? `<div class="tarjeta"><h3>Informes de tus redes</h3><table class="tabla"><thead><tr><th>País</th><th>Líder</th><th>Militar</th><th>Estab.</th><th>Próx. elecciones</th></tr></thead><tbody>${info}</tbody></table></div>` : ''}
+        <div class="tarjeta"><h3>Bitácora</h3>${e.historial.length ? `<div class="lista">${e.historial.slice(0, 10).map(h => `<div class="it"><div class="cuerpo"><b style="white-space:normal;font-weight:400">${esc(h.txt)}</b><span>${U.fmtT(h.t)}</span></div></div>`).join('')}</div>` : '<div class="tenue">Sin novedades.</div>'}</div></div></div>`;
+  };
+
+  const TABS = [['operaciones', 'Operaciones', operaciones], ['expedientes', 'Expedientes', expedientes], ['guerra', 'Guerra sucia', guerra], ['exterior', 'Espionaje exterior', exterior]];
   C.Pantallas.inteligencia = {
     render(el, params) {
       const E = C.E; C.Inteligencia.asegurar(E);
@@ -49,6 +64,7 @@ window.CURUL = window.CURUL || {};
         <div class="tabs">${TABS.map(([k, n]) => `<button data-tab="${k}" class="${k === cur[0] ? 'activo' : ''}">${n}${k === 'expedientes' && nExp ? ` (${nExp})` : ''}</button>`).join('')}</div>
         <div style="margin-top:14px">${cur[2](E)}</div>`;
       el.onclick = e => { const t = e.target.closest('.tabs [data-tab]'); if (t) C.App.ir('inteligencia', { tab: t.dataset.tab }); };
+      el.onchange = e => { if (e.target.matches('select[data-arg=pais]')) E.ui.espPais = e.target.value; };
     }
   };
 })(window.CURUL);
