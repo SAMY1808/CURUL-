@@ -23,7 +23,7 @@ window.CURUL = window.CURUL || {};
       const leyes = (J.historialLegislativo || []).filter(h => h.resultado === 'ley').length;
       const ap = (E.series.aprobacion || []).map(x => x[1]);
       let p = leyes * 3 + U.suma((J.ocupados || []).map(c => nivel(c) * 4)) + (J.historialElectoral || []).filter(h => h.electo).length * 2
-        + U.suma(l.fundaciones.map(f => f.nivel * 3)) + l.libros.length * 4 - J.escandalos.length * 4 + (J.reconocimientos || []).length * 2;
+        + U.suma(l.fundaciones.map(f => f.nivel * 3)) + l.libros.length * 4 - J.escandalos.length * 4 + (J.reconocimientos || []).length * 2 + (C.Escenarios ? C.Escenarios.cumplidos(E) * 6 : 0);
       if (E.gobierno.presidente === 'J' && ap.length) p += (U.prom(ap.slice(-260)) - 40) * 0.6;
       return Math.round(p);
     },

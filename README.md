@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 24 completas)
+## Qué hay en esta versión (Fases 1 a 25 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -227,6 +227,14 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
   destituciones y los hallazgos fiscales; el Presidente hace lobby por su candidato.
 - **Reforma política**: voto obligatorio, financiación pública o mixta de campañas y listas cerradas, por
   reforma constitucional.
+- **Servicio exterior**: embajadas y embajadores, consulados y diáspora, agregadurías, misiones ante organismos,
+  candidatura al Consejo de Seguridad de la ONU e incidentes diplomáticos con decisiones.
+- **Crisis, salud y legado**: escándalos con respuestas a elegir, desgaste físico y mental, fundaciones, libros y un
+  veredicto de la historia al final de tu carrera.
+- **Mercado de votos y coaliciones que cobran**: ganarte congresistas, atraerlos a tu partido y calmar a tus socios.
+- **Seguridad y territorio**: cultivos ilícitos, presencia del Estado, sustitución y certificación antidrogas.
+- **Economía global**: petróleo, café, ciclo mundial, pandemias y choques históricos (1929, 1973, 2008, 2014, 2020).
+- **Escenarios históricos** con objetivos, y un **menú lateral agrupado** por secciones.
 
 ## Arquitectura
 

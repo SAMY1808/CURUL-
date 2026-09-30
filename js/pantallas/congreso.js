@@ -180,18 +180,35 @@ window.CURUL = window.CURUL || {};
         </div></div>`;
   };
 
+  /* Mercado de votos: quién se puede ganar, con qué y a qué precio. */
+  const vistaMercado = E => {
+    const M = C.Mercado, J = E.jugador, cam = E.ui.mercadoCam || 'todos', poder = M.poder(E);
+    let ms = M.miembros(E).filter(p => cam === 'todos' || (p.cargo && p.cargo.tipo === (cam === 'senado' ? 'senador' : 'representante')));
+    ms = ms.sort((a, b) => M.negociabilidad(b) - M.negociabilidad(a)).slice(0, 30);
+    const est = E.gobierno.presidente === 'J' ? C.Gobierno.estabilidad(E) : null;
+    return `<div class="tarjeta"><div class="t-cab"><h3>Mercado de votos</h3><select id="c-mcam">${[['todos', 'Ambas cámaras'], ['senado', 'Senado'], ['camara', 'Cámara']].map(([k, n]) => `<option value="${k}" ${k === cam ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      <div class="tenue" style="font-size:12px;margin-bottom:10px;max-width:820px">Los congresistas más negociables (pragmáticos, ambiciosos y poco disciplinados) están arriba. Ganártelos sube su relación contigo, que pesa en tus proyectos y —si eres Presidente— en los del Gobierno. ${poder ? '' : 'Sin cargos ni presupuesto sólo puedes ofrecer favores o dinero.'} Atraerlos a tu partido se hace efectivo en la próxima inscripción de listas.</div>
+      <table class="tabla"><thead><tr><th>Congresista</th><th>Partido</th><th>Negociable</th><th>Relación</th><th>Ofrecer</th><th></th></tr></thead><tbody>${ms.map(p => { const pa = E.partidos[p.partido], prob = M.probAtraer(E, p);
+        return `<tr><td><b data-ficha="${p.id}" style="cursor:pointer">${esc(p.nombre)}</b><div class="tenue" style="font-size:11px">${p.cargo && p.cargo.tipo === 'senador' ? 'Senador' : 'Representante'}${p.proximoPartido ? ' · se pasará al ' + esc((E.partidos[p.proximoPartido] || {}).sigla || '') : ''}</div></td><td>${pa ? `<span class="sigla"><i class="pto" style="background:${pa.color}"></i>${esc(pa.sigla)}</span>` : '—'}</td><td class="num">${M.negociabilidad(p)}</td><td>${Comp.relacion(p.relJ || 0)}</td>
+        <td><div class="fila" style="gap:3px">${Object.entries(M.OFERTAS).map(([k, o]) => UI.botonAccion('ofrecerAlCongresista', { pol: p.id, oferta: k }, o.icono, 'chico')).join('')}</div></td>
+        <td>${UI.botonAccion('atraerCongresista', { pol: p.id }, 'Atraer · ' + Math.round(prob * 100) + '%', 'chico')}</td></tr>`; }).join('')}</tbody></table>
+      <div class="tenue" style="font-size:11.5px;margin-top:8px">${Object.values(M.OFERTAS).map(o => `${o.icono} ${esc(o.n)}: ${esc(o.desc)}`).join(' · ')}</div></div>
+      ${est ? `<div class="tarjeta" style="margin-top:14px"><h3>Satisfacción de tu coalición</h3>${G.barrasH(Object.entries(est.porPartido).filter(([pid]) => E.partidos[pid]).sort((a, b) => a[1].s - b[1].s).map(([pid, x]) => ({ etq: E.partidos[pid].sigla, v: x.s, color: x.s >= 55 ? 'var(--si)' : x.s >= 42 ? 'var(--alerta)' : 'var(--no)' })), { max: 100, fmt: v => Math.round(v), anchoEtq: '70px' })}<div class="tenue" style="font-size:12px;margin-top:6px">Por debajo de 42, un partido amenaza con irse y tendrás que decidir cómo calmarlo.</div></div>` : ''}`;
+  };
+
   C.Pantallas.congreso = {
     render(el, params) {
       const E = C.E;
       const tab = params.tab || E.ui.tabCong || (E.jugador.camara || 'senado');
       E.ui.tabCong = tab;
-      const tabs = [['senado', '🔴 Senado'], ['camara', '🟢 Cámara'], ['composicion', 'Composición y coaliciones'], ['comisiones', 'Comisiones'], ['orden', 'Orden del día'], ['actividad', 'Actividad']];
-      const cuerpo = tab === 'senado' || tab === 'camara' ? vistaCamara(E, tab) : tab === 'composicion' ? vistaComposicion(E) : tab === 'comisiones' ? vistaComisiones(E) : tab === 'orden' ? vistaOrden(E) : vistaActividad(E);
+      const tabs = [['senado', '🔴 Senado'], ['camara', '🟢 Cámara'], ['composicion', 'Composición y coaliciones'], ['comisiones', 'Comisiones'], ['orden', 'Orden del día'], ['mercado', 'Mercado de votos'], ['actividad', 'Actividad']];
+      const cuerpo = tab === 'senado' || tab === 'camara' ? vistaCamara(E, tab) : tab === 'composicion' ? vistaComposicion(E) : tab === 'comisiones' ? vistaComisiones(E) : tab === 'orden' ? vistaOrden(E) : tab === 'mercado' ? vistaMercado(E) : vistaActividad(E);
       el.innerHTML = `<div class="cab"><div><h1>Congreso de la República</h1><div class="sub">Cuatrienio ${esc(E.congreso.cuatrienio)} · Legislatura ${C.Congreso.periodo(E).legislatura} · ${C.Congreso.enSesion(E) ? '<span class="bien">en sesiones ordinarias</span>' : '<span class="tenue">en receso</span>'}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>${cuerpo}`;
       UI.$$('.tabs [data-tab]', el).forEach(b => b.onclick = () => C.App.ir('congreso', { tab: b.dataset.tab }));
       const modo = UI.$('#c-modo', el); if (modo) modo.onchange = e => { E.ui.modoHemi = e.target.value; C.App.refrescar(); };
       UI.$$('#c-vista button', el).forEach(b => b.onclick = () => { E.ui.vistaCamara = b.dataset.v; C.App.refrescar(); });
+      const mc = UI.$('#c-mcam', el); if (mc) mc.onchange = e => { E.ui.mercadoCam = e.target.value; C.App.refrescar(); };
       const bus = UI.$('#c-buscar', el); if (bus) bus.onchange = e => { E.ui.filtroCong = e.target.value; C.App.refrescar(); };
       el.onclick = e => {
         const s = e.target.closest('.curul[data-pol],.curul-mini[data-pol]'); if (s) return Comp.fichaPolitico(E, s.dataset.pol);

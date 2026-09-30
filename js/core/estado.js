@@ -74,6 +74,8 @@ window.CURUL = window.CURUL || {};
       if (C.Inteligencia && !E.inteligencia) { const prev = C.E; C.E = E; C.Inteligencia.migrar(E); C.E = prev; }
       if (C.Control && (!E.control || !E.control.organos)) { const prev = C.E; C.E = E; C.Control.migrar(E); C.E = prev; }
       if (C.Exterior && (!E.exterior || !E.exterior.embajadas)) { const prev = C.E; C.E = E; C.Exterior.migrar(E); C.E = prev; }
+      if (C.Territorio && (!E.territorio || !E.territorio.deptos)) { const prev = C.E; C.E = E; C.Territorio.migrar(E); C.E = prev; }
+      if (C.MundoEco && (!E.mundoEco || !E.mundoEco.petroleo)) { const prev = C.E; C.E = E; C.MundoEco.migrar(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

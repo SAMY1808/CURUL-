@@ -121,6 +121,7 @@ window.CURUL = window.CURUL || {};
       }
       f.relacion = 0;
       if (p.autor === 'J' || p.coautores.includes('J')) f.relacion += pol.relJ * 0.22;
+      else if (p.gobierno && E.gobierno.presidente === 'J') f.relacion += pol.relJ * 0.12;
       if (p.autor !== 'J' && p.partido === pol.partido) f.relacion += 6;
       if (p.coautores.some(id => E.politicos[id] && E.politicos[id].partido === pol.partido)) f.relacion += 4;
       const d = E.deptos[pol.depto];

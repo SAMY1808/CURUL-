@@ -252,7 +252,41 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **21** | Corte Constitucional activa (nueve magistrados con ideología, activismo y periodo; terna del Presidente, la Corte Suprema y el Consejo de Estado, elección en el Senado; control de leyes, tratados, reformas, objeciones y estado de cosas inconstitucional) y vicepresidencia real (fórmula en la campaña, encargo, lealtad, ruptura y sucesión por falta absoluta) | **completa** |
 | **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa** |
 | **23** | Finanzas del partido: la caja (`pa.finanzas`) recibe financiación estatal y paga la operación; el jugador puede donar de su bolsillo (con el tope legal anual), hacer grandes recaudos (cenas, aportes ciudadanos, donantes, gremios, dinero irregular) y girar la caja a su campaña; la caja mueve la maquinaria del partido | **completa** |
-| **24** | Encuestas 2.0 (seis firmas con muestra, margen y sesgo propios; promedio ponderado; intención de voto por partido y candidato; imagen por segmentos; encargar encuestas honestas o «cocinadas»); inteligencia (DAS/DNI) con interceptaciones, expedientes, filtraciones y presión; guerra sucia (campaña negra, bots); Fiscal, Procurador y Contralor con ternas y elección; reforma política (voto obligatorio, financiación de campañas, listas cerradas) | **completa (esta entrega)** |
+| **24** | Encuestas 2.0 (seis firmas con muestra, margen y sesgo propios; promedio ponderado; intención de voto por partido y candidato; imagen por segmentos; encargar encuestas honestas o «cocinadas»); inteligencia (DAS/DNI) con interceptaciones, expedientes, filtraciones y presión; guerra sucia (campaña negra, bots); Fiscal, Procurador y Contralor con ternas y elección; reforma política (voto obligatorio, financiación de campañas, listas cerradas) | **completa** |
+|### Notas de la Fase 25
+
+- **Menú agrupado** (`js/app.js`, `css/layout.css`): el menú lateral pasa a secciones plegables (Poder legislativo, Gobierno,
+  Justicia y control, Política y elecciones, Mundo y economía, Mi carrera). Se abre sola la sección de la pantalla activa,
+  las secciones recuerdan su estado en `E.ui.navAbierto` y las pantallas que no existen se omiten. En móvil se aplanan.
+  Lo que antes eran pestañas sueltas (Diplomacia dentro de Gobierno, Órganos de control) ahora tiene su lugar propio.
+- **Eventos con decisiones de sistema** (`data/crisis.js`, `js/sistemas/eventos.js`): las plantillas con `sistema: true` no entran en
+  el sorteo general; las dispara el código con `Eventos.disparar(E, plantilla, ctx)`. `ctx.vars` rellena `{variables}` del texto,
+  `forzar` obliga a mostrar la decisión y cada opción trae `fn(E, ev)` con sus consecuencias (devuelve un texto para el aviso).
+- **Escándalos** (`js/sistemas/crisis.js`): cuando se abre una investigación, alguien te denuncia o el riesgo judicial crece, saltan
+  cinco respuestas (negar, culpar a un colaborador, pedir perdón, contraatacar, callar) cuyo resultado depende de tu honestidad,
+  carisma y redes. **Salud** (`salud.js`): `J.salud` y `J.bienestar` se desgastan con el cargo, las campañas y los escándalos;
+  con poca salud pierdes puntos de agenda y hay crisis y, en el extremo, muerte. **Legado** (`legado.js`): fundaciones, libros y
+  un veredicto de la historia que aparece al terminar la carrera.
+- **Servicio exterior** (`js/sistemas/exterior.js`, `data/exterior.js`, pantalla «Diplomacia»): embajadas con embajador (de carrera o
+  político de confianza, que renuncia cuando cambia el gobierno) cuya calidad y afinidad ideológica mueven la relación cada semana;
+  consulados y diáspora por país (remesas y capacidad de respuesta); agregadurías comerciales; jefes de misión ante organismos;
+  candidatura al Consejo de Seguridad (votación en junio de los años pares) con votos que dividen a las potencias; incidentes
+  (connacionales detenidos, expulsión de embajadores, migración, cumbres, escándalo de un embajador) con decisiones. Un gobierno NPC
+  llena las vacantes con diplomáticos de carrera.
+- **Congreso 2.0** (`mercado.js`, pestaña «Mercado de votos»): ganarse a un congresista con un favor, una obra, un puesto o dinero (con
+  riesgo de denuncia), atraerlo a tu partido (efectivo en la próxima inscripción de listas) y, si eres Presidente, la coalición que
+  «cobra»: cuando la satisfacción de un socio cae de 42, exige un ministerio, obras o se va a la oposición.
+- **Seguridad y territorio** (`territorio.js`, pantalla «Seguridad y territorio»): cultivos, presencia del Estado y sustitución por
+  departamento; los cultivos crecen donde manda un grupo armado, lo financian y erosionan la seguridad; erradicación manual o aérea,
+  sustitución, despliegue e inversión social con costos políticos distintos; certificación antidrogas de EE. UU. cada septiembre.
+- **Economía global** (`mundoeco.js`, pantalla «Economía global»): petróleo, café, ciclo mundial y tasa de EE. UU. trasladan su cambio
+  semanal a las exportaciones, el crecimiento, el déficit y la inversión. Choques históricos anclados a su fecha (1929, 1973, 1998,
+  2008, 2014, 2020) y aleatorios; pandemias con tres respuestas. Fondo de estabilización, cobertura petrolera y postura fiscal.
+- **Escenarios** (`data/escenarios.js`, `escenarios.js`): seis épocas (Bogotazo, Frente Nacional, Constituyente, Proceso 8000, proceso de
+  paz, pandemia) con objetivos con plazo, hitos guionados y puntos de legado por objetivo cumplido; se eligen en el paso «Época» de la
+  creación del personaje.
+
+ **25** | Menú lateral agrupado en secciones plegables; escándalos y crisis con decisiones; salud y legado del político; servicio exterior (embajadas, consulados, misiones, Consejo de Seguridad, incidentes); Congreso 2.0 (mercado de votos, transfuguismo, coaliciones que cobran); seguridad y territorio (cultivos, presencia del Estado, certificación); economía global (petróleo, café, ciclo, pandemias, choques históricos); escenarios históricos con objetivos | **completa (esta entrega)** |
 
 ### Notas de la Fase 24
 

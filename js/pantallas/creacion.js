@@ -19,7 +19,7 @@ window.CURUL = window.CURUL || {};
         nombre: nombreAleatorio('f'), genero: 'f', edad: 36, nacimiento: 'BOY', residencia: 'BOG',
         educacion: 'Profesional', profesion: 'Politólogo', atributos: { carisma: 45, oratoria: 45, gestion: 45, negociacion: 45, integridad: 55 },
         intereses: ['educacion', 'salud'], eco: -10, soc: -10, origen: 'activista', partido: 'NC', comision: null,
-        pareja: '', hijos: 0, anioInicio: 2026, semilla: ''
+        pareja: '', hijos: 0, anioInicio: 2026, semilla: '', escenario: null
       };
       let paso = 0;
       const deptOpts = sel => C.DATA.departamentos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(d => `<option value="${d.id}" ${d.id === sel ? 'selected' : ''}>${esc(d.nombre)}</option>`).join('');
@@ -58,6 +58,8 @@ window.CURUL = window.CURUL || {};
           const ciclo = C.Mundo.cicloDe(cfg.anioInicio);
           cuerpo = `<div class="grid g2">
             <div>
+              <div class="tarjeta" style="margin-bottom:10px"><h3>Escenario histórico</h3><div class="lista" style="margin-bottom:6px"><div class="it clic" data-esc="" style="${!cfg.escenario ? 'background:var(--panel2)' : ''}"><span style="font-size:18px">🎲</span><div class="cuerpo"><b>Partida libre</b><span>Tú eliges el año y no hay objetivos</span></div></div>${C.DATA.escenarios.map(x => `<div class="it clic" data-esc="${x.id}" style="${cfg.escenario === x.id ? 'background:var(--panel2)' : ''}"><span style="font-size:18px">${x.icono}</span><div class="cuerpo"><b>${esc(x.nombre)} · ${x.anio}</b><span>${esc(x.desc.slice(0, 90))}…</span></div></div>`).join('')}</div>
+                ${cfg.escenario ? (() => { const x = C.DATA.escenarios.find(e => e.id === cfg.escenario); return `<div class="tenue" style="font-size:12.5px">${esc(x.desc)}</div><div style="margin-top:6px;font-size:12.5px"><b>Objetivos:</b><ul style="margin:4px 0 0 18px;padding:0">${x.objetivos.map(o => `<li>${esc(o.txt)}</li>`).join('')}</ul></div>` })() : ''}</div>
               <div class="campo"><label>Año de inicio: <b style="color:var(--oro2);font-size:18px">${cfg.anioInicio}</b></label><input type="range" min="${C.Mundo.ANIO_MIN}" max="${C.Mundo.ANIO_MAX}" step="1" value="${cfg.anioInicio}" id="c-anio"></div>
               <div class="fila" style="justify-content:space-between;font-size:11.5px;color:var(--tenue)"><span>${C.Mundo.ANIO_MIN}</span><span>${C.Mundo.ANIO_MAX}</span></div>
               <div class="tarjeta"><h3>Contexto histórico</h3><p style="margin:0">${esc(C.Mundo.notaEpoca(cfg.anioInicio))}</p>
@@ -154,7 +156,8 @@ window.CURUL = window.CURUL || {};
           });
         }
         if (paso === 2) {
-          $('#c-anio').oninput = e => { cfg.anioInicio = +e.target.value; pintar(); };
+          $('#c-anio').oninput = e => { cfg.anioInicio = +e.target.value; cfg.escenario = null; pintar(); };
+          UI.$$('[data-esc]', el).forEach(b => b.onclick = () => { cfg.escenario = b.dataset.esc || null; if (cfg.escenario) cfg.anioInicio = C.DATA.escenarios.find(x => x.id === cfg.escenario).anio; pintar(); });
         }
         if (paso === 3) {
           $('#c-eco').onchange = e => { cfg.eco = +e.target.value; pintar(); };
@@ -182,7 +185,7 @@ window.CURUL = window.CURUL || {};
         setTimeout(() => {
           const semilla = cfg.semilla ? Math.abs([...cfg.semilla].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)) : undefined;
           const jug = Object.assign({}, cfg, { genero: cfg.genero === 'x' ? (Math.random() < 0.5 ? 'f' : 'm') : cfg.genero });
-          C.Mundo.generar({ anioInicio: cfg.anioInicio, semilla, jugador: jug });
+          C.Mundo.generar({ anioInicio: cfg.anioInicio, semilla, jugador: jug, escenario: cfg.escenario });
           C.E.meta.slot = null;
           C.Guardado.guardar(null, cfg.nombre);
           C.App.comenzar();

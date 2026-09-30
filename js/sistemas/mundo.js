@@ -35,7 +35,7 @@ window.CURUL = window.CURUL || {};
       // 1. Territorio
       for (const d of C.DATA.departamentos) E.deptos[d.id] = Object.assign({}, d, { gobernador: null, alcalde: null, ajusteAprob: 0 });
       // 2. Instituciones y sistemas base
-      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E); C.Corte.init(E); C.Participacion.init(E); C.Encuestas.init(E); C.Inteligencia.init(E); C.Control.init(E); C.Exterior.init(E);
+      C.Partidos.init(E); C.Economia.init(E); C.Opinion.init(E); C.Medios.init(E); C.Redes.init(E); C.OrdenPublico.init(E); C.Diplomacia.init(E); C.Constitucion.init(E); C.Movilizacion.init(E); C.Comercio.init(E); C.Corte.init(E); C.Participacion.init(E); C.Encuestas.init(E); C.Inteligencia.init(E); C.Control.init(E); C.Exterior.init(E); C.Territorio.init(E); C.MundoEco.init(E);
       // 3. Jugador
       C.Personaje.crear(E, cfg.jugador);
       const J = E.jugador;
@@ -76,6 +76,7 @@ window.CURUL = window.CURUL || {};
       // 8. Presimulación silenciosa hasta el año pedido (el mundo ya tiene una historia real detrás)
       for (let i = 0; i < presim; i++) { C.Tiempo.avanzar(); E.eventos.pendientes = []; E.elecciones.nochePendiente = null; E.participacion.resultadosPendientes = []; if ((E.ui.sancionesPendientes || []).length) { for (const id of E.ui.sancionesPendientes) if (E.proyectos[id] && E.proyectos[id].sub === 'decisionPresidente') C.Legislacion.convertirEnLey(E, E.proyectos[id]); E.ui.sancionesPendientes = []; } }
       E.meta.presim = false;
+      if (cfg.escenario && C.Escenarios) C.Escenarios.iniciar(E, cfg.escenario);
       E.series = {};
       C.Economia.series(E); U.serie('aprobacion', E.opinion.aprobacionPres);
       for (const f of ['invamer', 'gad']) C.Encuestas.publicar(E, C.Encuestas.realizar(E, { firma: f, cliente: 'medios', detalle: true }));

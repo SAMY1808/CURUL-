@@ -31,6 +31,11 @@ window.CURUL = window.CURUL || {};
     return s + '</svg>';
   };
 
+  const escenarioHTML = E => {
+    const sc = E.escenario, d = sc && C.Escenarios.def(sc.id); if (!d) return '';
+    return `<div class="tarjeta" style="margin-top:14px;border-left:4px solid var(--oro)"><h3>${d.icono} Escenario · ${esc(d.nombre)}</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">${esc(d.desc)}</div>
+      <div class="lista">${sc.objetivos.map((o, i) => `<div class="it"><span style="font-size:18px">${o.estado === 'cumplido' ? '✅' : o.estado === 'fallido' ? '❌' : '🎯'}</span><div class="cuerpo"><b style="white-space:normal">${esc(d.objetivos[i].txt)}</b><span>${o.estado === 'pendiente' ? 'plazo: ' + d.objetivos[i].hasta : o.estado === 'cumplido' ? 'cumplido ' + esc(U.fmtT(o.t)) : 'fallido'}</span></div></div>`).join('')}</div></div>`;
+  };
   const saludLegadoHTML = E => {
     const J = E.jugador, Sa = C.Salud.asegurar(J), L = C.Legado, l = L.asegurar(J), pts = L.puntos(E);
     const col = v => v >= 60 ? 'var(--si)' : v >= 35 ? 'var(--alerta)' : 'var(--no)';
@@ -85,7 +90,7 @@ window.CURUL = window.CURUL || {};
           <h3 style="margin-top:12px">Historial legislativo</h3><div class="lista">${J.historialLegislativo.slice().reverse().slice(0, 8).map(h => `<div class="it"><span>${h.resultado === 'ley' ? '📜' : '🗄'}</span><div class="cuerpo"><b style="white-space:normal">${esc(h.titulo)}</b><span>${h.rol} · ${h.resultado === 'ley' ? 'Ley ' + h.ley : esc(h.motivo || 'archivado')}</span></div></div>`).join('') || '<div class="vacio">Sin iniciativas concluidas.</div>'}</div>
           <h3 style="margin-top:12px">Escándalos y reconocimientos</h3><div class="lista">${[...J.escandalos.map(x => ({ ...x, i: '🔎', txt: x.titulo })), ...J.reconocimientos.map(x => ({ ...x, i: '🏅' }))].sort((a, b) => b.t - a.t).map(x => `<div class="it"><span>${x.i}</span><div class="cuerpo"><b style="white-space:normal">${esc(x.txt)}</b><span>${U.fmtT(x.t)}</span></div></div>`).join('') || '<div class="vacio">Hoja de vida limpia y sin distinciones aún.</div>'}</div></div>
       </div>
-      ${saludLegadoHTML(E)}
+      ${escenarioHTML(E)}${saludLegadoHTML(E)}
       <div class="tarjeta" style="margin-top:14px"><h3>Familia · bienestar ${Math.round(J.bienestar || 60)}%</h3>
         <div class="grid g3">${J.familia.map(f => {
           const esHijo = f.rol === 'Hijo' || f.rol === 'Hija';
