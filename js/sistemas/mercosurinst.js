@@ -99,7 +99,7 @@ window.CURUL = window.CURUL || {};
       const i = Ins.st(E), pr = i.prop, pos = C.DATA.mercosur.postura[id] || { dureza: 0.4 }, ap = APRECIO[id] || {};
       const score = U.suma(pr.cambios.map(c => (ap[c.eje] || 0) * (c.nivel - i.niv[c.eje]) / Math.max(1, EJES[c.eje].niveles.length - 1))) / Math.max(1, Math.sqrt(pr.cambios.length));
       const rel = C.Comercio.relacion(E, id), neg = E.jugador.atributos.negociacion;
-      return U.clamp(0.42 + score * 0.65 + rel / 260 + neg / 600 - pos.dureza * 0.08 - (pr.cambios.length > 3 ? 0.05 : 0), 0.05, 0.95);
+      return U.clamp(0.42 + score * 0.65 + rel / 260 + neg / 600 - pos.dureza * 0.08 - (pr.cambios.length > 3 ? 0.05 : 0) + (pr.enmienda ? 0.06 : 0), 0.05, 0.95);
     },
     ronda(E) {
       const i = Ins.st(E), pr = i.prop; pr.rondas++;
@@ -157,12 +157,46 @@ window.CURUL = window.CURUL || {};
       }
       if (eje === 'exterior' && nivel === 0) m.flexibilizado = true; else if (eje === 'exterior' && nivel > 0 && ant === 0) m.flexibilizado = false;
       if (eje === 'directorio' && nivel === 0) i.comisionado = null;
-      if (eje === 'parlamento' && nivel >= 2 && !i.parlSeats) Ins.elegirParlamento(E);
+      if (eje === 'parlamento' && nivel >= 2 && !i.parlSeats) { Ins.elegirParlamento(E); i.parlProx = E.fecha.t + 40; }
     },
+    /* Elección del Parlamento del Mercosur: 18 escaños de Colombia repartidos entre los partidos; el jugador puede ir en la lista */
+    jug(E) { const J = E.jugador; J.mercosur = J.mercosur || { rol: null, hasta: 0, candidato: false, hist: [] }; return J.mercosur; },
     elegirParlamento(E) {
-      const i = Ins.st(E), ps = Object.values(E.partidos).filter(p => !p.especial && !p.futuro).sort((a, b) => b.popularidad - a.popularidad).slice(0, 6), tot = U.suma(ps.map(p => p.popularidad)) || 1;
-      i.parlSeats = ps.map(p => ({ pid: p.id, sigla: p.sigla, esc: Math.max(1, Math.round(p.popularidad / tot * 18)) })); i.parlT = E.fecha.t;
-      C.Medios.noticia(E, { tipo: 'diplomacia', titular: 'Colombia elige a sus representantes al Parlamento del Mercosur', tono: 0, importante: false, jugador: true });
+      const i = Ins.st(E), j = Ins.jug(E), J = E.jugador;
+      const ps = Object.values(E.partidos).filter(p => !p.especial && !p.futuro).sort((a, b) => b.popularidad - a.popularidad).slice(0, 6), tot = U.suma(ps.map(p => p.popularidad)) || 1;
+      i.parlSeats = ps.map(p => ({ pid: p.id, sigla: p.sigla, esc: Math.max(1, Math.round(p.popularidad / tot * 18)) })); i.parlT = E.fecha.t; i.parlProx = E.fecha.t + 208;
+      let txt = 'Colombia elige a sus representantes al Parlamento del Mercosur';
+      if (j.candidato) {
+        j.candidato = false;
+        const s = i.parlSeats.find(x => x.pid === J.partido), n = s ? s.esc : 0, pa = E.partidos[J.partido];
+        const p = n ? U.clamp(1 - 1 / (1 + n * (0.5 + J.reconocimiento / 100)) + (pa && pa.lider === 'J' ? 0.25 : 0), 0.05, 0.95) : 0.05;
+        if (U.chance(p)) { j.rol = 'parlamentario'; j.hasta = E.fecha.t + 208; j.hist.unshift({ t: E.fecha.t, txt: 'Elegido al Parlamento del Mercosur' }); J.reconocimiento = U.clamp(J.reconocimiento + 3, 0, 100); txt += `: ${J.nombre} obtiene una curul por el ${pa ? pa.sigla : 'partido'}`; }
+        else txt += `: ${J.nombre} no alcanza curul`;
+      }
+      C.Medios.noticia(E, { tipo: 'diplomacia', titular: txt, tono: 0, importante: true, jugador: true });
+    },
+    ventanaParlamento(E) { const i = Ins.st(E); return i.niv.parlamento >= 2 && i.parlProx && E.fecha.t >= i.parlProx - 26; },
+    dirEfectivo(E) { const i = Ins.st(E); return E.fecha.t < (i.censuraHasta || 0) ? 0 : i.niv.directorio; },
+    elegible(E, rol) {
+      const J = E.jugador, i = Ins.st(E), nivel = (C.DATA.cargos[J.cargo] || { nivel: 0 }).nivel, j = Ins.jug(E);
+      if (!C.Mercosur.esMiembro(E)) return 'Colombia debe ser miembro pleno del Mercosur';
+      if (j.rol) return 'Ya ocupas un cargo en el bloque';
+      if (rol === 'parlamentario') {
+        if (i.niv.parlamento < 2) return 'El bloque no tiene un parlamento con elección directa';
+        if (!Ins.ventanaParlamento(E)) return 'Las inscripciones se abren 26 semanas antes de la elección';
+        if (j.candidato) return 'Ya estás inscrito en la lista';
+        if (!J.partido) return 'Necesitas un partido para ir en una lista';
+        if (nivel > 2) return 'Un cargo nacional o ejecutivo es incompatible con una curul del bloque: deja el cargo primero';
+        return true;
+      }
+      if (rol === 'comisionado') {
+        if (i.niv.directorio < 2) return 'El bloque no tiene un directorio con sillas para los socios';
+        if (nivel > 1) return 'Debes dejar tu cargo público para dirigir un órgano del bloque';
+        if (i.comisionado && i.comisionado === 'J') return 'Ya eres comisionado';
+        const trayectoria = (J.ocupados || []).some(o => ['presidente', 'ministro', 'senador', 'gobernador'].includes(o));
+        return trayectoria || J.reconocimiento >= 55 ? true : 'Se exige una trayectoria de Estado (haber sido presidente, ministro, senador o gobernador) o un gran reconocimiento';
+      }
+      return 'Elige un cargo';
     },
 
     turno(E) {
@@ -189,7 +223,12 @@ window.CURUL = window.CURUL || {};
           const cand = C.DATA.sociosComercio.filter(so => !so.mercosur && so.id !== 'USA' && !E.comercio.acuerdos[so.id]);
           if (cand.length) { const so = U.pick(cand); C.Comercio.crearAcuerdo(E, so.id, { tipo: 'tlc', nombre: `TLC Mercosur–${so.nombre}`, anios: 10, red: { _: 0.5 }, acc: { _: 0.5 } }); i.ultExterior = E.fecha.t; C.Medios.noticia(E, { tipo: 'diplomacia', titular: `El Mercosur cierra como bloque un acuerdo de libre comercio con ${so.nombre}`, tono: 1, importante: true, jugador: true }); }
         }
-        if (n.parlamento >= 2 && (!i.parlT || E.fecha.t - i.parlT > 208)) Ins.elegirParlamento(E);
+        if (n.parlamento >= 2) { if (!i.parlProx) i.parlProx = (i.parlT || E.fecha.t) + 208; if (E.fecha.t >= i.parlProx) Ins.elegirParlamento(E); }
+        const j = Ins.jug(E);
+        if (j.rol) {
+          E.jugador.reconocimiento = U.clamp(E.jugador.reconocimiento + 0.003, 0, 100);
+          if (E.fecha.t >= j.hasta || (j.rol === 'parlamentario' && n.parlamento < 2) || (j.rol === 'comisionado' && n.directorio < 2)) { j.hist.unshift({ t: E.fecha.t, txt: `Termina tu periodo como ${j.rol}` }); C.Medios.noticia(E, { tipo: 'diplomacia', titular: `${E.jugador.nombre} termina su periodo como ${j.rol === 'comisionado' ? 'comisionado del Directorio' : 'parlamentario'} del Mercosur`, tono: 0, jugador: true }); if (j.rol === 'comisionado' && i.comisionado === 'J') i.comisionado = null; j.rol = null; }
+        }
       }
       // trámite de una reforma
       const pr = i.prop; if (!pr) return;
@@ -216,8 +255,46 @@ window.CURUL = window.CURUL || {};
       A.registrar({ id: 'retirarReformaMercosur', nombre: 'Retirar la reforma', icono: '🚪', grupo: 'comercio', costo: 0,
         disponible(E) { const ok = Ins.puede(E); if (ok !== true) return ok; return Ins.st(E).prop ? true : 'No hay una reforma en trámite'; },
         ejecutar(E) { Ins.fracasar(E, 'Colombia la retira'); return { ok: true, msg: 'Retiras la propuesta' }; } });
+
+      A.registrar({ id: 'postularParlamentoMercosur', nombre: 'Inscribirte en la lista al Parlamento del Mercosur', icono: '🏟', grupo: 'comercio', costo: 2,
+        disponible(E) { return Ins.elegible(E, 'parlamentario'); },
+        ejecutar(E) { const j = Ins.jug(E); if (E.jugador.patrimonio < 30) return { ok: false, msg: 'La campaña continental cuesta $30 millones' }; E.jugador.patrimonio -= 30; j.candidato = true; C.Medios.noticia(E, { tipo: 'diplomacia', titular: `${E.jugador.nombre} se inscribe en la lista de su partido al Parlamento del Mercosur`, tono: 1, jugador: true }); return { ok: true, msg: 'Quedas inscrito: el resultado se conoce en la elección del bloque' }; } });
+      A.registrar({ id: 'postularDirectorioMercosur', nombre: 'Aspirar al Directorio del Mercosur', icono: '🎩', grupo: 'comercio', costo: 3,
+        disponible(E) { return Ins.elegible(E, 'comisionado'); },
+        ejecutar(E) {
+          const i = Ins.st(E), J = E.jugador, j = Ins.jug(E), rel = U.suma(C.Mercosur.votantes(E).map(id => C.Comercio.relacion(E, id))) / Math.max(1, C.Mercosur.votantes(E).length);
+          const ex = (J.ocupados || []).includes('presidente') ? 0.15 : (J.ocupados || []).some(o => ['ministro', 'senador', 'gobernador'].includes(o)) ? 0.08 : 0;
+          const p = U.clamp(0.12 + rel / 300 + J.atributos.negociacion / 500 + J.reconocimiento / 300 + ex + (i.niv.parlamento >= 2 ? (i.legit - 45) / 400 : 0), 0.05, 0.85);
+          if (!U.chance(p)) { for (const id of C.Mercosur.votantes(E)) if (U.chance(0.3)) C.Comercio.moverRelacion(E, id, -1); return { ok: true, msg: `Los jefes de Estado del bloque eligen a otra persona (${Math.round(p * 100)} % de probabilidad)` }; }
+          const prev = i.comisionado && i.comisionado !== 'J' && E.politicos[i.comisionado]; if (prev) prev.embajadorEn = null;
+          i.comisionado = 'J'; j.rol = 'comisionado'; j.hasta = E.fecha.t + 260; J.reconocimiento = U.clamp(J.reconocimiento + 5, 0, 100); J.patrimonio += 40;
+          j.hist.unshift({ t: E.fecha.t, txt: 'Comisionado del Directorio del Mercosur' });
+          C.Medios.noticia(E, { tipo: 'diplomacia', titular: `${J.nombre} es elegido/a ${i.niv.directorio >= 3 ? 'presidente/a del Directorio' : 'comisionado/a'} del Mercosur`, tono: 1, importante: true, jugador: true });
+          return { ok: true, msg: 'Eres el rostro ejecutivo del bloque durante cinco años' };
+        } });
+      A.registrar({ id: 'enmendarReformaMercosur', nombre: 'Cabildear la reforma desde el Parlamento', icono: '📝', grupo: 'comercio', costo: 1,
+        disponible(E) { const j = Ins.jug(E), pr = Ins.st(E).prop; if (j.rol !== 'parlamentario') return 'Sólo los parlamentarios del bloque'; return pr && pr.fase === 'negociacion' && !pr.enmienda ? true : 'No hay una reforma en negociación sin cabildear'; },
+        ejecutar(E) { const pr = Ins.st(E).prop; pr.enmienda = true; return { ok: true, msg: 'Tu bancada en el Parlamento presiona a los gobiernos: sube el apoyo a la reforma' }; } });
+      A.registrar({ id: 'mocionCensuraMercosur', nombre: 'Presentar moción de censura al Directorio', icono: '🛑', grupo: 'comercio', costo: 2,
+        disponible(E) { const j = Ins.jug(E), i = Ins.st(E); if (j.rol !== 'parlamentario') return 'Sólo los parlamentarios del bloque'; if (i.niv.parlamento < 2 || i.niv.directorio < 2) return 'Se necesita un parlamento con control político y un directorio'; return E.fecha.t < (i.censuraHasta || 0) ? 'El Directorio ya está censurado' : true; },
+        ejecutar(E) {
+          const i = Ins.st(E), p = U.clamp(0.25 + (i.niv.parlamento - 2) * 0.15 + E.jugador.reconocimiento / 300 - (i.legit > 60 ? 0.1 : 0), 0.1, 0.7);
+          if (U.chance(p)) { i.censuraHasta = E.fecha.t + 52; if (i.comisionado && i.comisionado !== 'J') { const c = E.politicos[i.comisionado]; if (c) c.embajadorEn = null; i.comisionado = null; } i.legit = U.clamp(i.legit + 4, 0, 100); C.Medios.noticia(E, { tipo: 'diplomacia', titular: `El Parlamento del Mercosur censura al Directorio a instancias de ${E.jugador.nombre}`, tono: 0, importante: true, jugador: true }); return { ok: true, msg: 'La moción prospera: el Directorio queda sin poder durante un año' }; }
+          return { ok: true, msg: `La moción no reúne los votos (${Math.round(p * 100)} % de probabilidad)` };
+        } });
+      A.registrar({ id: 'proponerAgendaDirectorio', nombre: 'Proponer un punto desde el Directorio', icono: '📣', grupo: 'comercio', costo: 2,
+        disponible(E) { const j = Ins.jug(E); if (j.rol !== 'comisionado') return 'Sólo el comisionado del Directorio'; return true; },
+        ejecutar(E, a) {
+          const d = C.DATA.mercosur.decisiones.find(x => x.id === a.decision); if (!d) return { ok: false, msg: 'Elige una decisión' };
+          const m = C.Mercosur.st(E); if (m.agenda.some(x => x.decision === d.id && x.estado === 'pendiente')) return { ok: false, msg: 'Ese punto ya está en la agenda' };
+          m.agenda.push({ id: U.id('dm'), decision: d.id, proponen: 'DIR', t: E.fecha.t, hasta: E.fecha.t + 6, estado: 'pendiente', respaldo: 1 });
+          return { ok: true, msg: `El Directorio pone en agenda: ${d.nombre.toLowerCase()}` };
+        } });
+      A.registrar({ id: 'renunciarRolMercosur', nombre: 'Renunciar a tu cargo en el bloque', icono: '🚪', grupo: 'comercio', costo: 0,
+        disponible(E) { return Ins.jug(E).rol ? true : 'No ocupas ningún cargo en el bloque'; },
+        ejecutar(E) { const i = Ins.st(E), j = Ins.jug(E); if (j.rol === 'comisionado' && i.comisionado === 'J') i.comisionado = null; j.hist.unshift({ t: E.fecha.t, txt: 'Renuncia a su cargo en el bloque' }); j.rol = null; return { ok: true, msg: 'Renuncias a tu cargo en el Mercosur' }; } });
       A.registrar({ id: 'nombrarComisionado', nombre: 'Nombrar comisionado en el Directorio', icono: '🎩', grupo: 'comercio', costo: 2,
-        disponible(E) { const ok = Ins.puede(E); if (ok !== true) return ok; return Ins.st(E).niv.directorio >= 2 ? true : 'El bloque no tiene un directorio con sillas para los socios'; },
+        disponible(E) { const ok = Ins.puede(E); if (ok !== true) return ok; if (Ins.st(E).comisionado === 'J') return 'Tú ocupas esa silla'; return Ins.st(E).niv.directorio >= 2 ? true : 'El bloque no tiene un directorio con sillas para los socios'; },
         ejecutar(E, a) {
           const p = E.politicos[a.pol]; if (!p || !p.activo || p.cargo && p.cargo.tipo !== 'aspirante') return { ok: false, msg: 'Elige a alguien disponible' };
           const i = Ins.st(E); const prev = i.comisionado && E.politicos[i.comisionado]; if (prev) prev.embajadorEn = null;

@@ -307,6 +307,11 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   más decisiones y más probabilidad de adopción con un directorio (y un comisionado colombiano), y veto que deja de ser absoluto.
 
 
+- **Cargos del jugador en el bloque**: elecciones al Parlamento del Mercosur cada cuatro años (con inscripción 26 semanas antes y lista del partido)
+  y elección del comisionado o presidente del Directorio por los jefes de Estado. Requisitos: no ocupar cargo nacional o ejecutivo y, para el
+  Directorio, trayectoria de Estado. Parlamentario: cabildear reformas y moción de censura al Directorio; comisionado: fijar agenda con alta
+  probabilidad de adopción.
+
 ### Notas de la Fase 28
 
 - **Estructura orgánica** (`js/sistemas/organica.js`, pestaña «Estructura orgánica» en la Dirección del partido): seis cargos (Secretaría
