@@ -255,6 +255,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **24** | Encuestas 2.0 (seis firmas con muestra, margen y sesgo propios; promedio ponderado; intención de voto por partido y candidato; imagen por segmentos; encargar encuestas honestas o «cocinadas»); inteligencia (DAS/DNI) con interceptaciones, expedientes, filtraciones y presión; guerra sucia (campaña negra, bots); Fiscal, Procurador y Contralor con ternas y elección; reforma política (voto obligatorio, financiación de campañas, listas cerradas) | **completa** |
 | **25** | Menú agrupado, servicio exterior (embajadas, consulados, misiones, CSNU), crisis con decisiones, salud, legado, mercado de votos, seguridad y territorio, economía global y escenarios históricos. |
 | **26** | Licitaciones de megaobras (buenas empresas vs financiadoras de campaña), empresas públicas con gerentes y metas (EPM, Emcali…), mundo vivo con mapa mundial, bloques y conflictos, y visitas de Estado con agenda y seguimiento. |
+| **27** | Planisferio con formas reales y capas (relación, comercio, alianzas, conflictos, diáspora, deuda, inflación, desempleo), economía comparada, fuerzas armadas y guerra (Venezuela, Nicaragua), espionaje entre países, periódico de la semana con sesgo editorial y clima, migración y recursos. |
 
 ### Notas de la Fase 25
 
@@ -290,6 +291,26 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   creación del personaje.
 
  **25** | Menú lateral agrupado en secciones plegables; escándalos y crisis con decisiones; salud y legado del político; servicio exterior (embajadas, consulados, misiones, Consejo de Seguridad, incidentes); Congreso 2.0 (mercado de votos, transfuguismo, coaliciones que cobran); seguridad y territorio (cultivos, presencia del Estado, certificación); economía global (petróleo, café, ciclo, pandemias, choques históricos); escenarios históricos con objetivos | **completa (esta entrega)** |
+
+### Notas de la Fase 27
+
+- **Planisferio** (`data/mundo-formas.js`, `js/pantallas/mundo.js`): formas de países de Natural Earth 110m (dominio público) simplificadas
+  a un SVG equirrectangular; los 29 países sin forma se dibujan como puntos. Capas nuevas: comercio y TLC (con líneas de flujo),
+  alianzas y tratados, conflictos (líneas por estado), diáspora, deuda, inflación y desempleo. El botón «Casillas» conserva la vista anterior.
+  El ranking ahora ordena por PIB, deuda, inflación, desempleo, etc., con filtro por región.
+- **Cifras macro por país** (`MundoVivo.macro`): deuda, inflación y desempleo se crean perezosamente y evolucionan cada semana.
+- **Fuerzas armadas** (`js/sistemas/militar.js`, `data/militar.js`, pantalla «Fuerzas armadas»): capacidad por rama, moral, esfuerzo de gasto
+  (afecta el déficit), compras a siete proveedores con costo diplomático y plazos de entrega, disuasión, dos frentes (Venezuela y el diferendo
+  con Nicaragua) con tensión, incidentes con decisiones, movilización, escalada, guerra abierta (avance ±70, tablas a 80 semanas) y mediación.
+- **Espionaje** (`js/sistemas/espionaje.js`, pestaña «Espionaje exterior» de Inteligencia): redes por país, cinco operaciones (infiltrar,
+  ciberataque, sabotaje, oposición, golpe) con riesgo de ser descubiertas, incidentes diplomáticos, y ataques de otros países contra Colombia
+  frenados por la contrainteligencia.
+- **Periódico** (`js/sistemas/periodico.js`, pestaña «Periódico de la semana» en Medios): portada, país, mundo y editorial armados con el
+  estado del juego y enmarcados según la afinidad del medio con el gobierno.
+- **Clima y recursos** (`js/sistemas/clima.js`, `data/clima.js`, pantalla «Clima y recursos»): ENSO con El Niño y La Niña, embalses y
+  racionamiento, índice de alimentos, transición energética y migración con política migratoria.
+- Estado nuevo con migración perezosa: `E.militar`, `E.espionaje`, `E.periodico`, `E.clima`.
+
 
 ### Notas de la Fase 26
 
