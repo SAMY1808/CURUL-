@@ -4,7 +4,7 @@ window.CURUL = window.CURUL || {};
   const U = C.U, UI = C.UI, esc = U.esc, G = C.Graf, Comp = C.Comp;
   C.Pantallas = C.Pantallas || {};
 
-  C.Pantallas.medios = {
+  const base = {
     render(el) {
       const E = C.E, J = E.jugador;
       const f = E.ui.filtroNot || 'todas';
@@ -29,6 +29,32 @@ window.CURUL = window.CURUL || {};
           <div class="tarjeta"><h3>Conceder entrevista</h3><div class="lista">${medios.map(m => `<div class="it"><span style="font-size:18px">${m.icono}</span><div class="cuerpo"><b>${esc(m.nombre)}</b><span>${esc(m.tipo)}${m.region ? ' · ' + esc(m.region) : ''} · ${Math.abs(m.linea - J.ideologia.eco) > 60 ? '<span class="mal">hostil a tus ideas</span>' : Math.abs(m.linea - J.ideologia.eco) < 30 ? '<span class="bien">afín</span>' : 'neutral'}</span></div>${UI.botonAccion('entrevista', { medio: m.id }, 'Entrevista', 'chico')}</div>`).join('')}</div></div>
         </div></div>`;
       UI.$('#m-f', el).onchange = e => { E.ui.filtroNot = e.target.value; C.App.refrescar(); };
+    }
+  };
+
+  const periodico = (E, medioId) => {
+    const P = C.Periodico, ed = P.edicion(E, medioId), m = ed.medio, sesgo = ed.afin > 0.35 ? 'afín al gobierno' : ed.afin < -0.2 ? 'crítico del gobierno' : 'de línea independiente';
+    const nota = (n, cls) => `<article class="nota ${cls || ''}"><div class="nota-medio">${esc(n.tipo)}</div><h4>${esc(n.txt)}</h4>${n.sub ? `<div style="font-size:12.5px;color:var(--tinta2)">${esc(n.sub)}</div>` : ''}</article>`;
+    return `<div class="tarjeta"><div class="t-cab"><h3>${m.icono} ${esc(m.nombre)} · edición del ${U.fmtT(E.fecha.t, false)}</h3><select id="m-per">${E.medios.lista.map(x => `<option value="${x.id}" ${x.id === m.id ? 'selected' : ''}>${x.icono} ${esc(x.nombre)}</option>`).join('')}</select></div>
+      <div class="tenue" style="font-size:12px;margin-bottom:10px">Cada medio cuenta la semana a su manera: este es ${sesgo} (línea editorial ${m.linea > 0 ? '+' : ''}${m.linea}) y su credibilidad es ${m.credibilidad}%. Cambia de periódico para ver el mismo país con otra mirada.</div>
+      <div class="periodico">${ed.portada ? nota(ed.portada, 'portada') : ''}${ed.pais.map(n => nota(n)).join('')}</div>
+      <div class="grid g2" style="margin-top:14px"><div class="tarjeta"><h3>🌍 En el mundo</h3>${ed.mundo.length ? `<div class="lista">${ed.mundo.map(n => `<div class="it"><div class="cuerpo"><b style="white-space:normal;font-weight:400">${esc(n.txt)}</b></div></div>`).join('')}</div>` : '<div class="tenue">Semana tranquila en el planeta.</div>'}</div>
+        <div class="tarjeta"><h3>✒ Editorial</h3><p style="font-family:var(--display);font-size:15px;line-height:1.5;margin:0">${esc(ed.editorial)}</p></div></div></div>`;
+  };
+
+  C.Pantallas.medios = {
+    render(el, params) {
+      const E = C.E, tab = (params && params.tab) || E.ui.medTab || 'noticias'; E.ui.medTab = tab;
+      if (tab === 'periodico' && C.Periodico) {
+        el.innerHTML = `<div class="cab"><div><h1>Medios de comunicación</h1><div class="sub">La semana en el planeta y en el país, según el periódico que leas.</div></div></div>
+          <div class="tabs"><button data-mtab="noticias">Noticias y prensa</button><button data-mtab="periodico" class="activo">Periódico de la semana</button></div><div style="margin-top:14px">${periodico(E, E.ui.periodicoMedio)}</div>`;
+        const sel = el.querySelector('#m-per'); if (sel) sel.onchange = e => { E.ui.periodicoMedio = e.target.value; C.App.refrescar(); };
+        el.onclick = e => { const t = e.target.closest('[data-mtab]'); if (t) C.App.ir('medios', { tab: t.dataset.mtab }); };
+        return;
+      }
+      base.render(el);
+      const cab = el.querySelector('.cab'); if (cab && C.Periodico) cab.insertAdjacentHTML('afterend', '<div class="tabs"><button data-mtab="noticias" class="activo">Noticias y prensa</button><button data-mtab="periodico">Periódico de la semana</button></div>');
+      const prev = el.onclick; el.onclick = e => { const t = e.target.closest('[data-mtab]'); if (t) return C.App.ir('medios', { tab: t.dataset.mtab }); if (prev) prev(e); };
     }
   };
 })(window.CURUL);
