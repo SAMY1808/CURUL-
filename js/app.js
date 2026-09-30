@@ -33,7 +33,9 @@ window.CURUL = window.CURUL || {};
         <header class="barra" id="barra"></header>
         <nav class="nav" id="nav"></nav>
         <main class="vista" id="vista"></main>
-        <div class="ticker" id="ticker"></div></div>`;
+        <div class="ticker" id="ticker"></div>
+        <div class="nav-fondo" id="nav-fondo"></div><div class="movil-bar" id="movil-bar"></div></div>`;
+      document.getElementById('nav-fondo').onclick = () => document.body.classList.remove('nav-abierto');
       App.ir(E.ui.pantalla || 'dashboard', E.ui.params);
       App.revisarPendientes();
     },
@@ -41,6 +43,7 @@ window.CURUL = window.CURUL || {};
       const E = C.E;
       if (!C.Pantallas[pantalla]) pantalla = 'dashboard';
       E.ui.pantalla = pantalla; E.ui.params = params || null;
+      document.body.classList.remove('nav-abierto');
       App.refrescar(true);
     },
     refrescar(nuevo) {
@@ -71,6 +74,14 @@ window.CURUL = window.CURUL || {};
           <button class="btn prim" id="b-sem"${UI.tt('Avanzar una semana (tecla N)')}>▶ Semana</button>
           <button class="btn" id="b-mes"${UI.tt('Avanzar cuatro semanas (se detiene ante decisiones o elecciones)')}>▶▶ Mes</button>
         </div>`;
+      const mb = document.getElementById('movil-bar');
+      if (mb) {
+        mb.innerHTML = `<button id="m-menu"><b>☰</b>Menú</button><button data-ir="dashboard"><b>🧭</b>Inicio</button><button class="grande" id="m-sem"><b>▶</b>Semana</button><button id="m-mes"><b>⏩</b>Mes</button><button data-ir="personaje"><b>👤</b>Yo</button>`;
+        document.getElementById('m-menu').onclick = () => document.body.classList.toggle('nav-abierto');
+        document.getElementById('m-sem').onclick = () => App.avanzar(1);
+        document.getElementById('m-mes').onclick = () => App.avanzar(4);
+        UI.$$('[data-ir]', mb).forEach(b => b.onclick = () => App.ir(b.dataset.ir));
+      }
       document.getElementById('b-sem').onclick = () => App.avanzar(1);
       document.getElementById('b-mes').onclick = () => App.avanzar(4);
       UI.$$('[data-ir]', document.getElementById('barra')).forEach(b => b.onclick = () => App.ir(b.dataset.ir));

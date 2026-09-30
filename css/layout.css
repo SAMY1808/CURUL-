@@ -41,11 +41,7 @@
 .col{display:flex;flex-direction:column;gap:10px}
 @media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g-dash{grid-template-columns:1fr}}
 @media (max-width:760px){
-  .shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto auto;grid-template-areas:"barra" "vista" "ticker" "nav"}
-  .nav{flex-direction:row;overflow-x:auto;min-width:0;padding:4px 6px;border-right:0;border-top:1px solid var(--borde)}
-  .nav button{flex-direction:column;gap:2px;font-size:10px;padding:6px 8px;min-width:62px;align-items:center;text-align:center}
-  .nav button.activo::before{left:10px;right:10px;top:-4px;bottom:auto;height:3px;width:auto}
-  .nav .sep{display:none}
+  .shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;grid-template-areas:"barra" "vista" "ticker"}
   .vista{padding:14px 16px 30px}
   .g2,.g3,.g4{grid-template-columns:1fr} .span2{grid-column:auto}
   .barra{flex-wrap:wrap;gap:8px;padding:8px 12px}
@@ -62,9 +58,3 @@
 .nav .nav-sec.abierta .nav-items{display:flex}
 .nav .nav-items button{padding:7px 10px;font-size:13px}
 .nav .pto-aviso{width:7px;height:7px;border-radius:50%;background:var(--rojo);margin-left:4px}
-@media (max-width:760px){
-  .nav .nav-sec{display:contents}
-  .nav .nav-cab{display:none}
-  .nav .nav-items{display:contents}
-  .nav .nav-items button{padding:6px 8px;font-size:10px}
-}
