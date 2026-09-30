@@ -82,7 +82,9 @@ window.CURUL = window.CURUL || {};
       const monto = Math.round((10 + J.redes * 6 + J.reconocimiento * 1.2) * f(E) * (cam.cargo === 'presidencia' ? 8 : cam.cargo === 'senado' || cam.cargo === 'gobernacion' ? 2.5 : 1) * U.rf(0.7, 1.3));
       const cabe = Math.max(0, cam.tope - cam.recaudado);
       const real = Math.min(monto, cabe);
-      cam.recaudado += real; cam.caja += real;
+      const bono = C.Licitacion ? C.Licitacion.bonusRecaudo(E) : 1;
+      cam.recaudado += Math.round(real * bono); cam.caja += Math.round(real * bono);
+      if (C.Licitacion) C.Licitacion.registrarDonante(E, real, false);
       return { ok: true, msg: real < monto ? `Recaudas ${U.cop(real)}: alcanzaste el tope legal de gastos` : `Recaudas ${U.cop(real)} entre donantes` };
     } });
 
@@ -94,6 +96,7 @@ window.CURUL = window.CURUL || {};
       const cam = E.elecciones.campana, J = E.jugador;
       const monto = Math.round((25 + J.redes * 10) * f(E) * (cam.cargo === 'presidencia' ? 8 : cam.cargo === 'senado' || cam.cargo === 'gobernacion' ? 2.5 : 1) * U.rf(0.8, 1.4));
       cam.caja += monto; cam.irregular = (cam.irregular || 0) + monto;
+      if (C.Licitacion) C.Licitacion.registrarDonante(E, monto, true);
       J.riesgoJudicial = U.clamp((J.riesgoJudicial || 0) + U.rf(3, 6) * (C.Constitucion.valor(E, 'financiacionCampanas') === 'publica' ? 1.6 : 1), 0, 100);
       E.opinion.corrupcionAcum = (E.opinion.corrupcionAcum || 0) + 0.4;
       J.rep.transparencia = U.clamp(J.rep.transparencia - U.rf(1, 3), 0, 100);

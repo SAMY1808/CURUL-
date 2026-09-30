@@ -5,7 +5,7 @@ window.CURUL = window.CURUL || {};
   C.Pantallas = C.Pantallas || {};
   const bill = v => '$' + U.d1(v) + ' billones';
 
-  C.Pantallas.local = {
+  const base = {
     render(el) {
       const E = C.E, J = E.jugador;
       if (J.cargo !== 'gobernador' && J.cargo !== 'alcalde') {
@@ -99,6 +99,55 @@ window.CURUL = window.CURUL || {};
       el.onchange = e => {
         if (e.target.dataset.secshare) { GL.setShare(E, depto, organo, e.target.dataset.secshare, +e.target.value); return C.App.refrescar(); }
       };
+    }
+  };
+
+  /* ── Pestaña «Obras y licitaciones» ── */
+  const ocultaInteg = v => v >= 70 ? 'Alta' : v >= 45 ? 'Media' : 'Baja';
+  const obras = (E, depto, organo) => {
+    const g = GL.asegurar(E, depto, organo), L = C.Licitacion, lic = g.licitacion, ob = g.obraBandera, don = L.donantes(E).slice().sort((a, b) => b.aporte - a.aporte);
+    let centro;
+    if (lic) {
+      const info = GL.nombreObra({ obraId: lic.obraId }), pub = lic.modalidad === 'publica';
+      const ord = lic.proponentes.slice().sort((a, b) => L.puntaje(lic, b) - L.puntaje(lic, a));
+      centro = `<div class="tarjeta"><div class="t-cab"><h3>${info.icono} ${esc(info.nombre)} · ${bill(lic.costo)}</h3><span class="etq oro">${esc(L.MODALIDAD[lic.modalidad])}</span></div>
+        <div class="tenue" style="font-size:12px;margin-bottom:8px">${pub ? `Se adjudica por mérito en ${Math.max(0, lic.semanas + (lic.veeduria ? 1 : 0) - (E.fecha.t - lic.t0))} semanas${lic.veeduria ? ' · veeduría activa' : ''}${lic.favorecido ? ' · <b class="mal">pliegos ajustados</b>' : ''}. Puedes ajustar los pliegos a la medida de alguien (riesgoso) o activar la veeduría.` : 'Tú escoges al contratista: es más rápido, pero la Contraloría y la prensa miran con lupa.'}</div>
+        <table class="tabla"><thead><tr><th>Proponente</th><th>Tipo</th><th>Cumplimiento</th><th>Oferta</th><th>Plazo</th><th>Integridad</th>${pub ? '<th>Puntaje</th>' : ''}<th></th></tr></thead><tbody>${ord.map(p => `<tr><td><b>${esc(p.nombre)}</b>${p.vinculo === 'donante' ? ' <span class="etq rojo">financió tu campaña</span>' : p.vinculo ? ' <span class="etq amar">cercana al partido</span>' : ''}</td><td>${esc(L.TIPOS[p.tipo])}</td><td class="num">${p.cumplimiento}</td><td class="num">${bill(p.precio)}</td><td class="num">${p.plazo} sem.</td><td>${ocultaInteg(p.integridad)}</td>${pub ? `<td class="num">${Math.round(L.puntaje(lic, p))}</td>` : ''}
+          <td>${pub ? (lic.favorecido || lic.veeduria ? '' : UI.botonAccion('ajustarPliegos', { depto, organo, empresa: p.id }, 'Favorecer', 'chico')) : UI.botonAccion('adjudicarLicitacion', { depto, organo, empresa: p.id }, 'Adjudicar', 'chico')}</td></tr>`).join('')}</tbody></table>
+        ${pub && !lic.veeduria && !lic.favorecido ? `<div style="margin-top:10px">${UI.botonAccion('activarVeeduria', { depto, organo })}</div>` : ''}</div>`;
+    } else if (ob) {
+      const inf = GL.nombreObra(ob), c = ob.contratista;
+      centro = `<div class="tarjeta"><div class="t-cab"><h3>${inf.icono} ${esc(inf.nombre)} en obra</h3>${c ? `<span class="etq">${esc(L.MODALIDAD[ob.modalidad] || '')}</span>` : ''}</div>
+        <div class="barra-h" style="margin:6px 0"><i style="width:${Math.round((1 - ob.semanas / ob.semanasTot) * 100)}%;background:var(--oro)"></i></div>
+        <div class="tenue" style="font-size:12.5px">${ob.semanas} semanas restantes${c ? ` · contratista: <b style="color:var(--texto)">${esc(c.nombre)}</b> (calidad ${c.calidad}) · costo ${bill(ob.costo)}${ob.sobrecostos ? ` · <span class="mal">sobrecostos ${bill(ob.sobrecostos)}</span>` : ''}` : ''}</div>
+        <div class="fila" style="gap:6px;margin-top:8px;flex-wrap:wrap">${!ob.acelerada ? UI.botonAccion('acelerarObraBandera', { depto, organo }, null, 'chico') : ''}${c ? UI.botonAccion('cobrarComision', { depto, organo }, null, 'chico peligro') : ''}</div></div>`;
+    } else {
+      centro = `<div class="tarjeta"><h3>🏗 Megaobra</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Una obra grande y visible, una a la vez. Elige cómo contratarla: la licitación pública premia el mérito; el concurso restringido y la contratación directa te dejan escoger... y te exponen.</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="obra">${GL.obrasDisponibles(E, depto, organo).map(o => `<option value="${o.id}">${o.icono} ${esc(o.nombre)}</option>`).join('')}</select><select data-arg="modalidad">${Object.entries(L.MODALIDAD).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>${UI.botonAccion('abrirLicitacion', { depto, organo })}</div></div>`;
+    }
+    const hist = (g.obras || []).slice().reverse();
+    return `${centro}
+      <div class="grid g2" style="margin-top:14px"><div class="tarjeta"><h3>💰 Empresas que financiaron tus campañas</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Cuando recaudas, a veces aportan constructoras. Si les adjudicas contratos, te dan más caja en la próxima campaña... y la Contraloría te mira más.</div>${don.length ? `<div class="lista">${don.map(x => `<div class="it"><div class="cuerpo"><b>${esc(x.nombre)}</b><span>aportes ${U.cop(x.aporte)}${x.irregular ? ' · dinero irregular' : ''}${x.contratos ? ' · ' + x.contratos + ' contrato(s)' : ''}</span></div>${x.irregular ? '<span class="etq rojo">exige retorno</span>' : ''}</div>`).join('')}</div>` : '<div class="tenue" style="font-size:12px">Aún no hay donantes registrados: se generan cuando recaudas en campaña.</div>'}
+          <div class="tenue" style="font-size:11.5px;margin-top:8px">Deuda por obras: <b>${bill(g.deudaObras || 0)}</b></div></div>
+        <div class="tarjeta"><h3>Obras entregadas</h3>${hist.length ? `<div class="lista">${hist.map(h => { const i = GL.nombreObra(h); return `<div class="it"><span>${i.icono}</span><div class="cuerpo"><b>${esc(i.nombre)}</b><span>${esc(U.fmtT(h.t))}</span></div><span class="etq ${h.exito ? 'verde' : 'rojo'}">${h.exito ? 'Exitosa' : h.grave ? 'Escándalo' : 'Con problemas'}</span></div>`; }).join('')}</div>` : '<div class="tenue" style="font-size:12px">Ninguna todavía.</div>'}</div></div>`;
+  };
+
+  const TABS_LOCAL = [['gestion', 'Gestión'], ['obras', 'Obras y licitaciones']];
+  C.Pantallas.local = {
+    render(el, params) {
+      const E = C.E, J = E.jugador;
+      const tab = (params && params.tab) || E.ui.localTab || 'gestion'; E.ui.localTab = tab;
+      if (J.cargo !== 'gobernador' && J.cargo !== 'alcalde') return base.render(el);
+      const barra = `<div class="tabs" id="tabs-local" style="margin-bottom:0">${TABS_LOCAL.map(([k, n]) => `<button data-ltab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>`;
+      if (tab === 'obras') {
+        const organo = J.cargo === 'gobernador' ? 'gobernacion' : 'alcaldia', depto = J.cargoInfo.depto, d = E.deptos[depto];
+        el.innerHTML = `<div class="cab"><div><h1>${organo === 'gobernacion' ? 'Gobernación de ' + esc(d.nombre) : 'Alcaldía de ' + esc(d.capital)}</h1><div class="sub">Obras y licitaciones</div></div></div>${barra}<div style="margin-top:14px">${obras(E, depto, organo)}</div>`;
+        el.onclick = e => { const t = e.target.closest('[data-ltab]'); if (t) C.App.ir('local', { tab: t.dataset.ltab }); };
+        return;
+      }
+      base.render(el);
+      const cab = el.querySelector('.cab'); if (cab) cab.insertAdjacentHTML('afterend', barra);
+      const prev = el.onclick; el.onclick = e => { const t = e.target.closest('[data-ltab]'); if (t) return C.App.ir('local', { tab: t.dataset.ltab }); if (prev) prev(e); };
     }
   };
 })(window.CURUL);

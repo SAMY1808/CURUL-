@@ -317,6 +317,7 @@ window.CURUL = window.CURUL || {};
     },
     turnoObra(E, depto, organo) {
       const g = GL.asegurar(E, depto, organo), o = g.obraBandera; if (!o) return;
+      if (C.Licitacion) C.Licitacion.turnoObra(E, depto, organo);
       o.semanas--;
       if (o.semanas <= 0) GL.resolverObra(E, depto, organo);
     },
@@ -332,7 +333,7 @@ window.CURUL = window.CURUL || {};
       const gestionSec = secPol ? GL.asegurarSecretario(secPol).gestion : 50;
       const tot = GL.presupuestoTotal(E, depto, organo);
       const fondoBonus = tot > 0 ? Math.min(0.25, (g.fondoRegalias || 0) / tot * 0.5) : 0;
-      const prob = U.clamp(0.35 + gestionSec / 200 + fondoBonus - (o.acelerada ? 0.2 : 0), 0.15, 0.85);
+      const prob = U.clamp(0.35 + gestionSec / 200 + fondoBonus - (o.acelerada ? 0.2 : 0) + (o.contratista ? (o.contratista.calidad - 60) / 250 : 0), 0.12, 0.9);
       const exito = U.chance(prob);
       const nombreLugar = organo === 'gobernacion' ? d.nombre : d.capital;
       g.obras = g.obras || [];
@@ -350,6 +351,7 @@ window.CURUL = window.CURUL || {};
         g.obras.push({ t: E.fecha.t, obraId: o.obraId, sector: o.sector, exito: false, grave });
         C.Medios.noticia(E, { tipo: 'escandalo', titular: grave ? `Escándalo por sobrecostos en ${nombreObra.toLowerCase()} de ${nombreLugar}` : `${nombreObra} de ${nombreLugar} se entrega tarde y por debajo de lo prometido`, tono: -1, importante: true, jugador: true });
       }
+      if (C.Licitacion) C.Licitacion.alCerrar(E, depto, organo, o, exito);
       g.obraBandera = null;
     },
 
@@ -528,13 +530,15 @@ window.CURUL = window.CURUL || {};
         disponible(E, a) {
           if (!propio(E, a.depto, a.organo)) return 'No ejerces ese cargo';
           const g = E.deptos[a.depto].gobLocal[a.organo];
-          return g && g.obraBandera ? 'Ya tienes una obra bandera en curso' : true;
+          return g && g.obraBandera ? 'Ya tienes una obra bandera en curso' : g && g.licitacion ? 'Ya hay una licitación abierta' : true;
         },
         ejecutar(E, a) {
           const g = E.deptos[a.depto].gobLocal[a.organo];
           if (g.obraBandera) return { ok: false, msg: 'Ya tienes una obra bandera en curso' };
           const disponibles = GL.obrasDisponibles(E, a.depto, a.organo);
           const obraId = disponibles.some(o => o.id === a.obra) ? a.obra : disponibles[0].id;
+          if (g.licitacion) return { ok: false, msg: 'Ya hay una licitación abierta' };
+          if (C.Licitacion) { C.Licitacion.abrir(E, a.depto, a.organo, obraId, a.modalidad); return { ok: true, msg: 'Abres la contratación de la megaobra: mira los proponentes en la pestaña Obras' }; }
           GL.iniciarObraBandera(E, a.depto, a.organo, obraId);
           return { ok: true, msg: 'Inicias la obra bandera: tardará varias semanas en completarse' };
         } });
