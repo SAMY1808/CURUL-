@@ -47,10 +47,12 @@ window.CURUL = window.CURUL || {};
       const E = C.E; if (!E || !document.getElementById('vista')) return;
       App.barra(); App.nav(); App.ticker();
       const v = document.getElementById('vista'), scroll = v.scrollTop;
+      // Listas con su propio scroll: se recuerda su posición (por orden en el DOM) para no saltar arriba al actuar
+      const internos = nuevo ? [] : Array.from(v.querySelectorAll('*')).map((el, i) => el.scrollTop > 0 && el.scrollHeight > el.clientHeight ? [i, el.scrollTop] : null).filter(Boolean);
       v.onclick = null; v.onchange = null;
       try { C.Pantallas[E.ui.pantalla].render(v, E.ui.params || {}); }
       catch (e) { console.error(e); v.innerHTML = `<div class="tarjeta"><h3>Error de interfaz</h3><pre class="mono" style="white-space:pre-wrap">${esc(e.stack || e.message)}</pre></div>`; }
-      if (!nuevo) v.scrollTop = scroll; else v.scrollTop = 0;
+      if (!nuevo) { v.scrollTop = scroll; if (internos.length) { const todos = v.querySelectorAll('*'); for (const [i, t] of internos) if (todos[i]) todos[i].scrollTop = t; } } else v.scrollTop = 0;
     },
     barra() {
       const E = C.E, J = E.jugador;
