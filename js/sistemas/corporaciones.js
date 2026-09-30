@@ -24,16 +24,43 @@ window.CURUL = window.CURUL || {};
       if (d.corporaciones[organo]) return d.corporaciones[organo];
       const N = Co.escanos(E, depto, organo);
       const votos = C.Elecciones.cuotas(E, depto, true);
+      const clave = organo === 'gobernacion' ? 'asamblea' : 'concejo';
+      if (C.Director) for (const pid of Object.keys(votos)) { const m = C.Director.multLista(E, pid, clave, depto); if (m !== 1) votos[pid] *= m; }
       const cur = C.Elecciones.dhondt(votos, N, 0);
       const miembros = [];
       const tipo = organo === 'gobernacion' ? 'diputado' : 'concejal';
       for (const [pid, n] of Object.entries(cur)) {
-        for (let i = 0; i < n; i++) miembros.push(C.Politicos.crear(E, { partido: pid, depto, cargo: { tipo, depto } }).id);
+        // Los inscritos por el director del partido van primero
+        const cfg = C.Director ? C.Director.configLista(E, pid, clave, depto) : null;
+        const propios = cfg ? cfg.inscritos.map(id => E.politicos[id]).filter(p => p && p.activo && p.partido === pid && p.id !== 'J' && !miembros.includes(p.id) && (!p.cargo || ['aspirante', 'concejal', 'diputado', 'alcalde'].includes(p.cargo.tipo))).sort((a, b) => C.Director.est(b) - C.Director.est(a)) : [];
+        for (let i = 0; i < n; i++) {
+          const p = propios[i];
+          if (p) { if (!p.cargo || p.cargo.tipo === 'aspirante') { p.cargo = { tipo, depto }; C.Politicos.anotar(p, `Elegido/a ${tipo} por la lista del ${E.partidos[pid].sigla}`); } miembros.push(p.id); }
+          else miembros.push(C.Politicos.crear(E, { partido: pid, depto, cargo: { tipo, depto } }).id);
+        }
       }
       const corp = { miembros, anio: U.anio(), historial: [], ultimoVoto: null, mesa: {}, mesaPendiente: null };
       d.corporaciones[organo] = corp;
       Co.resolverMesaSinJugador(E, depto, organo);
       return corp;
+    },
+    /* Tras una elección regional se elige una corporación nueva: los salientes vuelven a ser aspirantes y las
+       listas del director (o las cuotas) arman la siguiente. El jugador conserva su curul si sigue en el cargo. */
+    renovar(E) {
+      for (const d of Object.values(E.deptos)) {
+        const organos = new Set(Object.keys(d.corporaciones || {}));
+        for (const pa of Object.values(E.partidos)) if (pa.dirListas) { if (pa.dirListas['asamblea:' + d.id]) organos.add('gobernacion'); if (pa.dirListas['concejo:' + d.id]) organos.add('alcaldia'); }
+        d.corporaciones = d.corporaciones || {};
+        for (const organo of organos) {
+          const corp = d.corporaciones[organo] || { miembros: [] }, tipo = organo === 'gobernacion' ? 'diputado' : 'concejal';
+          for (const id of corp.miembros) { const p = E.politicos[id]; if (p && id !== 'J' && p.cargo && p.cargo.tipo === tipo) p.cargo = { tipo: 'aspirante', aspira: organo === 'gobernacion' ? 'asamblea' : 'concejo' }; }
+          delete d.corporaciones[organo];
+          Co.asegurar(E, d.id, organo);
+          const k = (organo === 'gobernacion' ? 'asamblea:' : 'concejo:') + d.id;
+          for (const pa of Object.values(E.partidos)) if (pa.dirListas && pa.dirListas[k]) delete pa.dirListas[k];
+        }
+      }
+      if (Co.corpDe(E.jugador)) Co.asegurarJugador(E);
     },
     nombreCorp: organo => organo === 'gobernacion' ? 'la Asamblea' : 'el Concejo',
     miembros(E, depto, organo) { return Co.asegurar(E, depto, organo).miembros.map(id => E.politicos[id]).filter(Boolean); },

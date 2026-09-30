@@ -65,13 +65,13 @@ window.CURUL = window.CURUL || {};
     Dir.asegurar(pa);
     const tab = E.ui.dirTab || 'senado', depto = E.ui.dirDepto || E.jugador.residencia, d = E.deptos[depto];
     const selDepto = `<select data-dirdepto>${Object.values(E.deptos).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(x => `<option value="${x.id}" ${x.id === depto ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>`;
-    const tabs = [['senado', 'Lista al Senado'], ['camara', 'Lista a la Cámara'], ['avales', 'Avales']];
+    const tabs = [['senado', 'Lista al Senado'], ['camara', 'Lista a la Cámara'], ['asamblea', 'Asamblea departamental'], ['concejo', 'Concejo municipal'], ['avales', 'Avales']];
     let cuerpo;
-    if (tab === 'senado' || tab === 'camara') {
-      const camara = tab, dId = camara === 'camara' ? depto : null, l = Dir.lista(pa, camara, dId), mult = Dir.multLista(E, pa.id, camara, dId);
+    if (tab === 'senado' || tab === 'camara' || tab === 'asamblea' || tab === 'concejo') {
+      const camara = tab, dId = camara === 'senado' ? null : depto, l = Dir.lista(pa, camara, dId), mult = Dir.multLista(E, pa.id, camara, dId);
       const filas = Dir.pool(E, camara, dId);
       const efecto = mult === 1 ? '<span class="tenue">sin efecto todavía: inscribe candidatos</span>' : `<b class="${mult > 1 ? 'bien' : 'mal'}">${mult > 1 ? '+' : ''}${U.d1((mult - 1) * 100)} % de votos</b> por la calidad de tu lista`;
-      cuerpo = `<div class="fila" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div class="tenue" style="font-size:12px">Curules esperadas: <b class="num" style="color:var(--texto)">${U.d1(Dir.curulesEsperadas(E, camara, dId))}</b> · Inscritos: <b class="num" style="color:var(--texto)">${l.inscritos.length}</b> · Efecto: ${efecto}</div>${camara === 'camara' ? selDepto : ''}</div>
+      cuerpo = `<div class="fila" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div class="tenue" style="font-size:12px">Curules esperadas: <b class="num" style="color:var(--texto)">${U.d1(Dir.curulesEsperadas(E, camara, dId))}</b> · Inscritos: <b class="num" style="color:var(--texto)">${l.inscritos.length}</b> · Efecto: ${efecto}</div>${camara !== 'senado' ? selDepto : ''}</div>
         <div class="tenue" style="font-size:11.5px;margin-bottom:8px">«Aporte» estima cuántos votos suma cada nombre. Sin tu intervención el partido completa la lista con quienes más pesan; con ella, tus inscritos van primero, tus vetados quedan por fuera y los nombres fuertes empujan la votación de todo el partido.</div>
         <div class="lista">${filas.length ? filas.map(f => `<div class="it" data-ficha="${f.p.id}" style="cursor:pointer">${Comp.avatar(E, f.p, 30)}<div class="cuerpo"><b>${esc(f.p.nombre)}</b><span class="tenue">${esc(C.Politicos.etiquetaCargo(E, f.p))} · aporte <b class="num" style="color:var(--texto)">${f.est}</b>${f.incumbente ? ' · busca reelección' : ''}${f.p.fichaje ? ' · fichaje' : ''}</span></div>
             <div class="fila" style="gap:6px">${f.estado === 'inscrito' ? '<span class="etq verde">Inscrito</span>' : f.estado === 'vetado' ? '<span class="etq rojo">Vetado</span>' : ''}${UI.botonAccion('inscribirEnLista', { pol: f.p.id, camara, depto: dId }, null, 'chico')}${UI.botonAccion('vetarEnLista', { pol: f.p.id, camara, depto: dId }, null, 'chico peligro')}</div></div>`).join('') : '<div class="tenue" style="font-size:12px">No hay candidatos disponibles en esta lista: ficha a alguien.</div>'}</div>

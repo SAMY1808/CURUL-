@@ -619,6 +619,7 @@ window.CURUL = window.CURUL || {};
           }
         }
       }
+      if (C.Corporaciones) C.Corporaciones.renovar(E);
       C.Medios.noticia(E, { tipo: 'regional', titular: res.porDepto[Object.keys(res.porDepto)[0]].designado ? 'El Gobierno designa a los nuevos gobernadores, que a su vez nombran a los alcaldes' : 'Se posesionan los gobernadores y alcaldes elegidos por voto popular', tono: 0 });
     },
 

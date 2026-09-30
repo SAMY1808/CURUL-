@@ -25,7 +25,8 @@ window.CURUL = window.CURUL || {};
     esDirector(E) { const pa = E.partidos[E.jugador.partido]; return !!pa && pa.lider === 'J'; },
     partido(E) { const pa = E.partidos[E.jugador.partido]; if (pa) Dir.asegurar(pa); return pa; },
     asegurar(pa) { pa.dirListas = pa.dirListas || {}; pa.avalUni = pa.avalUni || {}; pa.avalesNegados = pa.avalesNegados || []; return pa; },
-    claveLista: (camara, dId) => camara === 'senado' ? 'senado' : 'camara:' + dId,
+    claveLista: (camara, dId) => camara === 'senado' ? 'senado' : camara + ':' + dId,
+    LOCALES: { asamblea: { organo: 'gobernacion', tipo: 'diputado', n: 'Asamblea Departamental' }, concejo: { organo: 'alcaldia', tipo: 'concejal', n: 'Concejo Municipal' } },
     lista(pa, camara, dId) { Dir.asegurar(pa); const k = Dir.claveLista(camara, dId); return pa.dirListas[k] = pa.dirListas[k] || { inscritos: [], vetados: [] }; },
     /* Fuerza electoral estimada de un candidato en lista (la misma base del voto preferente, sin azar). */
     est(p) {
@@ -46,12 +47,19 @@ window.CURUL = window.CURUL || {};
     /* Candidatos posibles para una lista, con su aporte estimado de votos y su estado actual. */
     pool(E, camara, dId) {
       const pa = Dir.partido(E), l = Dir.lista(pa, camara, dId), El = C.Elecciones;
-      const cargosOk = camara === 'senado' ? ['senador', 'representante', 'gobernador', 'alcalde', 'ministro'] : ['representante', 'diputado', 'alcalde', 'concejal'];
-      const propio = camara === 'senado' ? 'senador' : 'representante';
+      // En las listas locales el partido tiene pocos cuadros conocidos: se siembran aspirantes del departamento
+      if ((camara === 'asamblea' || camara === 'concejo') && !l.sembrada) {
+        l.sembrada = true;
+        for (let i = 0; i < 9; i++) C.Politicos.crear(E, { partido: pa.id, depto: dId, cargo: { tipo: 'aspirante', aspira: camara } });
+      }
+      const loc = Dir.LOCALES[camara];
+      const cargosOk = camara === 'senado' ? ['senador', 'representante', 'gobernador', 'alcalde', 'ministro'] : loc ? ['diputado', 'concejal', 'alcalde'] : ['representante', 'diputado', 'alcalde', 'concejal'];
+      const propio = camara === 'senado' ? 'senador' : loc ? loc.tipo : 'representante';
       const filas = C.Partidos.miembros(E, pa.id).filter(p => {
         if (p.id === 'J' || !El.edadOK(p) || !p.cargo) return false;
-        if (camara === 'camara' && p.depto !== dId) return false;
+        if (camara !== 'senado' && p.depto !== dId) return false;
         if (p.cargo.tipo === 'aspirante') return p.cargo.aspira === camara;
+        if (loc && p.cargo.tipo === 'alcalde' && p.depto !== dId) return false;
         return cargosOk.includes(p.cargo.tipo);
       }).map(p => ({ p, est: Dir.est(p), estado: l.inscritos.includes(p.id) ? 'inscrito' : l.vetados.includes(p.id) ? 'vetado' : 'libre', incumbente: p.cargo.tipo === propio }));
       return filas.sort((a, b) => b.est - a.est).slice(0, 22);
@@ -59,6 +67,8 @@ window.CURUL = window.CURUL || {};
     curulesEsperadas(E, camara, dId) {
       const pa = Dir.partido(E);
       if (camara === 'senado') return Math.round(pa.popularidad);
+      const loc = Dir.LOCALES[camara];
+      if (loc) return Math.max(0, Math.round((C.Elecciones.cuotas(E, dId, true)[pa.id] || 0) * C.Corporaciones.escanos(E, dId, loc.organo) * 10) / 10);
       return Math.max(0, Math.round(C.Elecciones.cuotas(E, dId, false)[pa.id] * E.deptos[dId].camara * 10) / 10);
     },
     inscribir(E, polId, camara, dId) {
@@ -66,6 +76,7 @@ window.CURUL = window.CURUL || {};
       l.vetados = l.vetados.filter(x => x !== polId);
       if (!l.inscritos.includes(polId)) l.inscritos.push(polId);
       if (camara === 'senado' && p.cargo && p.cargo.tipo === 'representante') p.aspiraOtro = 'senado';
+      if (camara === 'asamblea' && p.cargo && p.cargo.tipo === 'concejal') p.aspiraOtro = 'asamblea';
       p.relJ = U.clamp((p.relJ || 0) + 4, -100, 100);
       return { ok: true, msg: `${p.nombre} queda inscrito/a en la lista (aporte estimado ${Dir.est(p)})` };
     },
@@ -73,7 +84,7 @@ window.CURUL = window.CURUL || {};
       const pa = Dir.partido(E), p = E.politicos[polId], l = Dir.lista(pa, camara, dId);
       l.inscritos = l.inscritos.filter(x => x !== polId);
       if (!l.vetados.includes(polId)) l.vetados.push(polId);
-      const incumbente = p.cargo && p.cargo.tipo === (camara === 'senado' ? 'senador' : 'representante');
+      const incumbente = p.cargo && p.cargo.tipo === (camara === 'senado' ? 'senador' : Dir.LOCALES[camara] ? Dir.LOCALES[camara].tipo : 'representante');
       p.relJ = U.clamp((p.relJ || 0) - (incumbente ? 14 : 6), -100, 100);
       let msg = `${p.nombre} queda por fuera de la lista`;
       if (incumbente && p.r.amb > 55 && !p.proximoPartido && U.chance(0.5)) {
@@ -158,7 +169,7 @@ window.CURUL = window.CURUL || {};
     registrarAcciones() {
       const A = C.Acciones;
       const dirige = E => Dir.esDirector(E) || 'Debes dirigir tu partido';
-      const cam = a => a.camara === 'senado' || a.camara === 'camara';
+      const cam = a => a.camara === 'senado' || a.camara === 'camara' || a.camara === 'asamblea' || a.camara === 'concejo';
       const polMiembro = (E, id) => { const p = E.politicos[id], pa = Dir.partido(E); return p && p.activo && p.partido === pa.id ? p : null; };
       A.registrar({ id: 'inscribirEnLista', nombre: 'Inscribir', icono: '➕', grupo: 'partidos', costo: 1,
         disponible(E, a) {
