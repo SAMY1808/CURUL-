@@ -31,7 +31,17 @@ window.CURUL = window.CURUL || {};
     return LAYOUT = out;
   };
 
-  const capas = () => [['relacion', 'Relación con Colombia'], ['alineamiento', 'Alineamiento geopolítico'], ['regimen', 'Régimen político'], ['estabilidad', 'Estabilidad'], ['pib', 'Tamaño de la economía'], ['crecimiento', 'Crecimiento'], ['militar', 'Poder militar'], ['crisis', 'Crisis y guerras'], ['embajadas', 'Embajadas y consulados'], ...C.DATA.bloques.map(b => ['bloque:' + b.id, 'Bloque: ' + b.n])];
+  const capas = () => [['relacion', 'Relación con Colombia'], ['comercio', 'Comercio y TLC'], ['alianzas', 'Alianzas y tratados'], ['conflictos', 'Conflictos y guerras'], ['diaspora', 'Diáspora colombiana'], ['alineamiento', 'Alineamiento geopolítico'], ['regimen', 'Régimen político'], ['estabilidad', 'Estabilidad'], ['pib', 'Tamaño de la economía'], ['crecimiento', 'Crecimiento'], ['militar', 'Poder militar'], ['crisis', 'Crisis y guerras'], ['embajadas', 'Embajadas y consulados'], ['deuda', 'Deuda pública'], ['inflacion', 'Inflación'], ['desempleo', 'Desempleo'], ...C.DATA.bloques.map(b => ['bloque:' + b.id, 'Bloque: ' + b.n])];
+  const M2 = () => C.MundoVivo;
+  let TCACHE = null;
+  const TRADE = E => {
+    if (TCACHE && TCACHE.t === E.fecha.t) return TCACHE.v;
+    const out = {}; try {
+      const f = C.Comercio.flujos(E), mx = Math.max(1, ...C.DATA.sociosComercio.map(so => (f.expSocio[so.id] || 0) + (f.impSocio[so.id] || 0)));
+      for (const so of C.DATA.sociosComercio) { const vv = (f.expSocio[so.id] || 0) + (f.impSocio[so.id] || 0), ac = E.comercio.acuerdos[so.id]; for (const id of so.paises) out[id] = { k: U.clamp(Math.sqrt(vv / mx) * (so.paises.length > 1 ? 0.75 : 1), 0.08, 1), tlc: !!(ac && ac.estado === 'vigente'), v: vv }; }
+    } catch (e) { /* sin datos de comercio */ }
+    TCACHE = { t: E.fecha.t, v: out }; return out;
+  };
   const colorDe = (E, id, capa) => {
     const v = MV().asegurar(E), p = v.paises[id], st = E.diplomacia.paises[id];
     if (id === 'COL') return '#FCD116';
@@ -42,13 +52,42 @@ window.CURUL = window.CURUL || {};
     if (capa === 'pib') return azul(U.clamp((Math.log10(Math.max(1, p.pib)) - 0.3) / 4, 0, 1));
     if (capa === 'crecimiento') return rampa(p.crec, -3, 6);
     if (capa === 'militar') return `hsl(28,${Math.round(30 + p.militar * 0.5)}%,${Math.round(22 + p.militar * 0.32)}%)`;
+    if (capa === 'comercio') { const t = TRADE(E)[id]; return t ? (t.tlc ? `hsl(150,${Math.round(35 + t.k * 35)}%,${Math.round(24 + t.k * 26)}%)` : azul(t.k)) : '#2b3a5a'; }
+    if (capa === 'alianzas') { const tr = st ? st.tratados : []; const b = M2().bloquesDe(id).some(x => x.m.includes('COL')); return tr.includes('defensa') && tr.includes('cooperacion') ? '#3FBF7A' : tr.includes('defensa') ? '#4C7FE0' : tr.length ? '#6aa8d8' : b ? '#7d6bb8' : '#2b3a5a'; }
+    if (capa === 'conflictos') { const c = E.mundoVivo.conflictos.filter(x => x.a === id || x.b === id).sort((a, b) => b.t - a.t)[0]; return p.crisis ? '#B04AE0' : c ? (c.estado === 'guerra' ? '#E0504A' : c.estado === 'crisis' ? '#E8A33D' : '#8a7a3a') : '#2b3a5a'; }
+    if (capa === 'diaspora') { const n = C.DATA.diaspora[id]; return n ? azul(U.clamp(Math.log10(n) / 3.6, 0.1, 1)) : '#2b3a5a'; }
+    if (capa === 'deuda') return rampa(-M2().macro(id, p).deuda, -200, -25);
+    if (capa === 'inflacion') return rampa(-Math.min(60, M2().macro(id, p).inflacion), -60, -1);
+    if (capa === 'desempleo') return rampa(-M2().macro(id, p).desempleo, -25, -3);
     if (capa === 'crisis') return p.crisis ? (p.crisis.tipo === 'recesión' ? '#E8A33D' : '#E0504A') : p.estab < 30 ? '#8a5a2b' : '#36486e';
     if (capa === 'embajadas') { const e = E.exterior && E.exterior.embajadas[id]; return e && e.abierta ? '#D9B45A' : '#36486e'; }
     if (capa.startsWith('bloque:')) { const b = C.DATA.bloques.find(x => x.id === capa.slice(7)); return b.m.includes(id) ? b.color : '#33456b'; }
     return '#36486e';
   };
 
+  const proj = id => { const F = C.DATA.formasMundo, c = C.DATA.coords[id]; return [(c[0] + 180) * F.K, (F.LAT0 - c[1]) * F.K]; };
+  const tipTxt = (E, id) => { const p = MV().asegurar(E).paises[id], st = E.diplomacia.paises[id]; return `<b>${esc(MV().nombre(id))}</b><br>${p ? esc(MV().REG[p.regimen]) + ' · PIB ' + U.n(Math.round(p.pib)) + ' mil M USD' : ''}${st ? '<br>Relación ' + Math.round(st.relacion) + '%' : ''}${p && p.crisis ? '<br>⚠ ' + esc(p.crisis.tipo) : ''}`; };
+  const mapaReal = E => {
+    const F = C.DATA.formasMundo, capa = E.ui.mundoCapa || 'relacion', sel = E.ui.mundoSel || 'USA', v = MV().asegurar(E);
+    let s = `<svg viewBox="0 0 ${F.W} ${F.H}" style="width:100%;height:auto;display:block;background:radial-gradient(ellipse at 50% 40%,#0f2038,#08111f);border-radius:10px">`;
+    for (const id of F.neutro) if (F.p[id]) s += `<path d="${F.p[id]}" fill="#1b2740" stroke="#0b1424" stroke-width=".5"/>`;
+    for (const id of Object.keys(v.paises)) {
+      const p = v.paises[id], col = colorDe(E, id, capa), es = id === sel, cx = id === 'COL';
+      if (F.p[id]) s += `<path data-pais="${id}" d="${F.p[id]}" fill="${col}" stroke="${es ? '#fff' : cx ? '#FCD116' : 'rgba(6,12,24,.75)'}" stroke-width="${es || cx ? 1.6 : .5}" stroke-linejoin="round" style="cursor:pointer"${UI.tt(tipTxt(E, id))}/>`;
+      else if (C.DATA.coords[id]) { const [x, y] = proj(id); s += `<circle data-pais="${id}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${es ? 5 : 3.6}" fill="${col}" stroke="${es ? '#fff' : 'rgba(6,12,24,.8)'}" stroke-width="${es ? 1.6 : .7}" style="cursor:pointer"${UI.tt(tipTxt(E, id))}/>`; }
+    }
+    const linea = (a, b, col, dash, w) => { if (!C.DATA.coords[a] || !C.DATA.coords[b]) return ''; const [x1, y1] = proj(a), [x2, y2] = proj(b), mx = (x1 + x2) / 2, my = Math.min(y1, y2) - Math.hypot(x2 - x1, y2 - y1) * 0.18; return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)}Q${mx.toFixed(1)},${my.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${w || 1.4}" stroke-dasharray="${dash || ''}" opacity=".85" style="pointer-events:none"/>`; };
+    if (capa === 'conflictos') for (const c of v.conflictos) s += linea(c.a, c.b, c.estado === 'guerra' ? '#ff5d55' : c.estado === 'crisis' ? '#ffb347' : '#b9a94d', c.estado === 'guerra' ? '' : '4 3', c.estado === 'guerra' ? 2.2 : 1.3);
+    if (capa === 'alianzas') for (const [id, st] of Object.entries(E.diplomacia.paises)) for (const t of st.tratados) if (t !== 'comercio') s += linea('COL', id, t === 'defensa' ? '#6fa0ff' : '#7fe0aa', '', 1.2);
+    if (capa === 'comercio') for (const [id, t] of Object.entries(TRADE(E))) if (t.k > 0.3 && id !== 'COL') s += linea('COL', id, t.tlc ? '#7fe0aa' : '#8fb5e8', '', 0.6 + t.k * 2);
+    if (capa === 'embajadas' && E.exterior) for (const [id, e] of Object.entries(E.exterior.embajadas)) if (e.abierta && C.DATA.coords[id]) { const [x, y] = proj(id); s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4" fill="#fff" style="pointer-events:none"/>`; }
+    return s + '</svg>';
+  };
   const mapa = E => {
+    if (C.DATA.formasMundo && (E.ui.mundoVista || 'mapa') === 'mapa') return mapaReal(E);
+    return mapaCasillas(E);
+  };
+  const mapaCasillas = E => {
     const capa = E.ui.mundoCapa || 'relacion', L = layout(), sel = E.ui.mundoSel || 'USA', v = MV().asegurar(E);
     let s = `<svg viewBox="0 0 ${COLS * CELDA} ${FILAS * CELDA}" style="width:100%;height:auto;display:block;background:#0b1424;border-radius:10px">`;
     for (const [id, [cx, cy]] of Object.entries(L)) {
@@ -77,9 +116,10 @@ window.CURUL = window.CURUL || {};
 
   const vistaMapa = E => {
     const capa = E.ui.mundoCapa || 'relacion', al = MV().alineamiento(E), v = MV().asegurar(E);
-    const leyenda = { relacion: ['Baja', 'Alta', rampa(25, 25, 80), rampa(80, 25, 80)], estabilidad: ['Inestable', 'Estable', rampa(15, 15, 75), rampa(75, 15, 75)], crecimiento: ['Recesión', 'Boom', rampa(-3, -3, 6), rampa(6, -3, 6)], pib: ['Pequeña', 'Gigante', azul(0), azul(1)], militar: ['Débil', 'Potencia', 'hsl(28,30%,22%)', 'hsl(28,80%,54%)'] }[capa];
-    return `<div class="fila" style="gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap"><label class="tenue" style="font-size:12px">Capa</label><select id="m-capa">${capas().map(([k, n]) => `<option value="${k}" ${k === capa ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
-        ${leyenda ? `<span class="tenue" style="font-size:11.5px;display:flex;align-items:center;gap:6px">${leyenda[0]} <i style="display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(90deg,${leyenda[2]},${leyenda[3]})"></i> ${leyenda[1]}</span>` : capa === 'alineamiento' ? Object.entries(COL_ALIN).map(([k, c]) => `<span class="sigla"><i class="pto" style="background:${c}"></i>${esc(MV().EJES[k])}</span>`).join('') : capa === 'regimen' ? Object.entries(COL_REG).map(([k, c]) => `<span class="sigla"><i class="pto" style="background:${c}"></i>${esc(MV().REG[k])}</span>`).join('') : ''}</div>
+    const leyenda = { relacion: ['Baja', 'Alta', rampa(25, 25, 80), rampa(80, 25, 80)], estabilidad: ['Inestable', 'Estable', rampa(15, 15, 75), rampa(75, 15, 75)], crecimiento: ['Recesión', 'Boom', rampa(-3, -3, 6), rampa(6, -3, 6)], pib: ['Pequeña', 'Gigante', azul(0), azul(1)], militar: ['Débil', 'Potencia', 'hsl(28,30%,22%)', 'hsl(28,80%,54%)'], comercio: ['Poco comercio', 'Mucho (verde = TLC)', azul(0.1), azul(1)], diaspora: ['Pocos colombianos', 'Muchos', azul(0.1), azul(1)], deuda: ['Deuda alta', 'Deuda baja', rampa(-200, -200, -25), rampa(-25, -200, -25)], inflacion: ['Inflación alta', 'Estable', rampa(-60, -60, -1), rampa(-1, -60, -1)], desempleo: ['Desempleo alto', 'Bajo', rampa(-25, -25, -3), rampa(-3, -25, -3)] }[capa];
+    const extra = { conflictos: [['#E0504A', 'Guerra'], ['#E8A33D', 'Crisis'], ['#8a7a3a', 'Latente'], ['#B04AE0', 'Crisis interna']], alianzas: [['#3FBF7A', 'Defensa + cooperación'], ['#4C7FE0', 'Defensa'], ['#6aa8d8', 'Cooperación'], ['#7d6bb8', 'Comparten bloque']] }[capa];
+    return `<div class="fila" style="gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap"><button class="btn chico" data-vista="${(E.ui.mundoVista || 'mapa') === 'mapa' ? 'casillas' : 'mapa'}">${(E.ui.mundoVista || 'mapa') === 'mapa' ? '▦ Casillas' : '🌍 Planisferio'}</button><label class="tenue" style="font-size:12px">Capa</label><select id="m-capa">${capas().map(([k, n]) => `<option value="${k}" ${k === capa ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+        ${leyenda ? `<span class="tenue" style="font-size:11.5px;display:flex;align-items:center;gap:6px">${leyenda[0]} <i style="display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(90deg,${leyenda[2]},${leyenda[3]})"></i> ${leyenda[1]}</span>` : extra ? extra.map(([c, n]) => `<span class="sigla"><i class="pto" style="background:${c}"></i>${n}</span>`).join('') : capa === 'alineamiento' ? Object.entries(COL_ALIN).map(([k, c]) => `<span class="sigla"><i class="pto" style="background:${c}"></i>${esc(MV().EJES[k])}</span>`).join('') : capa === 'regimen' ? Object.entries(COL_REG).map(([k, c]) => `<span class="sigla"><i class="pto" style="background:${c}"></i>${esc(MV().REG[k])}</span>`).join('') : ''}</div>
       <div class="tarjeta" style="padding:10px">${mapa(E)}</div><div class="grid" style="margin-top:14px;grid-template-columns:1fr"><div class="col">${ficha(E)}
         <div class="tarjeta"><h3>Tu alineamiento</h3>${G.barrasH(Object.entries(al).map(([k, x]) => ({ etq: MV().EJES[k], v: x, color: COL_ALIN[k] })), { max: 100, marca: 50, fmt: x => Math.round(x) + '%', anchoEtq: '90px' })}<div class="tenue" style="font-size:11.5px;margin-top:6px">Relación media con los países de cada eje. Ser amigo de todos es difícil.</div></div>
         <div class="tarjeta"><h3>Noticias del mundo</h3><div class="lista">${v.historial.slice(0, 6).map(h => `<div class="it"><div class="cuerpo"><b style="white-space:normal;font-weight:400;font-size:12.5px">${esc(h.txt)}</b><span>${esc(U.fmtT(h.t))}</span></div></div>`).join('') || '<div class="tenue" style="font-size:12px">Sin novedades todavía.</div>'}</div></div></div></div>`;
@@ -99,12 +139,21 @@ window.CURUL = window.CURUL || {};
   };
 
   const ranking = E => {
-    const v = MV().asegurar(E), ord = E.ui.mundoOrden || 'pib';
-    const filas = Object.entries(v.paises).map(([id, p]) => ({ id, p, rel: (E.diplomacia.paises[id] || {}).relacion, pc: p.pib / Math.max(0.05, p.pob) * 1000 })).sort((a, b) => ({ pib: b.p.pib - a.p.pib, crec: b.p.crec - a.p.crec, pc: b.pc - a.pc, estab: b.p.estab - a.p.estab, militar: b.p.militar - a.p.militar, pob: b.p.pob - a.p.pob, rel: (b.rel || 0) - (a.rel || 0) }[ord]));
-    const rk = filas.findIndex(f => f.id === 'COL') + 1;
+    const v = MV().asegurar(E), ord = E.ui.mundoOrden || 'pib', reg = E.ui.mundoReg || 'todas';
+    const PC = f => f.p.pib / Math.max(0.05, f.p.pob) * 1000;
+    const ORD = { pib: f => -f.p.pib, crec: f => -f.p.crec, pc: f => -PC(f), estab: f => -f.p.estab, militar: f => -f.p.militar, pob: f => -f.p.pob, rel: f => -(f.rel || 0), deuda: f => -f.p.deuda, inflacion: f => -f.p.inflacion, desempleo: f => -f.p.desempleo };
+    const NOM = { pib: 'PIB', crec: 'crecimiento', pc: 'PIB per cápita', estab: 'estabilidad', militar: 'poder militar', pob: 'población', rel: 'relación', deuda: 'deuda pública', inflacion: 'inflación', desempleo: 'desempleo' };
+    const todas = Object.entries(v.paises).map(([id, p]) => ({ id, p: MV().macro(id, p), rel: (E.diplomacia.paises[id] || {}).relacion, region: (D().pais(id) || { region: 'Suramérica' }).region })).sort((a, b) => ORD[ord](a) - ORD[ord](b));
+    const rk = todas.findIndex(f => f.id === 'COL') + 1;
+    const regiones = ['todas'].concat([...new Set(todas.map(f => f.region))].sort());
+    const filas = todas.filter(f => reg === 'todas' || f.region === reg);
     const th = (k, n) => `<th data-ord="${k}" style="cursor:pointer;${ord === k ? 'color:var(--oro2)' : ''}">${n}${ord === k ? ' ▼' : ''}</th>`;
-    return `<div class="tarjeta"><h3>Economía y poder comparados</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Colombia ocupa el puesto ${rk} de ${filas.length} según «${{ pib: 'PIB', crec: 'crecimiento', pc: 'PIB per cápita', estab: 'estabilidad', militar: 'poder militar', pob: 'población', rel: 'relación' }[ord]}». Haz clic en una columna para ordenar.</div>
-      <table class="tabla clic-filas"><thead><tr><th>#</th><th>País</th>${th('pib', 'PIB (mil M USD)')}${th('crec', 'Crec.')}${th('pob', 'Población')}${th('pc', 'PIB pc')}${th('estab', 'Estab.')}${th('militar', 'Militar')}${th('rel', 'Relación')}<th>Régimen</th></tr></thead><tbody>${filas.slice(0, 45).map((f, i) => `<tr data-pais="${f.id}" class="${f.id === 'COL' ? 'sel' : ''}"><td>${i + 1}</td><td><b>${esc(MV().nombre(f.id))}</b></td><td class="num">${U.n(Math.round(f.p.pib))}</td><td class="num ${f.p.crec < 0 ? 'mal' : ''}">${U.d1(f.p.crec)}%</td><td class="num">${U.d1(f.p.pob)} M</td><td class="num">${U.n(Math.round(f.pc))}</td><td class="num">${Math.round(f.p.estab)}</td><td class="num">${f.p.militar}</td><td class="num">${f.rel != null ? Math.round(f.rel) + '%' : '—'}</td><td class="tenue" style="font-size:12px">${esc(MV().REG[f.p.regimen])}</td></tr>`).join('')}</tbody></table></div>`;
+    const lim = E.ui.mundoTodos ? 200 : 40, col = (x, malo) => malo ? 'mal' : '';
+    const media = k => U.prom(todas.map(f => f.p[k]));
+    return `<div class="grid g4">${Comp.kpi('Puesto de Colombia', `${rk}<small class="tenue" style="font-size:15px">/${todas.length}</small>`, `<span class="tenue">por ${NOM[ord]}</span>`)}${Comp.kpi('Inflación media mundial', U.d1(media('inflacion')) + '%', '<span class="tenue">promedio de países</span>')}${Comp.kpi('Deuda media', Math.round(media('deuda')) + '%', '<span class="tenue">% del PIB</span>')}${Comp.kpi('Desempleo medio', U.d1(media('desempleo')) + '%', '<span class="tenue">promedio de países</span>')}</div>
+      <div class="tarjeta" style="margin-top:14px"><div class="t-cab"><h3>Economía y poder comparados</h3><select id="m-reg">${regiones.map(r => `<option value="${r}" ${r === reg ? 'selected' : ''}>${r === 'todas' ? 'Todo el mundo' : esc(r)}</option>`).join('')}</select></div><div class="tenue" style="font-size:12px;margin-bottom:8px">Haz clic en una columna para ordenar; clic en un país para ver su ficha en el mapa.</div>
+      <div style="overflow-x:auto"><table class="tabla clic-filas"><thead><tr><th>#</th><th>País</th>${th('pib', 'PIB (mil M USD)')}${th('crec', 'Crec.')}${th('pc', 'PIB pc')}${th('deuda', 'Deuda %PIB')}${th('inflacion', 'Inflación')}${th('desempleo', 'Desempleo')}${th('estab', 'Estab.')}${th('militar', 'Militar')}${th('rel', 'Relación')}<th>Régimen</th></tr></thead><tbody>${filas.slice(0, lim).map(f => `<tr data-pais="${f.id}" class="${f.id === 'COL' ? 'sel' : ''}"><td>${todas.indexOf(f) + 1}</td><td><b>${esc(MV().nombre(f.id))}</b></td><td class="num">${U.n(Math.round(f.p.pib))}</td><td class="num ${col(0, f.p.crec < 0)}">${U.d1(f.p.crec)}%</td><td class="num">${U.n(Math.round(PC(f)))}</td><td class="num ${col(0, f.p.deuda > 100)}">${Math.round(f.p.deuda)}%</td><td class="num ${col(0, f.p.inflacion > 12)}">${U.d1(f.p.inflacion)}%</td><td class="num ${col(0, f.p.desempleo > 15)}">${U.d1(f.p.desempleo)}%</td><td class="num">${Math.round(f.p.estab)}</td><td class="num">${f.p.militar}</td><td class="num">${f.rel != null ? Math.round(f.rel) + '%' : '—'}</td><td class="tenue" style="font-size:12px">${esc(MV().REG[f.p.regimen])}</td></tr>`).join('')}</tbody></table></div>
+      ${filas.length > 40 ? `<div style="margin-top:8px"><button class="btn chico" data-todos="1">${E.ui.mundoTodos ? 'Mostrar sólo los 40 primeros' : `Mostrar los ${filas.length} países`}</button></div>` : ''}</div>`;
   };
 
   const TABS = [['mapa', 'Mapa', vistaMapa], ['conflictos', 'Conflictos', conflictos], ['bloques', 'Bloques', bloques], ['ranking', 'Ranking', ranking]];
@@ -117,10 +166,13 @@ window.CURUL = window.CURUL || {};
       el.innerHTML = `<div class="cab"><div><h1>Mapa mundial</h1><div class="sub">193 países que cambian solos: elecciones, golpes, guerras y bloques. Cada casilla es un país.</div></div></div>
         <div class="tabs">${TABS.map(([k, n]) => `<button data-tab="${k}" class="${k === cur[0] ? 'activo' : ''}">${n}</button>`).join('')}</div>
         <div style="margin-top:14px">${cur[2](E)}</div>`;
+      const rg = el.querySelector('#m-reg'); if (rg) rg.onchange = e => { E.ui.mundoReg = e.target.value; C.App.refrescar(); };
       const capa = el.querySelector('#m-capa'); if (capa) capa.onchange = e => { E.ui.mundoCapa = e.target.value; C.App.refrescar(); };
       el.onclick = e => {
         const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('mundo', { tab: t.dataset.tab });
         if (e.target.closest('[data-accion]')) return;
+        const td = e.target.closest('[data-todos]'); if (td) { E.ui.mundoTodos = !E.ui.mundoTodos; return C.App.refrescar(); }
+        const vi0 = e.target.closest('[data-vista]'); if (vi0) { E.ui.mundoVista = vi0.dataset.vista; return C.App.refrescar(); }
         const o = e.target.closest('[data-ord]'); if (o) { E.ui.mundoOrden = o.dataset.ord; return C.App.refrescar(); }
         const b = e.target.closest('[data-bloque]'); if (b) { E.ui.mundoCapa = 'bloque:' + b.dataset.bloque; return C.App.ir('mundo', { tab: 'mapa' }); }
         const vi = e.target.closest('[data-visita]'); if (vi) { E.ui.visitaPais = vi.dataset.visita; return C.App.ir('diplomacia', { tab: 'visitas' }); }

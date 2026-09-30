@@ -29,6 +29,13 @@ window.CURUL = window.CURUL || {};
       const arab = C.DATA.bloques.find(x => x.id === 'liga').m.includes(id);
       return { eco: U.clamp(b[0] + (H(id) - 0.5) * 60, -90, 90), soc: U.clamp(b[1] + (arab ? 30 : 0) + (H(id + 's') - 0.5) * 50, -90, 90) };
     },
+    /* Cifras macro comparables (deuda %PIB, inflación, desempleo): se crean perezosamente para no romper partidas viejas */
+    macro(id, p) {
+      if (p.deuda != null) return p;
+      const fijo = { VEN: [160, 180, 9], ARG: [85, 90, 7], TUR: [40, 55, 10], JPN: [255, 2, 2.6], USA: [123, 3.2, 4.1], CHN: [84, 0.5, 5], ZWE: [100, 150, 15], LBN: [280, 120, 30], SDN: [220, 100, 20], COL: [58, 5.1, 9.6], ITA: [140, 2, 7.5], GRC: [160, 3, 11] }[id];
+      p.deuda = fijo ? fijo[0] : Math.round(25 + H(id + 'd') * 75); p.inflacion = fijo ? fijo[1] : +(1.5 + Math.pow(H(id + 'i'), 2) * 14).toFixed(1); p.desempleo = fijo ? fijo[2] : +(3 + H(id + 'u') * 13).toFixed(1);
+      return p;
+    },
     nombreLider() { const h = U.chance(0.7); return `${U.pick(h ? C.DATA.nombres.h : C.DATA.nombres.m)} ${U.pick(C.DATA.nombres.a)}`; },
     asegurar(E) {
       if (E.mundoVivo && E.mundoVivo.paises) return E.mundoVivo;
@@ -72,6 +79,10 @@ window.CURUL = window.CURUL || {};
         p.pib = Math.max(0.1, p.pib * (1 + p.crec / 100 / 52));
         const base = p.regimen === 'autoritario' ? 60 : p.regimen === 'hibrido' ? 45 : p.regimen === 'monarquia' ? 60 : 65;
         p.estab = U.clamp(p.estab + (base - p.estab) * 0.004 + U.gauss(0, 0.7) + (p.crec < 0 ? -0.3 : 0) - (p.crisis ? 0.3 : 0), 2, 98);
+        M.macro(id, p);
+        p.inflacion = U.clamp(p.inflacion + (3 + (p.estab < 30 ? 20 : 0) + (p.crisis ? 6 : 0) - p.inflacion) * 0.004 + U.gauss(0, 0.05), 0, 400);
+        p.desempleo = U.clamp(p.desempleo + (4 + Math.max(0, 3 - p.crec) * 1.4 + (p.crisis ? 3 : 0) - p.desempleo) * 0.01, 1, 45);
+        p.deuda = U.clamp(p.deuda + (p.crec < 1 ? 0.03 : -0.015) + (p.crisis ? 0.04 : 0), 5, 400);
         if (E.meta.presim) continue;
         if (p.crisis) { if (E.fecha.t >= p.crisis.hasta) M.terminarCrisis(E, id, p); continue; }
         if (p.proxElec != null && E.fecha.t >= p.proxElec && p.regimen !== 'autoritario') M.elecciones(E, id, p);
