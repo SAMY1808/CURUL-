@@ -99,8 +99,9 @@ window.CURUL = window.CURUL || {};
         for (const p of P()) {
           const ti = Co.tarifaImp(E, s.id, p.id), ti0 = b.imp[s.id][p.id];
           const te = Co.tarifaExp(E, s.id, p.id), te0 = b.exp[s.id][p.id];
-          const im = U.clamp(1 + s.elasImp * (ti0 - ti) / (100 + ti0), 0.2, 3) * impTc;
-          const ex = U.clamp(1 + s.elasExp * (te0 - te) / (100 + te0), 0.2, 3) * expTc;
+          const ib = p.mercosur && C.MercosurInst && C.Mercosur.esMiembro(E) ? C.MercosurInst.bonoComercio(E) : 1;
+          const im = U.clamp(1 + s.elasImp * (ti0 - ti) / (100 + ti0), 0.2, 3) * impTc * ib;
+          const ex = U.clamp(1 + s.elasExp * (te0 - te) / (100 + te0), 0.2, 3) * expTc * ib;
           out.imp[s.id][p.id] = im; out.exp[s.id][p.id] = ex;
           out.impEf += W.imp[s.id][p.id] * (im - 1); out.expEf += W.exp[s.id][p.id] * (ex - 1);
           if (s.impPeso) out.dom[s.id] += W.imp[s.id][p.id] * (im - 1) / s.impPeso;

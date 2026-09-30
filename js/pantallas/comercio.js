@@ -94,7 +94,7 @@ window.CURUL = window.CURUL || {};
       <table class="tabla"><thead><tr><th>Socio</th><th>Relación</th><th>Acuerdo</th><th></th></tr></thead><tbody>${filas}</tbody></table></div>${activas}`;
   };
 
-  const mercosur = E => {
+  const mercosurBase = E => {
     const Mer = C.Mercosur, Co = C.Comercio, m = Mer.st(E), c = E.comercio, S = Co.sectores();
     const DAT = C.DATA.mercosur;
     if (!m.existe) return `<div class="tarjeta vacio">El Mercosur se funda en ${DAT.fundacion}: aún no existe en esta época.</div>`;
@@ -175,6 +175,45 @@ window.CURUL = window.CURUL || {};
       ${cerradas.length ? `<div class="tenue" style="font-size:11.5px;margin-top:8px">Últimas: ${cerradas.map(it => `${esc(DAT.decisiones.find(d => d.id === it.decision).nombre)} (${it.estado})`).join(' · ')}</div>` : ''}${impulsar}</div>`;
   };
 
+  const institucional = E => {
+    const Ins = C.MercosurInst, Mer = C.Mercosur, i = Ins.st(E), m = Mer.st(E), miembro = Mer.esMiembro(E), pr = i.prop, par = Ins.parecido(E);
+    const pres = E.gobierno.presidente === 'J' && miembro;
+    const nivelNom = (eje, n) => Ins.EJES[eje].niveles[n];
+    const filas = Object.entries(Ins.EJES).map(([k, e]) => {
+      const ops = e.niveles.map((n, j) => j === i.niv[k] ? '' : `<option value="${k}|${j}">${j > i.niv[k] ? '▲' : '▼'} ${esc(n)}</option>`).join('');
+      return `<tr><td style="width:24%"><b>${e.icono} ${esc(e.n)}</b><div class="tenue" style="font-size:11px">${esc(e.txt)}</div></td><td><div class="barra-h" style="width:90px;margin-bottom:3px"><i style="width:${Math.round(i.niv[k] / (e.niveles.length - 1) * 100)}%;background:var(--oro)"></i></div><span style="font-size:12.5px">${esc(nivelNom(k, i.niv[k]))}</span></td>
+        <td>${pres && !pr ? `<div class="fila accion-form" style="gap:6px;flex-wrap:nowrap"><select data-arg="cambio" style="max-width:260px">${ops}</select>${UI.botonAccion('proponerReformaMercosur', {}, 'Proponer', 'chico')}</div>` : ''}</td></tr>`;
+    }).join('');
+    const modelos = Object.entries(Ins.MODELOS).map(([k, mo]) => `<div class="tarjeta" style="padding:10px 12px"><div class="t-cab"><h4 class="sub-h" style="margin:0">${mo.icono} ${esc(mo.n)}</h4><span class="etq ${par[k] >= 70 ? 'verde' : ''}">${par[k]}% parecido</span></div><div class="tenue" style="font-size:11.5px;margin:6px 0">${esc(mo.txt)}</div>${pres && !pr ? UI.botonAccion('proponerModeloMercosur', { modelo: k }, 'Proponer este modelo', 'chico') : ''}</div>`).join('');
+    let tramite = '';
+    if (pr) {
+      const fases = { negociacion: 'Negociación con los socios', aprobada: 'Aprobada', congreso: 'En el Congreso colombiano', corte: 'Control de la Corte Constitucional', ratificacion: 'Ratificación por los parlamentos de los socios' };
+      const votos = pr.fase === 'negociacion' ? Mer.votantes(E).map(id => { const ult = pr.votos && pr.votos.votos.find(v => v.id === id); return { etq: Mer.nombreMiembro(id), v: Math.round(Ins.probVoto(E, id) * 100), color: ult ? (ult.si ? 'var(--si)' : 'var(--no)') : 'var(--oro)' }; }) : [];
+      tramite = `<div class="tarjeta" style="border-left:4px solid var(--oro);margin-bottom:14px"><div class="t-cab"><h3>📨 Reforma en trámite</h3><span class="etq oro">${esc(fases[pr.fase])}</span></div>
+        <div style="font-size:13px;margin-bottom:6px"><b>${esc(pr.etiqueta)}</b></div><div class="tenue" style="font-size:12px;margin-bottom:8px">${pr.cambios.map(c => `${Ins.EJES[c.eje].icono} ${esc(Ins.EJES[c.eje].n)} → ${esc(nivelNom(c.eje, c.nivel))}`).join(' · ')}</div>
+        ${votos.length ? `${G.barrasH(votos, { max: 100, marca: 50, fmt: v => v + ' % de apoyo', anchoEtq: '80px' })}<div class="tenue" style="font-size:11.5px;margin:6px 0">Regla de votación vigente: <b>${esc(nivelNom('votacion', i.niv.votacion))}</b>. Cada ronda es un intento; tras seis fracasa.</div>` : ''}
+        ${pr.ratif ? `<div class="tenue" style="font-size:12px">Ratificaciones: ${Object.entries(pr.ratif).map(([id, r]) => `${esc(Mer.nombreMiembro(id))} ${r.listo ? '✔' : '…'}`).join(' · ')}</div>` : ''}
+        ${pres ? `<div class="fila" style="gap:6px;margin-top:8px">${pr.fase === 'negociacion' ? UI.botonAccion('rondaReformaMercosur', {}, null, 'chico') : ''}${UI.botonAccion('retirarReformaMercosur', {}, null, 'chico peligro')}</div>` : ''}</div>`;
+    }
+    const inst = `<div class="grid g3" style="margin-bottom:14px">
+      <div class="tarjeta"><h4 class="sub-h" style="margin:0 0 6px">🏛 Directorio ${i.niv.directorio >= 2 ? `<span class="tenue" style="font-weight:400">· comisionado: ${i.comisionado && E.politicos[i.comisionado] ? esc(E.politicos[i.comisionado].nombre) : 'sin nombrar'}</span>` : ''}</h4><div class="tenue" style="font-size:12px">${esc(nivelNom('directorio', i.niv.directorio))}.${i.niv.directorio >= 2 ? ' Propone más decisiones en cada cumbre y les da más opciones de pasar.' : ' Sin un órgano propio, todo depende de la presidencia rotativa.'}</div>
+        ${pres && i.niv.directorio >= 2 ? `<div class="fila accion-form" style="gap:6px;margin-top:6px"><select data-arg="pol">${C.Exterior.candidatos(E).slice(0, 12).map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>${UI.botonAccion('nombrarComisionado', {}, null, 'chico')}</div>` : ''}</div>
+      <div class="tarjeta"><h4 class="sub-h" style="margin:0 0 6px">🏟 Parlamento</h4><div class="tenue" style="font-size:12px">${esc(nivelNom('parlamento', i.niv.parlamento))}. Legitimidad del bloque: <b>${Math.round(i.legit)}%</b>.</div>${i.parlSeats && i.niv.parlamento >= 2 ? `<div class="fila" style="gap:4px;flex-wrap:wrap;margin-top:6px">${i.parlSeats.map(x => `<span class="etq">${esc(x.sigla)} ${x.esc}</span>`).join('')}</div><div class="tenue" style="font-size:11px;margin-top:4px">Escaños de Colombia (18)</div>` : ''}</div>
+      <div class="tarjeta"><h4 class="sub-h" style="margin:0 0 6px">⚖ Tribunal</h4><div class="tenue" style="font-size:12px">${esc(nivelNom('tribunal', i.niv.tribunal))}. Probabilidad de que un socio cumpla un fallo: <b>${[35, 55, 80, 95][i.niv.tribunal]}%</b>.</div></div></div>`;
+    return `${miembro ? '' : '<div class="tenue" style="font-size:12px;margin-bottom:10px">Sólo los miembros plenos proponen reformas; aquí ves cómo está diseñado el bloque.</div>'}
+      <div class="grid g4">${Comp.kpi('Modelo del bloque', esc(Ins.modelo(E)), `<span class="tenue">integración ${Ins.indice(E)}%</span>`)}${Comp.kpi('Parecido a la UE', par.ue + '%', `<span class="tenue">ASEAN ${par.asean}% · vacío ${par.vacio}%</span>`)}${Comp.kpi('Legitimidad', Math.round(i.legit) + '%', '<span class="tenue">la sube el parlamento</span>')}${Comp.kpi('Bono al comercio', (Ins.bonoComercio(E) >= 1 ? '+' : '') + U.d1((Ins.bonoComercio(E) - 1) * 100) + '%', '<span class="tenue">con los socios del bloque</span>')}</div>
+      <div style="margin-top:14px">${tramite}${inst}</div>
+      <div class="tarjeta"><h3>🧩 Modelos de bloque</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Un paquete completo de reformas para parecerse a la Unión Europea, a la ASEAN o volver a un tratado casi vacío. Los socios votan cada eje según su interés, y los cambios profundos pasan por el Congreso, la Corte y los parlamentos de los demás miembros.</div><div class="grid g3">${modelos}</div></div>
+      <div class="tarjeta" style="margin-top:14px"><h3>🎛 Reformas eje por eje</h3><table class="tabla"><thead><tr><th>Eje</th><th>Hoy</th><th>Proponer</th></tr></thead><tbody>${filas}</tbody></table></div>
+      ${i.hist.length ? `<div class="tarjeta" style="margin-top:14px"><h3>Historial de reformas</h3><div class="lista">${i.hist.slice(0, 8).map(h => `<div class="it"><div class="cuerpo"><b style="white-space:normal;font-weight:400">${esc(h.txt)}</b><span>${U.fmtT(h.t)}</span></div><span class="etq ${h.ok ? 'verde' : 'rojo'}">${h.ok ? 'En vigor' : 'Cayó'}</span></div>`).join('')}</div></div>` : ''}`;
+  };
+  const mercosur = E => {
+    const sub = E.ui.merTab || 'bloque', m = C.Mercosur.st(E);
+    if (!m.existe || !C.MercosurInst) return mercosurBase(E);
+    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-mer="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-mer="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
+    return tabs + (sub === 'inst' ? institucional(E) : mercosurBase(E));
+  };
+
   const aranceles = E => {
     const Co = C.Comercio, c = E.comercio, M = C.Mercosur, f = Co.flujos(E);
     const filas = Co.sectores().map(s => {
@@ -201,7 +240,7 @@ window.CURUL = window.CURUL || {};
       el.innerHTML = `<div class="cab"><div><h1>Comercio exterior</h1><div class="sub">Balanza, aranceles, acuerdos de libre comercio y Mercosur.${esPres ? '' : ' Sólo el Presidente negocia y decide; aquí ves cómo te afecta.'}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
         <div style="margin-top:14px">${cuerpo}</div>`;
-      el.onclick = e => { const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('comercio', { tab: t.dataset.tab }); };
+      el.onclick = e => { const mm = e.target.closest('[data-mer]'); if (mm) { E.ui.merTab = mm.dataset.mer; return C.App.refrescar(); } const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('comercio', { tab: t.dataset.tab }); };
     }
   };
 })(window.CURUL);

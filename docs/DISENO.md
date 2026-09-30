@@ -257,6 +257,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **26** | Licitaciones de megaobras (buenas empresas vs financiadoras de campaña), empresas públicas con gerentes y metas (EPM, Emcali…), mundo vivo con mapa mundial, bloques y conflictos, y visitas de Estado con agenda y seguimiento. |
 | **27** | Planisferio con formas reales y capas (relación, comercio, alianzas, conflictos, diáspora, deuda, inflación, desempleo), economía comparada, fuerzas armadas y guerra (Venezuela, Nicaragua), espionaje entre países, periódico de la semana con sesgo editorial y clima, migración y recursos. |
 | **28** | Estructura orgánica del partido (secretaría general, tesorería, jefatura electoral, directorios departamentales), listas del director para Asambleas y Concejos, pareja e hijos con carrera política y dinastía, reformas constitucionales ligadas a la democracia directa y más funciones de las empresas públicas. |
+| **29** | Reforma institucional del Mercosur: directorio, parlamento, tribunal de controversias y modelos tipo UE, ASEAN o tratado vacío, con impactos reales. |
 
 ### Notas de la Fase 25
 
@@ -292,6 +293,19 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   creación del personaje.
 
  **25** | Menú lateral agrupado en secciones plegables; escándalos y crisis con decisiones; salud y legado del político; servicio exterior (embajadas, consulados, misiones, Consejo de Seguridad, incidentes); Congreso 2.0 (mercado de votos, transfuguismo, coaliciones que cobran); seguridad y territorio (cultivos, presencia del Estado, certificación); economía global (petróleo, café, ciclo, pandemias, choques históricos); escenarios históricos con objetivos | **completa (esta entrega)** |
+
+### Notas de la Fase 29
+
+- **Reforma institucional del Mercosur** (`js/sistemas/mercosurinst.js`, pestaña «Reforma institucional» en Comercio → Mercosur): diez ejes
+  con niveles (regla de votación, directorio ejecutivo, parlamento, tribunal, unión aduanera, mercado común, circulación de personas,
+  moneda, política exterior conjunta y fondos de cohesión) y tres paquetes: modelo Unión Europea, modelo ASEAN («consenso y no
+  injerencia») y tratado casi vacío. Los socios votan según su interés (`APRECIO`), la regla de votación vigente decide si basta la
+  mayoría o se exige unanimidad, y los cambios profundos pasan por el Congreso, la Corte y los parlamentos de los socios.
+- **Efectos reales**: bono al comercio con los socios (`Comercio.mult`), legitimidad del bloque, erosión de la aprobación por soberanía cedida,
+  controversias comerciales resueltas por el tribunal (evento `controversiaMercosur`), fin del AEC o exceptuados en la zona de libre
+  comercio, TLC libres o bloqueados según la política exterior, TLC del bloque con terceros, fondos de cohesión, inflación con moneda común,
+  más decisiones y más probabilidad de adopción con un directorio (y un comisionado colombiano), y veto que deja de ser absoluto.
+
 
 ### Notas de la Fase 28
 

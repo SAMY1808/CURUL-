@@ -10,7 +10,7 @@ window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U;
   const DAT = () => C.DATA.mercosur;
-  const NOMBRE_MIEMBRO = { ARG: 'Argentina', BRA: 'Brasil', PRY: 'Paraguay', URY: 'Uruguay', VEN: 'Venezuela', BOL: 'Bolivia', COL: 'Colombia' };
+  const NOMBRE_MIEMBRO = { DIR: 'El Directorio', ARG: 'Argentina', BRA: 'Brasil', PRY: 'Paraguay', URY: 'Uruguay', VEN: 'Venezuela', BOL: 'Bolivia', COL: 'Colombia' };
   const CONVERGENCIAS = [4, 8, 12];
 
   const Mer = {
@@ -156,6 +156,7 @@ window.CURUL = window.CURUL || {};
        excepciones nacionales. */
     turnoConvergencia(E) {
       const m = Mer.st(E), c = E.comercio; if (!Mer.esMiembro(E) || !m.convergencia) return;
+      if (C.MercosurInst && !C.MercosurInst.st(E).aecActivo) return;
       const prog = U.clamp((E.fecha.t - m.convergencia.desde) / (52 * m.convergencia.anios), 0, 1);
       for (const s of C.Comercio.sectores()) {
         if (s.sinArancel || m.excepciones.includes(s.id)) continue;
@@ -174,7 +175,8 @@ window.CURUL = window.CURUL || {};
     puedeFijarArancel(E, sector) { return Mer.st(E).excepciones.includes(sector); },
     /* ¿El bloque impide negociar un TLC con ese socio? */
     bloqueaTLC(E, socioId) {
-      const m = Mer.st(E);
+      const m = Mer.st(E), I = C.MercosurInst ? C.MercosurInst.st(E) : null;
+      if (I && (I.niv.exterior === 0 || !I.aecActivo)) return false;
       return !m.flexibilizado && !(m.autoriza[socioId] && m.autoriza[socioId] > E.fecha.t);
     },
     pedirAutorizacion(E, socioId) {
@@ -236,15 +238,18 @@ window.CURUL = window.CURUL || {};
       const m = Mer.st(E), r = Mer.rotacion(E);
       const iAct = Math.max(0, r.indexOf(m.ppt)); m.ppt = r[(iAct + 1) % r.length];
       m.proximaCumbre = E.fecha.t + 26;
-      const decs = Mer.proponerDecisiones(E, U.chance(0.5) ? 2 : 1);
-      for (const d of decs) m.agenda.push({ id: U.id('dm'), decision: d.id, proponen: U.pick(d.proponen), t: E.fecha.t, hasta: E.fecha.t + 8, estado: 'pendiente', respaldo: 0 });
+      const dirN = C.MercosurInst ? C.MercosurInst.nivel(E, 'directorio') : 0;
+      const decs = Mer.proponerDecisiones(E, (U.chance(0.5) ? 2 : 1) + (dirN >= 2 ? 1 : 0));
+      for (const d of decs) m.agenda.push({ id: U.id('dm'), decision: d.id, proponen: dirN >= 3 && U.chance(0.5) ? 'DIR' : U.pick(d.proponen), t: E.fecha.t, hasta: E.fecha.t + 8, estado: 'pendiente', respaldo: 0 });
       C.Medios.noticia(E, { tipo: 'diplomacia', titular: `Cumbre del Mercosur: ${Mer.nombreMiembro(m.ppt)} asume la presidencia pro tempore${decs.length ? ' y se ponen sobre la mesa ' + decs.map(d => '«' + d.nombre.toLowerCase() + '»').join(' y ') : ''}`, tono: 0, importante: Mer.esMiembro(E) });
     },
     /* Decisión del bloque sobre un punto de la agenda. `respaldo`: -1 veto de Colombia, +1 respaldo. */
     resolverDecision(E, it) {
       const m = Mer.st(E), def = DAT().decisiones.find(d => d.id === it.decision), pos = DAT().postura[it.proponen] || { dureza: 0.4 };
-      const veto = it.respaldo < 0 && Mer.esMiembro(E);
+      const I = C.MercosurInst ? C.MercosurInst.st(E) : null, regla = I ? I.niv.votacion : 0;
+      const veto = it.respaldo < 0 && Mer.esMiembro(E) && (regla === 0 || U.chance(regla === 1 ? 0.45 : 0.75));
       let prob = (0.62 - pos.dureza * 0.1 + it.respaldo * 0.22) * (def.dificultad || 1);
+      if (I) prob += (I.niv.directorio >= 2 ? 0.05 * I.niv.directorio : 0) + (I.comisionado ? 0.04 : 0) + (regla ? 0.06 * regla : 0) + (I.legit - 45) / 700;
       if (Mer.colombiaPreside(E)) prob += 0.08;
       const adopta = !veto && U.chance(U.clamp(prob, 0.05, 0.95));
       it.estado = adopta ? 'adoptada' : 'vetada';
