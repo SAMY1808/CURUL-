@@ -312,6 +312,12 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   Directorio, trayectoria de Estado. Parlamentario: cabildear reformas y moción de censura al Directorio; comisionado: fijar agenda con alta
   probabilidad de adopción.
 
+- **Resultados regionales completos**: el detalle de las elecciones regionales (`Elecciones.noche`) tiene vistas «Todas las gobernaciones» y
+  «Todas las alcaldías» con todos los candidatos, partido, votos y porcentaje por departamento y capital, y la participación nacional.
+- **Segunda vuelta con apoyos** (`js/sistemas/apoyos.js`): los partidos eliminados declaran su respaldo a un finalista, y si tu candidato o tu partido
+  quedan fuera puedes apoyar por acuerdo (ministerios y cambios al programa, si el candidato acepta) o sin condiciones. El respaldo suma fuerza en
+  las urnas; si el apoyado gana, el pacto se cumple (coalición y ministerios) o se incumple, con costo de relación.
+
 ### Notas de la Fase 28
 
 - **Estructura orgánica** (`js/sistemas/organica.js`, pestaña «Estructura orgánica» en la Dirección del partido): seis cargos (Secretaría

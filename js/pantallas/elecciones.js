@@ -113,6 +113,23 @@ window.CURUL = window.CURUL || {};
 
   const historico = (E) => `<div class="lista">${E.elecciones.historico.slice().reverse().map(r => `<div class="it clic tarjeta" style="margin-bottom:8px" data-res="${r.id}"><span style="font-size:22px">${r.tipo === 'congreso' ? '🏛' : r.tipo === 'presidencial' ? '🦅' : '🗺'}</span><div class="cuerpo"><b>${nombreTipo(r)}</b><span>${esc(El.titular(E, r))} · participación ${U.d1(r.participacion * 100 || 0)} %</span></div>${r.jugador ? `<span class="etq ${r.jugador.electo ? 'verde' : 'rojo'}">${r.jugador.electo ? 'Elegido' : 'No elegido'}</span>` : ''}</div>`).join('')}</div>`;
 
+  /* Segunda vuelta: el jugador decide a quién apoyar cuando su candidato o su partido quedan fuera */
+  const segundaVuelta = E => {
+    const sv = E.elecciones.segundaVuelta, Ap = C.Apoyos; if (!sv || !E.elecciones.apoyos || !Ap) return '';
+    const el = Ap.elegible(E), aj = E.elecciones.apoyoJ, r1 = E.elecciones.r1;
+    const pctDe = pol => { const c = r1 && r1.candidatos.find(x => x.pol === pol); return c ? c.pct : null; };
+    const cols = sv.map(f => {
+      const pol = f.pol === 'J' ? E.politicos.J : E.politicos[f.pol], ap = E.elecciones.apoyos[f.pol] || [];
+      return `<div class="tarjeta" style="padding:12px"><div class="fila" style="gap:8px"><i class="pto" style="background:${colorP(E, f.partido)}"></i><b>${esc(Comp.nombrePol(E, f.pol))}</b><span class="etq">${esc(siglaP(E, f.partido))}</span>${pctDe(f.pol) != null ? `<span class="tenue" style="font-size:12px">${U.d1(pctDe(f.pol))} % en primera vuelta</span>` : ''}</div>
+        <div class="tenue" style="font-size:12px;margin:6px 0">${Comp.etiquetaIdeo ? esc(Comp.etiquetaIdeo(pol ? pol.eco : 0)) : ''}${ap.length ? ' · Apoyos: ' + ap.map(x => `${esc(x.sigla)}${x.fuente === 'J' ? ' (tú)' : ''} +${U.d1(x.peso)}`).join(', ') : ' · Sin apoyos declarados aún'}</div>
+        ${el === true ? `<div class="accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="ministerios" title="Ministerios que pides"><option value="0">Sin ministerios</option><option value="1">1 ministerio</option><option value="2">2 ministerios</option><option value="3">3 ministerios</option></select><select data-arg="programa"><option value="no">Sin cambios al programa</option><option value="si">Exijo cambios al programa</option></select>${UI.botonAccion('apoyarSegundaVuelta', { cand: f.pol, modo: 'acuerdo' }, 'Negociar un acuerdo', 'chico')}</div>
+          <div style="margin-top:6px">${UI.botonAccion('apoyarSegundaVuelta', { cand: f.pol, modo: 'gratuito', ministerios: 0, programa: 'no' }, 'Apoyarlo sin condiciones', 'chico')}</div>` : ''}</div>`;
+    }).join('');
+    const estado = el === true ? '<div class="tenue" style="font-size:12.5px;margin-bottom:8px">Tu candidato o tu partido no está en la segunda vuelta. Puedes apoyar a un finalista <b>por acuerdo</b> (a cambio de ministerios o cambios en su programa, si acepta) o <b>sin condiciones</b>, ganando su gratitud. Tu respaldo pesa según tu partido, tu reconocimiento y los votos que sacaste.</div>'
+      : aj ? `<div class="resultado-jugador ok" style="margin-bottom:8px"><div style="font-size:24px">🤝</div><div><b>Apoyas a ${esc(Comp.nombrePol(E, aj.cand))}</b><div class="tenue">${aj.modo === 'acuerdo' ? 'Por acuerdo' + (aj.ministerios ? ` · ${aj.ministerios} ministerio${aj.ministerios > 1 ? 's' : ''}` : '') + (aj.programa ? ' · cambios al programa' : '') : 'Sin condiciones'}</div></div></div>` : `<div class="tenue" style="font-size:12px;margin-bottom:8px">${esc(el)}</div>`;
+    return `<div class="tarjeta" style="margin-bottom:14px;border-left:4px solid var(--oro)"><h3>🗳 Segunda vuelta presidencial</h3>${estado}<div class="grid g2">${cols}</div></div>`;
+  };
+
   const P = {
     render(el, params) {
       const E = C.E;
@@ -121,7 +138,7 @@ window.CURUL = window.CURUL || {};
       const tabs = [['campana', E.elecciones.campana ? '● Mi campaña' : 'Candidatura'], ['calendario', 'Calendario'], ['historico', 'Resultados']];
       el.innerHTML = `<div class="cab"><div><h1>Elecciones</h1><div class="sub">${E.elecciones.campana ? `Candidatura a ${esc(El.CARGOS_CAMPANA[E.elecciones.campana.cargo])}${E.elecciones.campana.depto ? ' · ' + esc(E.deptos[E.elecciones.campana.depto].nombre) : ''}` : 'Registraduría Nacional del Estado Civil'}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
-        ${tab === 'campana' ? (E.elecciones.campana ? campanaActiva(E) : formularioInscripcion(E)) : tab === 'calendario' ? calendario(E) : historico(E)}`;
+        ${tab === 'campana' ? segundaVuelta(E) : ''}${tab === 'campana' ? (E.elecciones.campana ? campanaActiva(E) : formularioInscripcion(E)) : tab === 'calendario' ? calendario(E) : historico(E)}`;
       el.onclick = e => {
         const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('elecciones', { tab: t.dataset.tab });
         const c = e.target.closest('[data-cargo]'); if (c) { E.ui.cargoInsc = c.dataset.cargo; return C.App.refrescar(); }
@@ -206,7 +223,21 @@ window.CURUL = window.CURUL || {};
             ${fin ? tablaLista(E, jr.lista, totLista) : `<div class="tenue" style="font-size:12.5px">Resultado disponible al cierre del escrutinio.</div>`}`;
         } else {
           const ganados = U.contar(Object.values(r.porDepto), x => x.candidatos[0].partido);
-          der = `<h3 class="sub-h">Gobernaciones ganadas</h3>${G.barrasH(Object.entries(ganados).sort((a, b) => b[1] - a[1]).map(([p, n]) => ({ etq: siglaP(E, p), v: n, color: colorP(E, p) })), { fmt: v => U.n(v), anchoEtq: '84px' })}
+          const desig = Object.values(r.porDepto).some(x => x.designado);
+          const tablaReg = (fuente, cargo) => {
+            const filas = Object.keys(fuente).sort((a, b) => E.deptos[a].nombre.localeCompare(E.deptos[b].nombre, 'es')).map(d => {
+              const x = fuente[d], f = frac(d), nom = cargo === 'gob' ? E.deptos[d].nombre : E.deptos[d].capital;
+              if (f <= 0) return `<tr><td><b>${esc(nom)}</b></td><td colspan="4" class="tenue">Sin boletines</td></tr>`;
+              return x.candidatos.map((c, k) => `<tr class="${k === 0 ? 'sel' : ''}">${k === 0 ? `<td rowspan="${x.candidatos.length}" style="vertical-align:top"><b>${esc(nom)}</b><div class="tenue" style="font-size:10.5px">${U.n(Math.round(x.validos * f))} votos válidos</div></td>` : ''}<td>${k === 0 ? '🏆 ' : ''}${esc(Comp.nombrePol(E, c.pol))}${c.pol === 'J' ? ' (tú)' : ''}</td><td><i class="pto" style="background:${colorP(E, c.partido)}"></i> ${esc(siglaP(E, c.partido))}</td><td class="num">${U.n(Math.round(c.votos * f))}</td><td class="num">${U.d1(c.pct)}%</td></tr>`).join('');
+            }).join('');
+            return `<div style="max-height:460px;overflow:auto"><table class="tabla"><thead><tr><th>${cargo === 'gob' ? 'Departamento' : 'Capital'}</th><th>Candidato</th><th>Partido</th><th>Votos</th><th>%</th></tr></thead><tbody>${filas}</tbody></table></div>`;
+          };
+          const sub = vista === 'gob' || vista === 'alc' ? vista : 'res';
+          const segReg = desig ? '' : `<div class="seg" id="n-vista"><button data-v="res" class="${sub === 'res' ? 'activo' : ''}">Resumen</button><button data-v="gob" class="${sub === 'gob' ? 'activo' : ''}">Todas las gobernaciones</button><button data-v="alc" class="${sub === 'alc' ? 'activo' : ''}">Todas las alcaldías</button></div>`;
+          if (!desig && sub === 'gob') der = `${segReg}<h3 class="sub-h">Candidatos y votos por gobernación ${fin ? '' : '(parcial)'}</h3>${tablaReg(r.porDepto, 'gob')}`;
+          else if (!desig && sub === 'alc') der = `${segReg}<h3 class="sub-h">Candidatos y votos por alcaldía de capital ${fin ? '' : '(parcial)'}</h3>${tablaReg(r.alcaldias, 'alc')}`;
+          else
+          der = `${segReg}<h3 class="sub-h">Gobernaciones ganadas</h3>${G.barrasH(Object.entries(ganados).sort((a, b) => b[1] - a[1]).map(([p, n]) => ({ etq: siglaP(E, p), v: n, color: colorP(E, p) })), { fmt: v => U.n(v), anchoEtq: '84px' })}
             <h3 class="sub-h" style="margin-top:12px">Alcaldías de capitales</h3>${G.barrasH(Object.entries(U.contar(Object.values(r.alcaldias), x => x.candidatos[0].partido)).sort((a, b) => b[1] - a[1]).map(([p, n]) => ({ etq: siglaP(E, p), v: n, color: colorP(E, p) })), { fmt: v => U.n(v), anchoEtq: '84px' })}`;
         }
         const jr = r.jugador;

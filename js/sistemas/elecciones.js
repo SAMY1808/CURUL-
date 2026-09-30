@@ -364,7 +364,7 @@ window.CURUL = window.CURUL || {};
       // conservadores; ningún otro partido tiene opción real de gobernar en esos comicios.
       const fnGana = El.fnGanaAnio(anioEl);
       const ideoDe = c => El.ideoCandidato(E, c);
-      const fuerza = c => El.fuerzaCandidatoPresidencial(E, c, fnGana);
+      const fuerza = c => El.fuerzaCandidatoPresidencial(E, c, fnGana) + (vuelta === 2 && C.Apoyos ? C.Apoyos.bonus(E, c.pol) : 0);
       const base = candidatos.map(c => ({ ...c, f: fuerza(c), ideo: ideoDe(c) }));
       let el = 0, vt = 0;
       const tot = {};
@@ -450,6 +450,7 @@ window.CURUL = window.CURUL || {};
       }
       // Corporaciones locales del jugador (asamblea o concejo): lista con candidatos sintéticos
       if (cam && cam.eleccion === 'regional' && (cam.cargo === 'asamblea' || cam.cargo === 'concejo')) res.jugador = El.corporacionLocal(E, cam);
+      const partes = Object.values(res.porDepto); if (partes.length) res.participacion = U.suma(partes.map(x => x.participacion * x.validos)) / Math.max(1, U.suma(partes.map(x => x.validos)));
       return res;
     },
     /* Antes de 1991: el presidente designa gobernador; el gobernador designa alcalde. Sin voto

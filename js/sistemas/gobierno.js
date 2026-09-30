@@ -97,6 +97,7 @@ window.CURUL = window.CURUL || {};
         if (entra) { g.coalicion.push(pa.id); asientos += comp[pa.id] || 0; }
       }
       if (E.jugador && E.jugador.partido && !E.partidos[E.jugador.partido]) E.jugador.postura = 'independiente';
+      if (C.Apoyos) C.Apoyos.alFormarCoalicion(E);
     },
     nombrarGabinete(E) {
       const g = E.gobierno;
@@ -107,6 +108,7 @@ window.CURUL = window.CURUL || {};
         const pid = tecnocrata ? null : U.pesado(cuotas, c => c.w).pid;
         G.designar(E, m.id, pid, true);
       }
+      if (C.Apoyos) C.Apoyos.alNombrarGabinete(E);
     },
     designar(E, minId, pid, silencioso) {
       const g = E.gobierno;
