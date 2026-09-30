@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 27 completas)
+## Qué hay en esta versión (Fases 1 a 28 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -243,6 +243,9 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Espionaje entre países** y contrainteligencia.
 - **Periódico de la semana** con el sesgo de cada medio.
 - **Clima, migración y recursos**: El Niño, La Niña, embalses, alimentos y transición energética.
+- **Estructura orgánica del partido**, listas para Asambleas y Concejos, pareja e hijos con dinastía política.
+- **Reformas constitucionales** por referendo, iniciativa popular o Constituyente, ligadas a la democracia directa.
+- **Empresas públicas** con programas de inversión, dividendos, APP, fusiones y misiones estratégicas.
 - **Escenarios históricos** con objetivos, y un **menú lateral agrupado** por secciones.
 
 ## Arquitectura

@@ -256,6 +256,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **25** | Menú agrupado, servicio exterior (embajadas, consulados, misiones, CSNU), crisis con decisiones, salud, legado, mercado de votos, seguridad y territorio, economía global y escenarios históricos. |
 | **26** | Licitaciones de megaobras (buenas empresas vs financiadoras de campaña), empresas públicas con gerentes y metas (EPM, Emcali…), mundo vivo con mapa mundial, bloques y conflictos, y visitas de Estado con agenda y seguimiento. |
 | **27** | Planisferio con formas reales y capas (relación, comercio, alianzas, conflictos, diáspora, deuda, inflación, desempleo), economía comparada, fuerzas armadas y guerra (Venezuela, Nicaragua), espionaje entre países, periódico de la semana con sesgo editorial y clima, migración y recursos. |
+| **28** | Estructura orgánica del partido (secretaría general, tesorería, jefatura electoral, directorios departamentales), listas del director para Asambleas y Concejos, pareja e hijos con carrera política y dinastía, reformas constitucionales ligadas a la democracia directa y más funciones de las empresas públicas. |
 
 ### Notas de la Fase 25
 
@@ -291,6 +292,24 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   creación del personaje.
 
  **25** | Menú lateral agrupado en secciones plegables; escándalos y crisis con decisiones; salud y legado del político; servicio exterior (embajadas, consulados, misiones, Consejo de Seguridad, incidentes); Congreso 2.0 (mercado de votos, transfuguismo, coaliciones que cobran); seguridad y territorio (cultivos, presencia del Estado, certificación); economía global (petróleo, café, ciclo, pandemias, choques históricos); escenarios históricos con objetivos | **completa (esta entrega)** |
+
+### Notas de la Fase 28
+
+- **Estructura orgánica** (`js/sistemas/organica.js`, pestaña «Estructura orgánica» en la Dirección del partido): seis cargos (Secretaría
+  General, Tesorería, Jefatura electoral, Comunicaciones, Escuela de formación, Dirección jurídica) ocupados por militantes, con costo
+  semanal y eficacia según su capacidad; directorios departamentales con «presencia» que multiplica la cuota de votos del partido
+  en el departamento (`Organica.factor`, aplicado en `Elecciones.cuotas`); convención nacional anual.
+- **Listas locales**: el director inscribe, veta y ficha candidatos para la Asamblea Departamental y el Concejo de la capital
+  (`Director.LOCALES`). Tras cada elección regional `Corporaciones.renovar` arma corporaciones nuevas con esas listas.
+- **Familia** (`js/sistemas/familia.js`, `data/familia.js`): pareja con vida propia (tipo, papel, relación, carrera política propia),
+  tener o adoptar hijos, lanzar y apadrinar a un familiar en la política, evento cuando un hijo pide entrar, y puntos de
+  dinastía que suman al legado; el heredero llega con el reconocimiento de su trayectoria.
+- **Reformas constitucionales por democracia directa**: `Participacion` tiene cuatro tipos nuevos (referendo constitucional,
+  iniciativa popular por firmas, consulta para convocar Constituyente y referendo de ratificación) con Senado, Corte, campaña y
+  umbrales del 25 % y el 33 %. `Constitucion.apoyoReforma/posturaPartido/aplicarResultado` conectan ambos sistemas.
+- **Empresas públicas**: programas de inversión, política de dividendos, emisión de bonos, alianza público-privada, convención
+  colectiva, auditoría, fusión y misiones estratégicas que conectan con clima, inflación y educación del territorio.
+
 
 ### Notas de la Fase 27
 

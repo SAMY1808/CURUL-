@@ -75,6 +75,7 @@ window.CURUL = window.CURUL || {};
       for (const e of q.lista) {
         if (e.estado === 'liquidada') continue;
         const g = e.gerente, t = GERENTES[g.tipo] || GERENTES.tecnico;
+        Em.turnoExtra(E, e);
         e.politizacion = U.clamp(e.politizacion + t.pol * 0.4 - (g.tipo === 'tecnico' || g.tipo === 'externo' ? 0.02 : 0), 0, 100);
         const efObj = U.clamp(35 + g.gestion * 0.55 - e.politizacion * 0.25 - Math.max(0, e.sindicato - 60) * 0.2 + (1 - e.deuda / Math.max(0.1, e.capital)) * 5, 15, 95);
         e.eficiencia += (efObj - e.eficiencia) * 0.02;
@@ -92,7 +93,7 @@ window.CURUL = window.CURUL || {};
         if (E.fecha.t % 26 === 0) Em.dividendo(E, e);
         if (!E.meta.presim) {
           if (U.chance(0.0012 * (100 - g.integridad) / 50 * (e.politizacion / 50 + 0.3))) Em.escandalo(E, e);
-          if (e.sindicato > 78 && !e.paro && U.chance(0.02)) Em.paroSindical(E, e);
+          if (e.sindicato > 78 && !e.paro && U.chance(E.fecha.t < (e.convencionHasta || 0) ? 0.004 : 0.02)) Em.paroSindical(E, e);
           if (e.paro) { e.paro.sem--; e.calidad = U.clamp(e.calidad - 0.4, 15, 98); if (e.paro.sem <= 0) { e.paro = null; e.sindicato = Math.max(30, e.sindicato - 18); C.Medios.noticia(E, { tipo: 'regional', titular: `Termina el paro en ${e.nombre}`, tono: 1 }); } }
           Em.evaluarMeta(E, e);
           if (!Em.esMia(E, e) && E.fecha.t % 52 === 0 && U.chance(0.12)) Em.rotarGerente(E, e);
@@ -100,8 +101,47 @@ window.CURUL = window.CURUL || {};
         }
       }
     },
+
+    PROGRAMAS: {
+      expansion: { n: 'Expansión de cobertura', icono: '🏗', costo: 0.12, sem: 26, txt: 'Llega a barrios sin servicio: sube la cobertura.' },
+      modernizacion: { n: 'Modernización de redes y plantas', icono: '🔧', costo: 0.1, sem: 26, txt: 'Reduce pérdidas y mejora la calidad.' },
+      digital: { n: 'Transformación digital', icono: '💻', costo: 0.06, sem: 20, txt: 'Más eficiencia y menos espacio para la corrupción.' },
+      renovables: { n: 'Energías renovables', icono: '🌱', costo: 0.14, sem: 30, txt: 'Sólo energía: avanza la transición energética y baja la exposición al clima.', sector: 'energia' }
+    },
+    MISIONES: {
+      energia: { tipo: 'ahorro', n: 'Plan de choque contra el racionamiento', txt: 'Sube el nivel de los embalses durante 20 semanas a costa de rentabilidad.' },
+      petroleo: { tipo: 'combustible', n: 'Subsidiar el combustible', txt: 'Baja la inflación 26 semanas, pero la empresa pierde utilidades.' },
+      agua: { tipo: 'emergencia', n: 'Brigadas de emergencia hídrica', txt: 'Protege infraestructura y salud del territorio 20 semanas.' },
+      aseo: { tipo: 'emergencia', n: 'Plan de choque sanitario', txt: 'Mejora la salud del territorio 20 semanas.' },
+      salud: { tipo: 'emergencia', n: 'Plan de contingencia hospitalaria', txt: 'Mejora la salud del territorio 20 semanas.' },
+      telecom: { tipo: 'conectividad', n: 'Conectividad para colegios', txt: 'Sube la educación del territorio 26 semanas.' },
+      transporte: { tipo: 'emergencia', n: 'Movilidad de emergencia', txt: 'Protege la infraestructura del territorio 20 semanas.' }
+    },
+    turnoExtra(E, e) {
+      if (e.politicaDiv === 'reinvertir') e.eficiencia = U.clamp(e.eficiencia + 0.02, 0, 100);
+      if (e.politicaDiv === 'maximo') e.calidad = U.clamp(e.calidad - 0.015, 15, 98);
+      const d = E.deptos[e.depto], clima = C.Clima ? C.Clima.asegurar(E) : null;
+      for (const pr of e.programas || []) {
+        pr.resta--; const P = Em.PROGRAMAS[pr.tipo], k = 1 / P.sem;
+        if (pr.tipo === 'expansion') e.cobertura = U.clamp(e.cobertura + 18 * k, 20, 100);
+        else if (pr.tipo === 'modernizacion') { e.calidad = U.clamp(e.calidad + 9 * k, 15, 98); e.eficiencia = U.clamp(e.eficiencia + 4 * k, 0, 100); }
+        else if (pr.tipo === 'digital') { e.eficiencia = U.clamp(e.eficiencia + 6 * k, 0, 100); e.politizacion = U.clamp(e.politizacion - 8 * k, 0, 100); }
+        else if (pr.tipo === 'renovables' && clima) { clima.transicion = U.clamp(clima.transicion + (e.nivel === 'nacional' ? 10 : 3) * k, 0, 100); e.calidad = U.clamp(e.calidad + 3 * k, 15, 98); }
+      }
+      if (e.programas && e.programas.some(p => p.resta <= 0)) { const hechos = e.programas.filter(p => p.resta <= 0); e.programas = e.programas.filter(p => p.resta > 0); if (Em.esMia(E, e) && !E.meta.presim) C.Medios.noticia(E, { tipo: 'regional', titular: `${e.nombre} termina su programa de ${hechos.map(h => Em.PROGRAMAS[h.tipo].n.toLowerCase()).join(' y ')}`, tono: 1, jugador: true }); }
+      const m = e.mision;
+      if (m) {
+        m.resta--; e.rentabilidad = U.clamp(e.rentabilidad - (m.tipo === 'combustible' ? 0.05 : 0.02), -20, 40);
+        if (m.tipo === 'ahorro' && clima) clima.embalses = U.clamp(clima.embalses + 0.25, 5, 100);
+        if (m.tipo === 'combustible') C.Economia.aplicarDelta(E, 'inflacion', -0.006);
+        if (d && m.tipo === 'emergencia') { d.salud = U.clamp(d.salud + 0.01, 1, 99); d.infraestructura = U.clamp(d.infraestructura + 0.008, 1, 99); }
+        if (d && m.tipo === 'conectividad') d.educacion = U.clamp(d.educacion + 0.012, 1, 99);
+        if (m.resta <= 0) e.mision = null;
+      }
+    },
     dividendo(E, e) {
-      const div = Math.max(0, e.rentabilidad) / 100 * e.capital * 0.5 * (1 - e.vendido / 100) * (e.paro ? 0.5 : 1); if (div <= 0) return;
+      const pf = { distribuir: 1, reinvertir: 0.4, maximo: 1.5 }[e.politicaDiv || 'distribuir'];
+      const div = Math.max(0, e.rentabilidad) / 100 * e.capital * 0.5 * pf * (1 - e.vendido / 100) * (1 - (e.appPct || 0) / 100) * (e.paro ? 0.5 : 1); if (div <= 0) return;
       e.dividendos += div;
       if (e.nivel === 'nacional') C.Economia.aplicarDelta(E, 'deficit', -div * 0.05);
       else { const gl = Em.gobLocal(E, e); if (gl) gl.fondoRegalias = (gl.fondoRegalias || 0) + div; }
@@ -185,6 +225,57 @@ window.CURUL = window.CURUL || {};
           C.Medios.noticia(E, { tipo: 'regional', titular: `${E.jugador.nombre} vende ${pct} % de ${e.nombre} por ${U.d1(monto)} billones`, tono: pct === 100 ? -1 : 0, jugador: true, importante: true });
           if (e.vendido >= 100) e.estado = 'liquidada';
           return { ok: true, msg: `Vendes ${pct} % de ${e.nombre}: entran ${U.d1(monto)} billones, pero el sindicato se enfurece` };
+        } });
+
+      A.registrar({ id: 'programaInversion', nombre: 'Lanzar un programa de inversión', icono: '🏗', grupo: 'local', costo: 2, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a), P = Em.PROGRAMAS[a.programa]; if (!P) return { ok: false, msg: 'Elige el programa' };
+          if (P.sector && e.sector !== P.sector) return { ok: false, msg: 'Ese programa sólo aplica a empresas de energía' };
+          e.programas = e.programas || [];
+          if (e.programas.length >= 2) return { ok: false, msg: 'Ya hay dos programas en marcha' };
+          if (e.programas.some(p => p.tipo === a.programa)) return { ok: false, msg: 'Ese programa ya está en marcha' };
+          const costo = +(P.costo * e.capital).toFixed(2); e.deuda += costo; e.programas.push({ tipo: a.programa, resta: P.sem });
+          return { ok: true, msg: `${P.n} en ${e.nombre}: ${P.sem} semanas, financiado con deuda de la empresa (${U.d1(costo)} billones)` };
+        } });
+      A.registrar({ id: 'emitirBonos', nombre: 'Emitir bonos para el dueño', icono: '📄', grupo: 'local', costo: 2, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a); if (e.deuda / Math.max(0.1, e.capital) > 1.4) return { ok: false, msg: 'La empresa ya está demasiado endeudada' };
+          const monto = +(e.capital * 0.1).toFixed(2); e.deuda += e.capital * 0.12; e.politizacion = U.clamp(e.politizacion + 3, 0, 100);
+          if (e.nivel === 'nacional') C.Economia.aplicarDelta(E, 'deficit', -monto * 0.06); else { const gl = Em.gobLocal(E, e); if (gl) gl.fondoRegalias = (gl.fondoRegalias || 0) + monto; }
+          return { ok: true, msg: `Emites bonos de ${e.nombre}: ${U.d1(monto)} billones para el presupuesto, y la empresa carga con la deuda` };
+        } });
+      A.registrar({ id: 'politicaDividendos', nombre: 'Definir la política de dividendos', icono: '💵', grupo: 'local', costo: 1, disponible: gest,
+        ejecutar(E, a) { const e = emp(E, a); if (!['distribuir', 'reinvertir', 'maximo'].includes(a.pol)) return { ok: false, msg: 'Elige la política' }; e.politicaDiv = a.pol; return { ok: true, msg: { distribuir: 'Repartes la mitad de las utilidades al dueño', reinvertir: 'Reinviertes casi todo: menos dividendos, más eficiencia', maximo: 'Exprimes la empresa: más dividendos hoy, menos calidad mañana' }[a.pol] }; } });
+      A.registrar({ id: 'alianzaPublicoPrivada', nombre: 'Alianza público-privada', icono: '🤝', grupo: 'local', costo: 3, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a); if (e.appPct) return { ok: false, msg: 'Ya tiene un socio privado' };
+          e.appPct = 20; e.eficiencia = U.clamp(e.eficiencia + 8, 0, 100); e.calidad = U.clamp(e.calidad + 5, 15, 98); e.deuda = Math.max(0, e.deuda - e.capital * 0.1); e.sindicato = U.clamp(e.sindicato + 10, 0, 100);
+          if (C.Licitacion) C.Licitacion.registrarDonante(E, 40, false);
+          C.Medios.noticia(E, { tipo: 'regional', titular: `${e.nombre} se asocia con un socio privado: críticas de los sindicatos`, tono: 0, jugador: true, importante: true });
+          return { ok: true, msg: 'Entra un socio privado con el 20 % de las utilidades: sube la eficiencia, baja la deuda y se molesta el sindicato' };
+        } });
+      A.registrar({ id: 'negociarConvencion', nombre: 'Negociar convención colectiva', icono: '📑', grupo: 'local', costo: 2, disponible: gest,
+        ejecutar(E, a) { const e = emp(E, a); if (E.fecha.t < (e.convencionHasta || 0)) return { ok: false, msg: 'La convención vigente aún rige' }; e.convencionHasta = E.fecha.t + 104; e.sindicato = Math.max(15, e.sindicato - 20); e.rentabilidad = U.clamp(e.rentabilidad - 0.6, -20, 40); return { ok: true, msg: 'Acuerdas una convención por dos años: baja el riesgo de paro, sube el costo laboral' }; } });
+      A.registrar({ id: 'auditarEmpresa', nombre: 'Ordenar una auditoría', icono: '🔍', grupo: 'local', costo: 1, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a); if (E.fecha.t - (e.ultAuditoria || -99) < 26) return { ok: false, msg: 'Acaba de auditarse' };
+          e.ultAuditoria = E.fecha.t; e.politizacion = U.clamp(e.politizacion - 12, 0, 100); e.gerente.integridad = Math.min(98, e.gerente.integridad + 2);
+          if (U.chance(0.35 * (100 - e.gerente.integridad) / 50)) { const g = e.gerente; e.gerente = Em.gerente(E, 'tecnico'); C.Medios.noticia(E, { tipo: 'regional', titular: `Auditoría en ${e.nombre} destapa irregularidades: sale el gerente ${g.nombre}`, tono: 0, jugador: true, importante: true }); return { ok: true, msg: `La auditoría encuentra irregularidades y cae el gerente ${g.nombre}` }; }
+          return { ok: true, msg: 'La auditoría limpia la casa: baja la politización' };
+        } });
+      A.registrar({ id: 'fusionarEmpresas', nombre: 'Fusionar dos empresas', icono: '🔗', grupo: 'local', costo: 3, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a), o = Em.asegurar(E).lista.find(x => x.id === a.otra); if (!o || o.id === e.id) return { ok: false, msg: 'Elige la empresa con la que se fusiona' };
+          if (o.estado === 'liquidada' || o.sector !== e.sector || o.depto !== e.depto || o.organo !== e.organo) return { ok: false, msg: 'Deben ser del mismo sector y del mismo dueño' };
+          e.capital += o.capital; e.deuda += o.deuda; e.cobertura = Math.max(e.cobertura, (e.cobertura + o.cobertura) / 2 + 2); e.calidad = (e.calidad + o.calidad) / 2; e.eficiencia = U.clamp((e.eficiencia + o.eficiencia) / 2 + 4, 0, 100); e.sindicato = Math.max(e.sindicato, o.sindicato); o.estado = 'liquidada'; o.vendido = 100;
+          C.Medios.noticia(E, { tipo: 'regional', titular: `${e.nombre} absorbe a ${o.nombre}: nace un gigante del sector`, tono: 1, jugador: true, importante: true });
+          return { ok: true, msg: `${o.nombre} se fusiona con ${e.nombre}: más escala y eficiencia` };
+        } });
+      A.registrar({ id: 'misionEstrategica', nombre: 'Encargar una misión estratégica', icono: '🚨', grupo: 'local', costo: 2, disponible: gest,
+        ejecutar(E, a) {
+          const e = emp(E, a), m = Em.MISIONES[e.sector]; if (!m) return { ok: false, msg: 'Este sector no tiene misión' }; if (e.mision) return { ok: false, msg: 'Ya tiene una misión en curso' };
+          e.mision = { tipo: m.tipo, resta: m.tipo === 'combustible' || m.tipo === 'conectividad' ? 26 : 20 };
+          return { ok: true, msg: `${m.n}: ${e.nombre} pone sus recursos al servicio del país durante ${e.mision.resta} semanas` };
         } });
       A.registrar({ id: 'atenderParoEmpresa', nombre: 'Atender el paro de la empresa', icono: '🤝', grupo: 'local', costo: 1, disponible: gest,
         ejecutar(E, a) { const e = emp(E, a); if (!e.paro) return { ok: false, msg: 'No hay paro' }; e.paro = null; e.sindicato = Math.max(25, e.sindicato - 22); e.rentabilidad -= 0.8; return { ok: true, msg: 'Negocias con el sindicato: se levanta el paro y sube el costo laboral' }; } });
