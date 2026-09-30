@@ -253,7 +253,10 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **22** | Democracia directa: referendos derogatorio y aprobatorio (por firmas), plebiscitos y consultas populares nacionales (del Presidente), consultas locales y cabildos abiertos (de gobernadores y alcaldes) y revocatoria del mandato de alcaldes, gobernadores y —si una reforma constitucional lo habilita— del Presidente, con umbrales de participación reales, control de la Corte, campañas, posturas de partido y elección atípica | **completa** |
 | **23** | Finanzas del partido: la caja (`pa.finanzas`) recibe financiación estatal y paga la operación; el jugador puede donar de su bolsillo (con el tope legal anual), hacer grandes recaudos (cenas, aportes ciudadanos, donantes, gremios, dinero irregular) y girar la caja a su campaña; la caja mueve la maquinaria del partido | **completa** |
 | **24** | Encuestas 2.0 (seis firmas con muestra, margen y sesgo propios; promedio ponderado; intención de voto por partido y candidato; imagen por segmentos; encargar encuestas honestas o «cocinadas»); inteligencia (DAS/DNI) con interceptaciones, expedientes, filtraciones y presión; guerra sucia (campaña negra, bots); Fiscal, Procurador y Contralor con ternas y elección; reforma política (voto obligatorio, financiación de campañas, listas cerradas) | **completa** |
-|### Notas de la Fase 25
+| **25** | Menú agrupado, servicio exterior (embajadas, consulados, misiones, CSNU), crisis con decisiones, salud, legado, mercado de votos, seguridad y territorio, economía global y escenarios históricos. |
+| **26** | Licitaciones de megaobras (buenas empresas vs financiadoras de campaña), empresas públicas con gerentes y metas (EPM, Emcali…), mundo vivo con mapa mundial, bloques y conflictos, y visitas de Estado con agenda y seguimiento. |
+
+### Notas de la Fase 25
 
 - **Menú agrupado** (`js/app.js`, `css/layout.css`): el menú lateral pasa a secciones plegables (Poder legislativo, Gobierno,
   Justicia y control, Política y elecciones, Mundo y economía, Mi carrera). Se abre sola la sección de la pantalla activa,
@@ -287,6 +290,28 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
   creación del personaje.
 
  **25** | Menú lateral agrupado en secciones plegables; escándalos y crisis con decisiones; salud y legado del político; servicio exterior (embajadas, consulados, misiones, Consejo de Seguridad, incidentes); Congreso 2.0 (mercado de votos, transfuguismo, coaliciones que cobran); seguridad y territorio (cultivos, presencia del Estado, certificación); economía global (petróleo, café, ciclo, pandemias, choques históricos); escenarios históricos con objetivos | **completa (esta entrega)** |
+
+### Notas de la Fase 26
+
+- **Licitaciones** (`js/sistemas/licitaciones.js`, `C.Licitacion`): la obra bandera de alcaldes y gobernadores se licita
+  (pública, restringida o directa). Los proponentes son empresas reconocidas, internacionales, locales, donantes de campaña
+  u oportunistas; el puntaje pesa precio, cumplimiento y plazo, y un favorecido suma bonus. La adjudicada define calidad,
+  sobrecostos y riesgo de escándalo con Contraloría y Fiscalía; las financiadoras de campaña dejan comisión y donaciones
+  (`registrarDonante`). Pantalla Local: pestaña «Obras y licitaciones».
+- **Empresas públicas** (`js/sistemas/empresas.js`, `C.Empresas`): once precargadas (EPM, Emcali, Acueducto de Bogotá…),
+  gerentes (técnico, político, aliado, externo), tarifas, sindicato y paro, metas específicas o amplias, dividendos cada
+  26 semanas, capitalización y venta parcial. Crear una requiere voto del Concejo o la Asamblea.
+- **Mundo vivo** (`js/sistemas/mundovivo.js`, `data/geo.js`): 193 países con PIB, régimen, ideología, estabilidad y poder
+  militar que cambian solos (elecciones, golpes, guerras civiles, recesiones); 15 bloques; nueve conflictos con tensión y
+  guerra; tres ejes de alineamiento (occidente, multipolar, bolivariano) que presionan al Presidente y mueven la relación
+  bilateral. Acciones: sancionar, levantar sanciones, mediar, ayuda humanitaria. Pantalla «Mapa mundial» (casillas por
+  país con diez capas, ficha, conflictos, bloques y ranking).
+- **Visitas de Estado** (`js/sistemas/visitas.js`, pestaña «Visitas de Estado» en Diplomacia): agenda de hasta tres temas y
+  tipo de delegación; los embajadores preparan el terreno cada semana; al viajar cada punto sale logrado, a medias o mal,
+  y deja seguimientos que rinden durante meses (mucho más con embajada abierta). También llegan jefes de Estado y hay
+  incidentes de protocolo.
+- Estado nuevo con migración perezosa: `E.licitaciones`/`gobLocal.licitacion`, `E.empresas`, `E.mundoVivo`, `E.visitas`.
+
 
 ### Notas de la Fase 24
 
