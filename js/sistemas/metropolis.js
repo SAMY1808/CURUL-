@@ -167,7 +167,7 @@ window.CURUL = window.CURUL || {};
           if (!v.aprobado) return { ok: true, exito: false, msg: `Los concejos no dan su concepto favorable (${v.si} % de apoyo ponderado). Cabildea a los alcaldes de ${v.detalle.filter(z => !z.voto).map(z => z.n).slice(0, 3).join(', ')}` };
           const nuc = Me.nucleoDepto(x);
           const m = C.Participacion.crear(E, { tipo: 'metropolitana', clave: 'metro:' + x.id, metro: x.id, titulo: `Crear el ${d.n}`, promotor: 'J', nivel: 'municipal', depto: nuc, cargo: 'alcalde' });
-          x.estado = 'tramite'; x.consulta = m.id; Me.anotar(E, x, 'Se abre la consulta popular');
+          x.estado = 'tramite'; x.promoJ = true; x.consulta = m.id; Me.anotar(E, x, 'Se abre la consulta popular');
           Me.noticia(E, x, `Arranca el trámite del ${d.n}: los concejos dieron su aval y se convoca a consulta popular`, 1, true);
           return { ok: true, msg: 'Los concejos avalan: se abre la consulta popular (revísala en Democracia directa)' };
         } });
