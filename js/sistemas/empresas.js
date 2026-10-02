@@ -58,7 +58,7 @@ window.CURUL = window.CURUL || {};
     migrar(E) { Em.asegurar(E); },
     crear(E, o) {
       const g = Em.gerente(E, o.tecnico === false ? 'politico' : 'tecnico', o.gestion, o.integridad);
-      return { id: U.id('emp'), nombre: o.nombre, sector: o.sector, depto: o.depto, organo: o.organo, nivel: o.organo === 'nacion' ? 'nacional' : o.organo === 'gobernacion' ? 'departamental' : 'municipal',
+      return { id: U.id('emp'), nombre: o.nombre, sector: o.sector, depto: o.depto, organo: o.organo, nivel: o.organo === 'nacion' ? 'nacional' : o.organo === 'gobernacion' ? 'departamental' : o.organo === 'metro' ? 'metropolitano' : 'municipal', metro: o.metro || null,
         capital: o.capital, cobertura: o.cobertura, calidad: o.calidad, eficiencia: o.gestion || 60, rentabilidad: 5, deuda: o.deuda, sindicato: o.sindicato, politizacion: 25, tarifa: 'tecnica', subioTarifa: false,
         gerente: g, meta: null, dividendos: 0, vendido: 0, hist: [], estado: 'operando', fundada: E.fecha.t, paro: null };
     },
@@ -66,9 +66,9 @@ window.CURUL = window.CURUL || {};
       const t = GERENTES[tipo] || GERENTES.tecnico, h = U.chance(0.5);
       return { tipo, nombre: `${U.pick(h ? C.DATA.nombres.h : C.DATA.nombres.m)} ${U.pick(C.DATA.nombres.a)} ${U.pick(C.DATA.nombres.a)}`, gestion: Math.round(gestion || U.ri(t.gestion[0], t.gestion[1])), integridad: Math.round(integridad || U.ri(t.integridad[0], t.integridad[1])), desde: E.fecha.t };
     },
-    ownerLabel(E, e) { if (e.nivel === 'nacional') return 'Nación'; const d = E.deptos[e.depto]; return e.nivel === 'departamental' ? 'Gobernación de ' + d.nombre : 'Alcaldía de ' + d.capital; },
-    esMia(E, e) { const J = E.jugador; return e.nivel === 'nacional' ? E.gobierno.presidente === 'J' : e.nivel === 'municipal' ? J.cargo === 'alcalde' && J.cargoInfo.depto === e.depto : J.cargo === 'gobernador' && J.cargoInfo.depto === e.depto; },
-    gobLocal(E, e) { const d = E.deptos[e.depto]; return d && d.gobLocal && d.gobLocal[e.organo]; },
+    ownerLabel(E, e) { if (e.nivel === 'nacional') return 'Nación'; if (e.nivel === 'metropolitano') return 'Área Metropolitana ' + (C.Metro ? C.Metro.def(e.metro).corto : ''); const d = E.deptos[e.depto]; return e.nivel === 'departamental' ? 'Gobernación de ' + d.nombre : 'Alcaldía de ' + d.capital; },
+    esMia(E, e) { const J = E.jugador; if (e.nivel === 'metropolitano') return !!C.Metro && C.Metro.esGestor(E, e.metro); return e.nivel === 'nacional' ? E.gobierno.presidente === 'J' : e.nivel === 'municipal' ? J.cargo === 'alcalde' && J.cargoInfo.depto === e.depto : J.cargo === 'gobernador' && J.cargoInfo.depto === e.depto; },
+    gobLocal(E, e) { if (e.organo === 'metro') return C.Metro ? C.Metro.area(E, e.metro).caja : null; const d = E.deptos[e.depto]; return d && d.gobLocal && d.gobLocal[e.organo]; },
 
     turno(E) {
       const q = Em.asegurar(E), petro = E.mundoEco ? E.mundoEco.petroleo : 100;
@@ -92,7 +92,7 @@ window.CURUL = window.CURUL || {};
         if (E.fecha.t % 13 === 0) { e.hist.push([E.fecha.t, e.rentabilidad, e.cobertura, e.calidad]); if (e.hist.length > 40) e.hist.shift(); }
         if (E.fecha.t % 26 === 0) Em.dividendo(E, e);
         if (!E.meta.presim) {
-          if (U.chance(0.0012 * (100 - g.integridad) / 50 * (e.politizacion / 50 + 0.3))) Em.escandalo(E, e);
+          if (U.chance(0.0012 * (100 - g.integridad) / 50 * (e.politizacion / 50 + 0.3) * (C.Junta ? C.Junta.factorEscandalo(e) : 1))) Em.escandalo(E, e);
           if (e.sindicato > 78 && !e.paro && U.chance(E.fecha.t < (e.convencionHasta || 0) ? 0.004 : 0.02)) Em.paroSindical(E, e);
           if (e.paro) { e.paro.sem--; e.calidad = U.clamp(e.calidad - 0.4, 15, 98); if (e.paro.sem <= 0) { e.paro = null; e.sindicato = Math.max(30, e.sindicato - 18); C.Medios.noticia(E, { tipo: 'regional', titular: `Termina el paro en ${e.nombre}`, tono: 1 }); } }
           Em.evaluarMeta(E, e);
@@ -141,7 +141,7 @@ window.CURUL = window.CURUL || {};
     },
     dividendo(E, e) {
       const pf = { distribuir: 1, reinvertir: 0.4, maximo: 1.5 }[e.politicaDiv || 'distribuir'];
-      const div = Math.max(0, e.rentabilidad) / 100 * e.capital * 0.5 * pf * (1 - e.vendido / 100) * (1 - (e.appPct || 0) / 100) * (e.paro ? 0.5 : 1); if (div <= 0) return;
+      const div = Math.max(0, e.rentabilidad + (C.Junta ? C.Junta.mod(e).rent : 0)) / 100 * e.capital * 0.5 * pf * (1 - e.vendido / 100) * (1 - (e.appPct || 0) / 100) * (e.paro ? 0.5 : 1); if (div <= 0) return;
       e.dividendos += div;
       if (e.nivel === 'nacional') C.Economia.aplicarDelta(E, 'deficit', -div * 0.05);
       else { const gl = Em.gobLocal(E, e); if (gl) gl.fondoRegalias = (gl.fondoRegalias || 0) + div; }

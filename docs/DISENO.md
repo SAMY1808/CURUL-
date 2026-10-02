@@ -258,6 +258,7 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 | **27** | Planisferio con formas reales y capas (relación, comercio, alianzas, conflictos, diáspora, deuda, inflación, desempleo), economía comparada, fuerzas armadas y guerra (Venezuela, Nicaragua), espionaje entre países, periódico de la semana con sesgo editorial y clima, migración y recursos. |
 | **28** | Estructura orgánica del partido (secretaría general, tesorería, jefatura electoral, directorios departamentales), listas del director para Asambleas y Concejos, pareja e hijos con carrera política y dinastía, reformas constitucionales ligadas a la democracia directa y más funciones de las empresas públicas. |
 | **29** | Reforma institucional del Mercosur: directorio, parlamento, tribunal de controversias y modelos tipo UE, ASEAN o tratado vacío, con impactos reales. |
+| **30** | Junta directiva de las empresas públicas (votaciones, estrategia, gobierno corporativo, expansión regional, efectos sobre el país) y áreas metropolitanas con mapas de conurbaciones (Aburrá, Bogotá-Región, Cali, Barranquilla, Manizales, Pereira, Bucaramanga, Cartagena, Cúcuta). |
 
 ### Notas de la Fase 25
 
@@ -317,6 +318,23 @@ animados, ticker de noticias. Adaptado a móvil (navegación inferior).
 - **Segunda vuelta con apoyos** (`js/sistemas/apoyos.js`): los partidos eliminados declaran su respaldo a un finalista, y si tu candidato o tu partido
   quedan fuera puedes apoyar por acuerdo (ministerios y cambios al programa, si el candidato acepta) o sin condiciones. El respaldo suma fuerza en
   las urnas; si el apoyado gana, el pacto se cumple (coalición y ministerios) o se incumple, con costo de relación.
+
+### Notas de la Fase 30
+
+- **Junta directiva** (`js/sistemas/junta.js`, tarjeta «Junta directiva» en Empresas públicas): siete miembros (nueve en las nacionales) con delegados del dueño y de otros
+  socios, trabajadores, usuarios, independientes y accionistas privados. `Junta.exige` somete a votación el cambio de gerente, la venta, los bonos, la APP, la fusión, la
+  inversión, las tarifas altas, los dividendos máximos, la estrategia y la expansión (envuelve las acciones existentes). Cada tipo de miembro tiene su interés por asunto; el
+  jugador puede cabildear, reemplazar y reformar el gobierno corporativo. Una junta sólida (gobernanza alta) mejora la eficiencia y frena los escándalos y puede destituir a
+  un gerente que fracasa; una capturada politiza la empresa.
+- **Estrategias** (servicio, rentabilidad, expansión, transición) cambian cobertura, calidad y rentabilidad semana a semana. **Expansión regional**: llevar la empresa a otros
+  departamentos mejora sus indicadores allá y sube la rentabilidad, pero genera tensión con gobernadores de otros partidos. **Efectos país**: las empresas grandes mueven la
+  inflación (tarifas de energía, gas y telecom), el crecimiento (inversión y paros) y la transición energética.
+- **Áreas metropolitanas** (`data/metropolis.js`, `js/sistemas/metropolis.js`, pantalla «Áreas metropolitanas»): nueve conurbaciones con sus municipios (códigos DANE) y
+  aspirantes. Estado: conurbación sin gobierno, en trámite o constituida; constituirla exige el aval de los concejos y una consulta popular (`Participacion`, tipo
+  `metropolitana`). Constituida tiene junta de alcaldes (voto ponderado por población), director, sobretasa, fondo, proyectos (metro, cables, aire, vivienda…), anexión de
+  municipios y empresa propia; sin gobierno, la movilidad y el ambiente se degradan. Los indicadores mueven los departamentos. El mapa de cada área se dibuja con los
+  polígonos municipales y el del país muestra todas las conurbaciones. Empresas metropolitanas (`organo: 'metro'`), con Metro de Medellín precargado.
+
 
 ### Notas de la Fase 28
 

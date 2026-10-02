@@ -83,6 +83,7 @@ window.CURUL = window.CURUL || {};
       if (C.Espionaje && (!E.espionaje || !E.espionaje.redes)) { const prev = C.E; C.E = E; C.Espionaje.migrar(E); C.E = prev; }
       if (C.Periodico && !E.periodico) { const prev = C.E; C.E = E; C.Periodico.migrar(E); C.E = prev; }
       if (C.Clima && (!E.clima || E.clima.enso == null)) { const prev = C.E; C.E = E; C.Clima.migrar(E); C.E = prev; }
+      if (C.Metro && (!E.metro || !E.metro.areas)) { const prev = C.E; C.E = E; C.Metro.migrar(E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;

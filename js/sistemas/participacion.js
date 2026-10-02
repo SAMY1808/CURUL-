@@ -22,6 +22,7 @@ window.CURUL = window.CURUL || {};
     plebiscito: { nombre: 'Plebiscito', icono: '📣', umbral: null, etapas: ['senado', 'corte', 'campana'], camp: 10 },
     consulta: { nombre: 'Consulta popular nacional', icono: '🗣', umbral: 0.33, etapas: ['senado', 'corte', 'campana'], camp: 10 },
     local: { nombre: 'Consulta popular local', icono: '🏘', umbral: 0.33, etapas: ['concepto', 'campana'], camp: 6 },
+    metropolitana: { nombre: 'Consulta metropolitana', icono: '🏙', umbral: 0.33, etapas: ['concepto', 'campana'], camp: 8 },
     constitucional: { nombre: 'Referendo constitucional', icono: '🏛', umbral: 0.25, etapas: ['senado', 'corte', 'campana'], camp: 12 },
     constitucionalPopular: { nombre: 'Reforma constitucional por iniciativa popular', icono: '🏛', umbral: 0.25, etapas: ['firmas', 'corte', 'campana'], camp: 12 },
     constituyente: { nombre: 'Consulta para convocar una Constituyente', icono: '📜', umbral: 0.33, etapas: ['senado', 'corte', 'campana'], camp: 12 },
@@ -102,6 +103,7 @@ window.CURUL = window.CURUL || {};
     apoyoInicial(E, m, sinRuido) {
       const centro = P.centro(E), ruido = sinRuido ? 0 : U.gauss(0, 2);
       if (P.esConst(m.tipo)) return C.Constitucion.apoyoReforma(E, m, ruido);
+      if (m.tipo === 'metropolitana' && C.Metro) { const a = C.Metro.area(E, m.metro); return U.clamp(40 + (P.aprobLocal(E, m.depto, 'alcalde') - 50) * 0.25 + (60 - a.indic.movilidad) * 0.3 + (60 - a.indic.ambiente) * 0.15 + ruido, 8, 90); }
       if (m.tipo === 'derogatorio' || m.tipo === 'aprobatorio') {
         const p = E.proyectos[m.proyecto]; if (!p) return 50;
         const lejos = U.distIdeo(p, centro);
@@ -263,6 +265,7 @@ window.CURUL = window.CURUL || {};
           opin(r.pasa ? U.rf(2, 5) : -U.rf(3, 6), 'El Presidente sale fortalecido', 'El Presidente pierde el plebiscito: golpe político');
         } else if (E.gobierno.presidente === 'J' && m.promotor === 'J') opin(r.pasa ? U.rf(1, 3) : -U.rf(1, 3), 'Sube la aprobación por ganar la consulta', 'Baja la aprobación por perder la consulta');
       } else if (P.esConst(m.tipo)) C.Constitucion.aplicarResultado(E, m, r, ef, opin);
+      else if (m.tipo === 'metropolitana') C.Metro.aplicarConsulta(E, m, r, ef, opin);
       else if (m.tipo === 'local') P.aplicarLocal(E, m, r, ef);
       else if (m.tipo === 'revocatoria') P.aplicarRevocatoria(E, m, r, ef);
     },

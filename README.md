@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 29 completas)
+## Qué hay en esta versión (Fases 1 a 30 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,
@@ -247,6 +247,8 @@ En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de in
 - **Reformas constitucionales** por referendo, iniciativa popular o Constituyente, ligadas a la democracia directa.
 - **Empresas públicas** con programas de inversión, dividendos, APP, fusiones y misiones estratégicas.
 - **Reforma institucional del Mercosur**: directorio propio, parlamento y tribunal de controversias; parecerse a la UE, a la ASEAN o a un tratado vacío.
+- **Junta directiva** en las empresas públicas, con estrategia, expansión regional y efectos sobre el país.
+- **Áreas metropolitanas** con mapas de las grandes conurbaciones (Valle de Aburrá, Bogotá-Región, Cali, Barranquilla…).
 - **Escenarios históricos** con objetivos, y un **menú lateral agrupado** por secciones.
 
 ## Arquitectura
