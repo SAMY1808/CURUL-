@@ -140,13 +140,20 @@ window.CURUL = window.CURUL || {};
     /* ── Radicar un proyecto ── */
     radicar() {
       const E = C.E, J = E.jugador;
-      const cfg = { plantilla: null, ambicion: 1, financiacion: 'sin', giroEco: 0, giroSoc: 0, titulo: '' };
+      const cfg = { plantilla: null, sector: '', q: '', soloInteres: false, ambicion: 1, financiacion: 'sin', giroEco: 0, giroSoc: 0, titulo: '' };
       const m = UI.modal({ titulo: 'Radicar proyecto de ley', icono: '📥', clase: 'ancho', cuerpo: '' });
       const pintar = () => {
         if (!cfg.plantilla) {
-          const pls = C.DATA.plantillasProyectos.filter(x => !x.interno && (!x.gobierno || E.gobierno.presidente === 'J'));
+          const todas = C.DATA.plantillasProyectos.filter(x => !x.interno && (!x.gobierno || E.gobierno.presidente === 'J'));
+          const q = (cfg.q || '').toLowerCase();
+          const pls = todas.filter(x => (!cfg.sector || x.sector === cfg.sector) && (!cfg.soloInteres || J.intereses.includes(x.sector)) && (!q || x.titulo.toLowerCase().includes(q)));
           const porSector = U.agrupar(pls, x => x.sector);
-          m.cuerpo.innerHTML = `<p class="tenue" style="margin-top:0">Elige la iniciativa. Los temas que coinciden con tus intereses aparecen resaltados.</p>
+          const cuenta = {}; todas.forEach(x => cuenta[x.sector] = (cuenta[x.sector] || 0) + 1);
+          const chips = `<div class="fila" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <button class="btn chico ${!cfg.sector ? '' : 'fant'}" data-cat="">Todas (${todas.length})</button>
+            ${Object.keys(C.DATA.sectores).filter(s => cuenta[s]).map(s => `<button class="btn chico ${cfg.sector === s ? '' : 'fant'}" data-cat="${s}">${C.DATA.sectores[s].icono} ${C.DATA.sectores[s].nombre} (${cuenta[s]})</button>`).join('')}</div>
+            <div class="fila" style="gap:8px;margin-bottom:8px"><div class="campo" style="flex:1;margin:0"><input id="r-buscar" placeholder="Buscar ley…" value="${esc(cfg.q)}"></div><label class="tenue" style="white-space:nowrap"><input type="checkbox" id="r-int" ${cfg.soloInteres ? 'checked' : ''}> Sólo mis intereses</label></div>`;
+          m.cuerpo.innerHTML = `<p class="tenue" style="margin-top:0">Elige la iniciativa (${pls.length} de ${todas.length} leyes). Los temas que coinciden con tus intereses aparecen resaltados.</p>${chips}${pls.length ? '' : '<p class="tenue">Ninguna ley coincide con el filtro.</p>'}
             ${Object.entries(porSector).map(([s, arr]) => `<h3 class="sub-h">${C.DATA.sectores[s].icono} ${C.DATA.sectores[s].nombre} <span class="tenue">· Comisión ${C.DATA.comisiones[C.DATA.sectores[s].comision - 1].nombre}</span></h3>
               <div class="grid g3">${arr.map(x => `<div class="tarjeta clic plantilla ${J.intereses.includes(s) ? 'interes' : ''}" data-pl="${x.id}"><b>${esc(x.titulo)}</b>
                 <div class="fila" style="margin-top:6px"><span class="etq">${C.DATA.tramite.tipos[x.tipo].nombre}</span><span class="etq ${x.pop > 10 ? 'verde' : x.pop < 0 ? 'rojo' : ''}">Popularidad ${x.pop > 0 ? '+' : ''}${x.pop}</span><span class="etq">${x.costo >= 0 ? 'Cuesta' : 'Recauda'} $${U.d1(Math.abs(x.costo))} bill.</span></div>
@@ -186,8 +193,13 @@ window.CURUL = window.CURUL || {};
       m.pie = document.createElement('div'); m.pie.className = 'm-pie';
       m.el.querySelector('.modal').appendChild(m.pie);
       const pie = () => { m.pie.innerHTML = cfg.plantilla ? `<button class="btn" id="r-cancel">Cancelar</button><button class="btn prim" id="r-ok">📥 Radicar en la Secretaría <span class="coste">2 ◆</span></button>` : ''; };
+      m.el.addEventListener('input', e => {
+        if (e.target.id === 'r-buscar') { cfg.q = e.target.value; const pos = e.target.selectionStart; pintar(); const b = m.el.querySelector('#r-buscar'); if (b) { b.focus(); b.setSelectionRange(pos, pos); } }
+        if (e.target.id === 'r-int') { cfg.soloInteres = e.target.checked; pintar(); }
+      });
       m.el.addEventListener('click', e => {
         const t = e.target.closest('[data-pl]'); if (t) { cfg.plantilla = t.dataset.pl; pintar(); pie(); return; }
+        const ct = e.target.closest('[data-cat]'); if (ct) { cfg.sector = ct.dataset.cat; pintar(); return; }
         if (e.target.closest('#r-volver')) { cfg.plantilla = null; pintar(); pie(); return; }
         const f = e.target.closest('#r-fin [data-f]'); if (f) { cfg.financiacion = f.dataset.f; pintar(); return; }
         if (e.target.closest('#r-cancel')) return m.cerrar();

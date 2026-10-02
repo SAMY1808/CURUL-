@@ -1274,3 +1274,9 @@ prueban con el jugador de presidente.
   recortar un sector con los controles de la pestaña Presupuesto.
 - Pendiente natural de la Fase 3: dar a gobernadores y alcaldes un presupuesto y agenda propios
   (hoy sólo existen como cargos electorales), reutilizando el mismo patrón de `presupuesto.js`.
+
+
+### Notas de la Fase 31 — Catálogo ampliado de leyes
+- `data/leyes-extra.js` añade ~216 leyes (250 en total) en formato compacto por categoría (las 18 sectores/comisiones), con tipo (ordinaria/orgánica/estatutaria/acto), posición ideológica, costo, popularidad, actores a favor/en contra y efectos.
+- Todas alimentan por igual la IA del Congreso, la agenda del Gobierno y el selector «Radicar proyecto».
+- El selector agrupa por categoría, con chips de filtro con conteo, buscador y filtro «sólo mis intereses».
