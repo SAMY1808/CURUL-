@@ -332,8 +332,10 @@ window.CURUL = window.CURUL || {};
       E.meta.numLey = (E.meta.numLey || 2310) + 1;
       p.estado = 'ley'; p.ley = E.meta.numLey; p.sub = 'fin'; p.sancionada = E.fecha.t;
       L.hist(E, p, promulgacion ? `Promulgado como Acto Legislativo ${String(p.ley % 100).padStart(2, '0')} de ${U.anio()}` : `SANCIONADO: Ley ${p.ley} de ${U.anio()}`, 'ley');
-      C.Economia.programar(E, p.efectos, p.id);
-      if (p.costo) C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(p.costo), p: 'm' }], p.id);
+      if (!(C.Decretos && C.Decretos.retener(E, p))) {
+        C.Economia.programar(E, p.efectos, p.id);
+        if (p.costo) C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(p.costo), p: 'm' }], p.id);
+      }
       const autor = E.politicos[p.autor]; if (autor) autor.stats.aprobados++;
       if (p.autor === 'J' || p.coautores.includes('J')) {
         E.jugador.historialLegislativo.push({ t: E.fecha.t, titulo: p.titulo, ley: p.ley, rol: p.autor === 'J' ? 'autor' : 'coautor', resultado: 'ley' });

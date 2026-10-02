@@ -130,12 +130,13 @@ window.CURUL = window.CURUL || {};
     /* Revierte lo que una ley ya movió y cancela lo pendiente. `factor` 1 = todo; 0,5 = la mitad. */
     anularEfectos(E, p, factor) {
       const Ec = C.Economia;
+      if (p.reglam && p.reglam.estado === 'pendiente') { p.reglam.estado = 'anulada'; return; }
       E.economia.pendientes = E.economia.pendientes.filter(pe => {
         if (pe.origen !== p.id) return true;
         if (factor >= 1) return false;
         pe.d *= (1 - factor); return true;
       });
-      const dt = E.fecha.t - (p.sancionada != null ? p.sancionada : E.fecha.t), inv = [];
+      const dt = E.fecha.t - (p.vigencia != null ? p.vigencia : p.sancionada != null ? p.sancionada : E.fecha.t), inv = [];
       const parte = (plazo, d, v) => { const [a, b] = Ec.PLAZOS[plazo || 'i']; const frac = U.clamp((dt - a) / Math.max(1, b - a), 0, 1); if (frac > 0.02 && d) inv.push({ v, d: -d * frac * factor, p: 'i' }); };
       for (const ef of p.efectos || []) parte(ef.p, ef.d, ef.v);
       if (p.costo) parte('m', Ec.impactoFiscal(p.costo), 'deficit');

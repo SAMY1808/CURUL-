@@ -84,6 +84,7 @@ window.CURUL = window.CURUL || {};
       if (C.Periodico && !E.periodico) { const prev = C.E; C.E = E; C.Periodico.migrar(E); C.E = prev; }
       if (C.Clima && (!E.clima || E.clima.enso == null)) { const prev = C.E; C.E = E; C.Clima.migrar(E); C.E = prev; }
       if (C.Metro && (!E.metro || !E.metro.areas)) { const prev = C.E; C.E = E; C.Metro.migrar(E); C.E = prev; }
+      for (const k of C.MODULOS_NUEVOS || []) if (C[k] && C[k].clave && (!E[C[k].clave])) { const prev = C.E; C.E = E; (C[k].migrar || C[k].init).call(C[k], E); C.E = prev; }
       // Futuras migraciones: if (E.meta.esquema < 2) { … }
       E.meta.esquema = ESQUEMA;
       E.meta.version = C.VERSION;
