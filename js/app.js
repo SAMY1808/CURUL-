@@ -38,6 +38,7 @@ window.CURUL = window.CURUL || {};
       document.getElementById('nav-fondo').onclick = () => document.body.classList.remove('nav-abierto');
       App.ir(E.ui.pantalla || 'dashboard', E.ui.params);
       App.revisarPendientes();
+      if (C.Tutorial) C.Tutorial.primeraVez();
     },
     ir(pantalla, params) {
       const E = C.E;

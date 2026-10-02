@@ -44,7 +44,6 @@ tabaco|Impuestos saludables a cigarrillos, licores y comida chatarra|o|-20|10|-1
 empleo: `
 saludlaboral|Salario mínimo diferencial regional|o|40|5|0|-3|Gremios|Sindicatos|des:-0.3:m,pob:0.1:m,apr:-0.6:i
 trabajoplataformas|Estatuto de trabajadores de plataformas digitales|o|-20|-10|0.3|12|Jóvenes,Sindicatos|Tecnológicas|des:-0.1:m,pob:-0.1:m,apr:0.9:i,inv:-0.1:l
-primerempleo|Incentivo al primer empleo juvenil|o|15|0|0.9|13|Jóvenes,Gremios|Sindicatos|des:-0.5:m,apr:0.8:i
 teletrabajo|Régimen moderno de teletrabajo y desconexión laboral|o|5|-10|0.1|8|Jóvenes,Gremios|Hacienda|cr:0.1:l,apr:0.5:i
 tercerizacion|Límites a la tercerización e intermediación laboral|o|-45|-5|0.1|7|Sindicatos|Gremios,Industria|pob:-0.2:m,inv:-0.1:l,apr:0.6:i
 licenciamaternidad|Ampliación de licencia de maternidad y paternidad|o|-30|-35|0.3|12|Mujeres,Sindicatos|Gremios|pob:-0.1:l,apr:0.9:i,inv:-0.05:l
@@ -73,7 +72,6 @@ justicia: `
 descongestion|Plan de descongestión judicial y oralidad|o|0|0|1.2|5|Jueces,Abogados|Hacienda|conf:0.6:l,inv:0.2:l
 justiciarural|Casas de justicia y jueces itinerantes rurales|o|-15|-5|0.7|6|Campesinos,Indígenas|Hacienda|conf:0.4:m,seg:0.4:m
 tutela|Reglamentación de la acción de tutela|e|20|10|0.1|-3|Jueces|Defensores de DDHH,Abogados|conf:-0.3:m
-anticorrupcion|Estatuto anticorrupción: inhabilidad perpetua para corruptos|e|0|10|0.3|18|Medios,Jóvenes|Políticos|conf:1.2:l,apr:1.3:i
 extincion|Reforma a la extinción de dominio|o|10|20|0.2|12|Fuerza Pública,Medios|Abogados|seg:0.8:m,conf:0.6:m,apr:0.7:i
 carreraJudicial|Reforma a la carrera judicial y a la Rama|g|0|0|0.9|2|Jueces|Políticos|conf:0.8:l
 colaboracion|Reglas de colaboración eficaz y principio de oportunidad|o|5|5|0.1|2|Jueces|Defensores de DDHH|conf:0.4:l,seg:0.4:m
@@ -159,8 +157,6 @@ transgenicos|Liberación de cultivos mejorados genéticamente|o|40|10|0.1|-2|Ind
 contrabandoagro|Control al contrabando de productos agrícolas|o|10|10|0.3|5|Campesinos,Gremios|-|exp:0.1:m,seg:0.2:m
 `,
 ambiente: `
-deforestacion|Pacto contra la deforestación amazónica|o|-10|-10|0.9|6|Ambientalistas,Indígenas|Gremios|seg:0.3:m,conf:0.3:l,cr:-0.05:m
-fracking|Prohibición del fracturamiento hidráulico|o|-25|-15|0.2|5|Ambientalistas|Minero-energético|exp:-0.2:m,apr:0.6:i
 paramos|Delimitación y protección de páramos y humedales|o|-15|-10|0.6|5|Ambientalistas|Minero-energético|cr:-0.05:m,conf:0.2:l
 aguas|Gestión integral del recurso hídrico|o|-5|0|1.0|5|Ambientalistas,Alcaldes|Industria|sal:0.5:l,cr:0.05:l
 residuos|Economía circular y responsabilidad extendida del productor|o|10|-5|0.5|4|Ambientalistas,Jóvenes|Industria|cr:0.05:l,sal:0.2:l
@@ -177,7 +173,6 @@ energia: `
 transicionenergetica|Transición energética justa: renovables y desmonte gradual|o|-10|-5|2.0|6|Ambientalistas,Jóvenes|Minero-energético|inv:0.3:m,cr:0.1:l,exp:-0.15:m
 solarcomunidades|Comunidades energéticas y autogeneración solar|o|-10|-5|0.9|8|Alcaldes,Ambientalistas|-|inv:0.2:m,pob:-0.05:l,inf2:0.2:l
 tarifasenergia|Reducción de tarifas de energía y opción tarifaria|o|-40|0|1.3|12|Pobres,Alcaldes|Industria|inf:-0.2:m,pob:-0.15:m,def:0.1:m
-exploracion|Reactivación de la exploración de petróleo y gas|o|50|5|-0.8|3|Minero-energético,Gremios|Ambientalistas|exp:0.6:m,inv:0.4:m,cr:0.2:m,def:-0.1:m
 hidrogeno|Estrategia del hidrógeno verde|o|20|-5|0.8|3|Industria,Ambientalistas|-|inv:0.2:l,exp:0.2:l
 nuclear|Marco para energía nuclear civil|o|35|10|0.3|-3|Industria|Ambientalistas|inv:0.1:l
 interconexion|Interconexión eléctrica regional y exportación de energía|o|30|0|1.2|3|Industria,Gremios|-|exp:0.3:l,inv:0.2:l
@@ -232,7 +227,6 @@ espaciopublico|Estatuto del espacio público y ciudad compacta|o|5|-5|0.4|3|Alca
 comercio: `
 aranceles|Reducción unilateral de aranceles|o|60|5|-0.6|2|Gremios,Industria|Campesinos,Sindicatos|inf:-0.2:m,exp:0.2:m,des:0.1:m
 exportacionespyme|Programa de exportación para pymes|o|25|0|0.7|5|Gremios|-|exp:0.4:m,cr:0.1:m
-tlc|Aprobación de nuevos TLC con Asia y Europa|o|55|5|0.1|-1|Gremios,Comercio|Sindicatos,Campesinos|exp:0.5:m,inv:0.3:m,des:0.05:m
 competencia|Ley de competencia y límites a posiciones dominantes|o|-10|0|0.2|6|Jóvenes,Medios|Gremios|inf:-0.15:m,cr:0.05:l
 protecciondeconsumo|Estatuto reforzado del consumidor|o|-15|0|0.2|9|Pobres,Medios|Gremios|inf:-0.05:m,apr:0.5:i
 desarrolloindustrial|Política de reindustrialización nacional|o|-20|0|1.8|8|Industria,Sindicatos|Hacienda|cr:0.3:l,des:-0.2:m,exp:0.2:l,def:0.2:m
@@ -285,7 +279,7 @@ memoriaoral|Archivo digital de la memoria y las tradiciones|o|-5|-5|0.2|2|Cultur
       out.push({
         id, titulo: f[1], sector, tipo: TIPO[f[2]], eco: +f[3], soc: +f[4], costo: +f[5], pop: +f[6],
         apoyan: lista(f[7]), opuestos: lista(f[8]),
-        efectos: f[9].split(',').map(t => { const [v, d, p] = t.split(':'); return { v: VAR[v] || (v === 'inf2' ? 'infraestructura' : v), d: +d, p }; }),
+        efectos: f[9].split(',').map(t => { const [v, d, p] = t.split(':'); return { v: VAR[v], d: +(+d * (TIPO[f[2]] === 'acto' ? 1 : 1.5)).toFixed(2), p }; }),   // equilibrado: las leyes extra rinden como las originales
         extra: true
       });
     }

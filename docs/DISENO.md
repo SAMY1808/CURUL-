@@ -1280,3 +1280,11 @@ prueban con el jugador de presidente.
 - `data/leyes-extra.js` añade ~216 leyes (250 en total) en formato compacto por categoría (las 18 sectores/comisiones), con tipo (ordinaria/orgánica/estatutaria/acto), posición ideológica, costo, popularidad, actores a favor/en contra y efectos.
 - Todas alimentan por igual la IA del Congreso, la agenda del Gobierno y el selector «Radicar proyecto».
 - El selector agrupa por categoría, con chips de filtro con conteo, buscador y filtro «sólo mis intereses».
+
+
+### Notas de las Fases 32 a 36
+- **32 · Decretos y excepción** (`sistemas/decretos.js`, `pantallas/decretos.js`): las leyes sancionadas quedan *pendientes de reglamentación*; el Gobierno las reglamenta (fiel o restrictiva) o, tras 52 semanas, caen en *letra muerta* (35 % de efectos). El congresista puede presionar o acudir a una acción de cumplimiento. Estados de excepción (conmoción interior, emergencia económica) con decretos legislativos, prórrogas, límite anual y revisión automática de la Corte, que compara la declaratoria con la gravedad real de la crisis.
+- **33 · Riesgo y sociedad** (`sistemas/sociedad.js`): desastres naturales y UNGRD (calamidad, refuerzo, prevención); consulta previa a comunidades étnicas para megaproyectos (concertar, saltarse la consulta y arriesgar tutela); narcotráfico con estructuras que se fragmentan, golpes, extradición, sometimiento, UIAF y control de puertos.
+- **34 · Sectores** (`sistemas/sectores.js`): pensiones (régimen público vs. fondos privados, edad, pilar solidario, costo fiscal), salud con EPS (solvencia, intervención, liquidación, UPC, deuda hospitalaria, modelo) y finanzas (dólar, reservas, junta del Banco, presión del Gobierno, crisis bancarias y rescate). Las reformas estructurales son leyes (`pen_*`, `sal_*`, `banrep_reforma`, `fogafin`) que cambian el sistema al sancionarse.
+- **35 · Narrativa** (`sistemas/narrativa.js`): debates presidenciales televisados (9 y 4 semanas antes de la elección), logros y estadísticas globales persistentes (`localStorage`), biografía automática con línea de tiempo y red de poder entre políticos NPC (rasgos, alianzas, traiciones, bodas).
+- **36 · Calidad**: catálogo de leyes depurado y equilibrado (≈250), tutorial inicial de siete pasos y registro genérico de módulos nuevos (`C.MODULOS_NUEVOS`: init en `mundo.js` y migración en `estado.js`).

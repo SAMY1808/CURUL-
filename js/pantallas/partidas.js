@@ -26,7 +26,7 @@ window.CURUL = window.CURUL || {};
             <div class="fila"><button class="btn prim" id="g-guardar">💾 Guardar</button><button class="btn" id="g-nueva">💾 Guardar como nueva</button><button class="btn" id="g-exp">⬇ Exportar .json</button>
               <label class="btn">⬆ Importar<input type="file" id="g-imp" accept=".json,application/json" hidden></label></div>
             <div class="tenue" style="font-size:12px;margin-top:10px">Semilla del mundo: <span class="mono">${E.meta.semilla}</span> · versión ${esc(E.meta.version)} · esquema ${E.meta.esquema}</div>
-            <div style="margin-top:14px"><button class="btn peligro" id="g-salir">⏏ Salir al menú principal</button></div></div>
+            <div style="margin-top:14px"><button class="btn" id="g-tutorial">❓ Ver el tutorial</button> <button class="btn peligro" id="g-salir">⏏ Salir al menú principal</button></div></div>
           <div class="tarjeta"><h3>Partidas guardadas</h3><div class="lista" id="g-lista">${filas(C.Guardado.listar(), E.meta.slot)}</div></div>
         </div>`;
       const $ = s => UI.$(s, el);
@@ -34,6 +34,7 @@ window.CURUL = window.CURUL || {};
       $('#g-nueva').onclick = () => { E.meta.slot = null; C.Guardado.guardar(null, $('#g-nombre').value + ' (copia)').then(r => { UI.toast(r.msg, r.ok ? 'bien' : 'mal'); C.App.refrescar(); }); };
       $('#g-exp').onclick = () => C.Guardado.exportar();
       $('#g-imp').onchange = e => { const f = e.target.files[0]; if (f) C.Guardado.importar(f).then(r => { if (r.ok) { C.App.comenzar(); UI.toast('Partida importada', 'bien'); } else UI.toast(r.msg, 'mal'); }); };
+      $('#g-tutorial').onclick = () => C.Tutorial.mostrar(0);
       $('#g-salir').onclick = () => C.Guardado.guardar(E.meta.slot).then(() => { C.E = null; C.Pantallas.inicio.render(document.getElementById('app')); });
       enlazar($('#g-lista'), () => C.App.refrescar());
     },
