@@ -251,6 +251,74 @@ window.CURUL = window.CURUL || {};
       }
     },
 
+
+    /* ── Calendario proyectado ────────────────────────────────
+       Estima, etapa por etapa, la semana en que se votará el proyecto: espera de ponencia, cola del orden del día
+       (una votación por comisión y semana, dos por plenaria; las urgencias tienen doble cupo), recesos
+       legislativos y el tránsito de legislatura del artículo 162. Son fechas aproximadas: la política las mueve. */
+    enSesionEn(t) {
+      const d = U.fechaDe(t), m = d.getUTCMonth(), dia = d.getUTCDate();
+      if (m === 6) return dia >= 20; if (m >= 7 && m <= 10) return true; if (m === 11) return dia <= 16;
+      if (m === 2) return dia >= 16; if (m === 3 || m === 4) return true; if (m === 5) return dia <= 20; return false;
+    },
+    siguienteSesion(t) { for (let i = 0; i < 80 && !L.enSesionEn(t); i++) t++; return t; },
+    limiteLegislatura(E, p) {
+      let n = (p.legRad || 1) + 2 - (E.congreso.legislatura || 1), t = E.fecha.t;
+      if (n <= 0) return E.fecha.t;
+      for (let i = 0; i < 160; i++) { t++; const d = U.fechaDe(t); if (d.getUTCMonth() === 6 && d.getUTCDate() >= 20 && d.getUTCDate() < 27 && --n === 0) return t; }
+      return t;
+    },
+    calendario(E, p) {
+      const Tt = T(), now = E.fecha.t, pasos = [], act = L.activos(E);
+      const cola = (id, cam, inst, com, futuro) => {
+        const mios = act.filter(x => x.id !== p.id && L.camaraDeEtapa(x) === cam && (futuro ? L.etapaActual(x) === id : (x.sub === 'agenda' || x.sub === 'ponencia') && L.etapaActual(x) === id) && (inst !== 'comision' || x.comision === com));
+        const ahead = futuro ? Math.floor(mios.length * 0.5) : mios.filter(x => L.prioridad(E, x) > L.prioridad(E, p)).length;
+        return Math.floor(ahead / (inst === 'comision' ? (p.urgencia ? 2 : 1) : 2));
+      };
+      let t = now, tFinal = null;
+      for (let i = 0; i < p.etapas.length; i++) {
+        const id = p.etapas[i], def = Tt.etapas[id] || { nombre: id, icono: '•' }, cam = L.camaraDeEtapa(p, id);
+        const paso = { id, nombre: def.nombre, icono: def.icono, cam, instancia: def.instancia || null };
+        if (p.estado === 'ley' || i < p.etapa) {
+          paso.estado = 'hecha';
+          const v = p.votaciones.map(x => E.votaciones.find(y => y.id === x)).filter(Boolean).filter(x => x.etapa === id).pop();
+          paso.t = id === 'radicacion' ? p.radicado : v ? v.t : null;
+          pasos.push(paso); continue;
+        }
+        if (p.estado === 'archivado') { paso.estado = 'muerta'; pasos.push(paso); continue; }
+        const actual = i === p.etapa;
+        paso.estado = actual ? 'actual' : 'futura';
+        let ready;
+        if (id === 'radicacion') { ready = p.esperaHasta; }
+        else if (def.instancia === 'comision') {
+          const cambio = id === 'comision2' || id === 'comision4';
+          if (actual && p.sub === 'ponencia') ready = p.ponenciaLista;
+          else if (actual && p.sub === 'agenda') ready = Math.max(p.esperaHasta, now + 1);
+          else ready = (actual ? Math.max(p.esperaHasta, now) : t) + (cambio ? 2 : 1) + (p.urgencia ? 2 : 6);
+        } else if (def.instancia === 'plenaria') ready = actual && p.sub === 'agenda' ? Math.max(p.esperaHasta, now + 1) : t + 2;
+        else if (id === 'conciliacion') { paso.condicional = !p.modificado; ready = t + 1; }
+        else ready = t + (id === 'sancion' ? 1 : 0);
+        if (def.instancia) { ready += cola(id, cam, def.instancia, p.comision, !actual); paso.t = L.siguienteSesion(Math.max(ready, now + 1)); }
+        else paso.t = Math.max(ready, now + 1);
+        if (id === 'sancion' && E.gobierno.presidente === 'J') paso.nota = 'Decides tú';
+        t = paso.t; if (!paso.condicional || p.modificado) tFinal = t;
+        pasos.push(paso);
+      }
+      const lim = p.estado === 'tramite' ? L.limiteLegislatura(E, p) : null;
+      return { pasos, final: p.estado === 'tramite' ? tFinal : null, limite: lim, enRiesgo: lim != null && tFinal != null && tFinal >= lim,
+        proxima: pasos.find(x => x.id !== 'radicacion' && (x.estado === 'actual' || x.estado === 'futura')) || null };
+    },
+    /* Votaciones esperadas en las próximas semanas, agrupadas por semana (para el calendario del Congreso) */
+    agendaProyectada(E, semanas) {
+      const out = {};
+      for (const p of L.activos(E)) {
+        if (p.sub === 'decisionPresidente') continue;
+        const cal = L.calendario(E, p), pr = cal.proxima; if (!pr || pr.t == null || pr.t > E.fecha.t + semanas) continue;
+        (out[pr.t] = out[pr.t] || []).push({ p, paso: pr });
+      }
+      return out;
+    },
+
     /* ── Orden del día y avance del trámite ─────────────────── */
     prioridad(E, p) {
       let s = p.pop * 0.5 + (p.urgencia ? 40 : 0) + (p.gobierno ? 18 : 0) + p.presion;

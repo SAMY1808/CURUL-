@@ -135,6 +135,19 @@ window.CURUL = window.CURUL || {};
       }).join('')}</div>`;
   };
 
+  /* Calendario: votaciones esperadas semana a semana en las próximas 16 semanas */
+  const vistaCalendario = E => {
+    const L = C.Legislacion, soloMios = !!E.ui.calMios, ag = L.agendaProyectada(E, 16);
+    const semanas = Object.keys(ag).map(Number).sort((a, b) => a - b);
+    const filas = semanas.map(t => {
+      const its = ag[t].filter(x => !soloMios || x.p.autor === 'J' || x.p.coautores.includes('J'));
+      if (!its.length) return '';
+      return `<div class="tarjeta"><div class="fila" style="justify-content:space-between"><b>Semana del ${U.fmtT(t, false)}</b><span class="tenue" style="font-size:12px">${t - E.fecha.t <= 0 ? 'esta semana' : 'en ' + (t - E.fecha.t) + ' sem.'}</span></div>
+        <div class="lista" style="margin-top:6px">${its.map(({ p, paso }) => `<div class="it clic" data-proy="${p.id}"><div class="cuerpo"><b style="white-space:normal;font-size:13px">${esc(p.titulo)}</b><span>${paso.icono} ${esc(paso.nombre)}${paso.cam ? ' · ' + C.Congreso.nombreCamara(paso.cam) : ''}${p.autor === 'J' ? ' · <b>tuyo</b>' : ''}</span></div></div>`).join('')}</div></div>`;
+    }).join('');
+    return `<div class="fila" style="margin-bottom:10px"><label class="tenue"><input type="checkbox" id="cal-mios" ${soloMios ? 'checked' : ''}> Sólo mis proyectos</label><span class="tenue" style="font-size:12px">Fechas estimadas: dependen de ponencias, cupos semanales por comisión y recesos.</span></div>${filas || '<div class="tarjeta vacio">No hay votaciones previstas en las próximas 16 semanas.</div>'}`;
+  };
+
   const vistaOrden = (E) => {
     const od = E.congreso.ordenDia;
     if (!od || !C.Congreso.enSesion(E)) return `<div class="tarjeta vacio">El Congreso está en receso. Las sesiones ordinarias van del 20 de julio al 16 de diciembre y del 16 de marzo al 20 de junio.</div>`;
@@ -201,11 +214,12 @@ window.CURUL = window.CURUL || {};
       const E = C.E;
       const tab = params.tab || E.ui.tabCong || (E.jugador.camara || 'senado');
       E.ui.tabCong = tab;
-      const tabs = [['senado', '🔴 Senado'], ['camara', '🟢 Cámara'], ['composicion', 'Composición y coaliciones'], ['comisiones', 'Comisiones'], ['orden', 'Orden del día'], ['mercado', 'Mercado de votos'], ['actividad', 'Actividad']];
-      const cuerpo = tab === 'senado' || tab === 'camara' ? vistaCamara(E, tab) : tab === 'composicion' ? vistaComposicion(E) : tab === 'comisiones' ? vistaComisiones(E) : tab === 'orden' ? vistaOrden(E) : tab === 'mercado' ? vistaMercado(E) : vistaActividad(E);
+      const tabs = [['senado', '🔴 Senado'], ['camara', '🟢 Cámara'], ['composicion', 'Composición y coaliciones'], ['comisiones', 'Comisiones'], ['orden', 'Orden del día'], ['calendario', '📅 Calendario'], ['mercado', 'Mercado de votos'], ['actividad', 'Actividad']];
+      const cuerpo = tab === 'senado' || tab === 'camara' ? vistaCamara(E, tab) : tab === 'composicion' ? vistaComposicion(E) : tab === 'comisiones' ? vistaComisiones(E) : tab === 'orden' ? vistaOrden(E) : tab === 'calendario' ? vistaCalendario(E) : tab === 'mercado' ? vistaMercado(E) : vistaActividad(E);
       el.innerHTML = `<div class="cab"><div><h1>Congreso de la República</h1><div class="sub">Cuatrienio ${esc(E.congreso.cuatrienio)} · Legislatura ${C.Congreso.periodo(E).legislatura} · ${C.Congreso.enSesion(E) ? '<span class="bien">en sesiones ordinarias</span>' : '<span class="tenue">en receso</span>'}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>${cuerpo}`;
       UI.$$('.tabs [data-tab]', el).forEach(b => b.onclick = () => C.App.ir('congreso', { tab: b.dataset.tab }));
+      const cm = UI.$('#cal-mios', el); if (cm) cm.onchange = () => { E.ui.calMios = cm.checked; C.App.refrescar(); };
       const modo = UI.$('#c-modo', el); if (modo) modo.onchange = e => { E.ui.modoHemi = e.target.value; C.App.refrescar(); };
       UI.$$('#c-vista button', el).forEach(b => b.onclick = () => { E.ui.vistaCamara = b.dataset.v; C.App.refrescar(); });
       const mc = UI.$('#c-mcam', el); if (mc) mc.onchange = e => { E.ui.mercadoCam = e.target.value; C.App.refrescar(); };

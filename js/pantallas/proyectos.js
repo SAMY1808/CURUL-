@@ -33,7 +33,7 @@ window.CURUL = window.CURUL || {};
             <div class="fp-cuerpo"><div class="fila" style="gap:6px"><span class="tenue mono" style="font-size:11px">PL ${esc(p.numero)}</span>${p.gobierno ? '<span class="etq">Gobierno</span>' : ''}${p.urgencia ? '<span class="etq rojo">Urgencia</span>' : ''}${p.autor === 'J' ? '<span class="etq verde">Tuyo</span>' : ''}<span class="etq">${C.DATA.tramite.tipos[p.tipo].nombre}</span></div>
               <b>${esc(p.titulo)}</b><div class="tenue" style="font-size:12px">${esc(L.nombreAutor(E, p))} · ${Comp.partido(E, p.partido)} · Comisión ${C.DATA.comisiones[p.comision - 1].nombre}</div>
               ${Comp.tramite(E, p, true)}</div>
-            <div class="fp-der">${Comp.estadoProyecto(p)}${pr ? `<span class="etq ${pr.distancia <= 0 ? 'verde' : 'rojo'}"${UI.tt('Distancia de mayoría en la próxima instancia')}>${pr.distancia <= 0 ? 'Pasa (+' + -pr.distancia + ')' : 'Faltan ' + pr.distancia}</span>` : ''}<span class="tenue" style="font-size:11.5px">Apoyo ciudadano ${U.n(apoyoCiudadano(p))}%</span></div></div>`;
+            <div class="fp-der">${Comp.estadoProyecto(p)}${(() => { if (p.estado !== 'tramite') return ''; const x = L.calendario(E, p).proxima; return x && x.t != null ? `<span class="etq"${UI.tt('Próxima votación estimada: ' + esc(x.nombre))}>📅 ${U.fmtT(x.t)}</span>` : ''; })()}${pr ? `<span class="etq ${pr.distancia <= 0 ? 'verde' : 'rojo'}"${UI.tt('Distancia de mayoría en la próxima instancia')}>${pr.distancia <= 0 ? 'Pasa (+' + -pr.distancia + ')' : 'Faltan ' + pr.distancia}</span>` : ''}<span class="tenue" style="font-size:11.5px">Apoyo ciudadano ${U.n(apoyoCiudadano(p))}%</span></div></div>`;
         }).join('') || '<div class="tarjeta vacio">No hay proyectos en esta categoría.</div>'}</div>`;
       UI.$$('#p-filtro button', el).forEach(b => b.onclick = () => C.App.ir('proyectos', { filtro: b.dataset.f }));
       UI.$$('[data-proy]', el).forEach(b => b.onclick = () => P.expediente(b.dataset.proy));
@@ -61,7 +61,7 @@ window.CURUL = window.CURUL || {};
             </div></div>
           <div class="exp-estado">${Comp.estadoProyecto(p)}${p.estado === 'tramite' ? `<div class="tenue" style="font-size:12px;margin-top:4px">${esc(inf.nombre || '')}${cam ? ' · ' + C.Congreso.nombreCamara(cam) : ''}</div>` : ''}</div>
         </div>
-        ${Comp.tramite(E, p)}`;
+        ${Comp.tramite(E, p)}${Comp.calendario(E, p)}`;
         const tabs = [['negociacion', p.estado === 'tramite' ? '🤝 Votos y negociación' : null], ['resumen', 'Impacto'], ['votaciones', 'Votaciones (' + p.votaciones.length + ')'], ['enmiendas', 'Enmiendas (' + p.enmiendas.length + ')'], ['historial', 'Historial']].filter(t => t[1]);
         let cuerpo = '';
         if (tab === 'resumen') cuerpo = P.tabImpacto(E, p);

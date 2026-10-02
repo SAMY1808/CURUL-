@@ -122,6 +122,22 @@ window.CURUL = window.CURUL || {};
         return `<div class="paso ${est}" data-etapa="${i}"${UI.tt(`<b>${esc(def.nombre)}</b>${cam ? '<br>' + C.Congreso.nombreCamara(cam) : ''}`)}><span class="ic">${est === 'muerta' ? '✖' : est === 'hecha' ? '✔' : def.icono}</span>${compacto ? '' : `<span class="n">${esc(def.nombre.replace(' · ', '\n'))}</span>`}</div>`;
       }).join('<i class="lin"></i>')}</div>`;
     },
+    /* Calendario proyectado de un proyecto: cuándo se vota cada debate (fechas aproximadas) */
+    calendario(E, p) {
+      const L = C.Legislacion, cal = L.calendario(E, p), hoy = E.fecha.t;
+      if (p.estado === 'archivado') return '';
+      const fila = x => {
+        const cam = x.cam ? C.Congreso.nombreCamara(x.cam) : '';
+        const f = x.t != null ? U.fmtT(x.t, false) : '—';
+        const cls = x.estado === 'hecha' ? 'verde' : x.estado === 'actual' ? 'amar' : '';
+        const cuando = x.estado === 'hecha' ? f : x.t != null ? `${f}${x.t - hoy > 0 ? ` <span class="tenue">(en ${x.t - hoy} sem.)</span>` : ''}` : f;
+        return `<tr><td>${x.icono} ${esc(x.nombre)}${x.condicional ? ' <span class="tenue">(si hay diferencias)</span>' : ''}${x.nota ? ' <b>· ' + esc(x.nota) + '</b>' : ''}</td><td>${esc(cam)}</td><td>${cuando}${x.estado === 'actual' ? '' : ''}</td><td><span class="etq ${cls}">${x.estado === 'hecha' ? 'Hecho' : x.estado === 'actual' ? 'Siguiente' : 'Estimado'}</span></td></tr>`;
+      };
+      const lim = cal.limite != null ? `<div class="tenue" style="font-size:12px;margin-top:6px">Plazo del art. 162: si no es ley antes del <b>${U.fmtT(cal.limite, false)}</b>, el proyecto se archiva.${cal.enRiesgo ? ' <span class="etq rojo">En riesgo: el calendario estimado lo supera</span>' : ''}</div>` : '';
+      return `<div class="tarjeta" style="margin-top:12px"><h3>📅 Calendario del trámite</h3>
+        <table class="tabla"><thead><tr><th>Debate</th><th>Cámara</th><th>Fecha estimada</th><th></th></tr></thead><tbody>${cal.pasos.filter(x => x.id !== 'radicacion').map(fila).join('')}</tbody></table>${lim}
+        <div class="tenue" style="font-size:11.5px;margin-top:4px">Las fechas dependen de la ponencia, del orden del día (una votación semanal por comisión), de los recesos y de la presión política: son una estimación.</div></div>`;
+    },
     estadoProyecto(p) {
       if (p.estado === 'inexequible') return `<span class="etq rojo">⚖ Ley ${p.ley} · inexequible</span>`;
       if (p.estado === 'derogada') return `<span class="etq rojo">🗳 Ley ${p.ley} · derogada</span>`;

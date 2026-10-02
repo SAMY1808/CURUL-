@@ -1288,3 +1288,7 @@ prueban con el jugador de presidente.
 - **34 · Sectores** (`sistemas/sectores.js`): pensiones (régimen público vs. fondos privados, edad, pilar solidario, costo fiscal), salud con EPS (solvencia, intervención, liquidación, UPC, deuda hospitalaria, modelo) y finanzas (dólar, reservas, junta del Banco, presión del Gobierno, crisis bancarias y rescate). Las reformas estructurales son leyes (`pen_*`, `sal_*`, `banrep_reforma`, `fogafin`) que cambian el sistema al sancionarse.
 - **35 · Narrativa** (`sistemas/narrativa.js`): debates presidenciales televisados (9 y 4 semanas antes de la elección), logros y estadísticas globales persistentes (`localStorage`), biografía automática con línea de tiempo y red de poder entre políticos NPC (rasgos, alianzas, traiciones, bodas).
 - **36 · Calidad**: catálogo de leyes depurado y equilibrado (≈250), tutorial inicial de siete pasos y registro genérico de módulos nuevos (`C.MODULOS_NUEVOS`: init en `mundo.js` y migración en `estado.js`).
+
+### Notas de la Fase 37 — Calendario legislativo
+- `Legislacion.calendario(E, p)` estima la semana de cada debate: espera de ponencia, cola del orden del día (cupo semanal por comisión y plenaria), recesos y plazo del art. 162. Se contrastó con simulaciones reales: la estimación acierta con margen de ±1 semana.
+- Se muestra en el expediente (tabla «Calendario del trámite»), como chip «📅 fecha» en la lista de proyectos, en la agenda del Centro de mando y en la pestaña «Calendario» del Congreso (16 semanas, con filtro de proyectos propios).

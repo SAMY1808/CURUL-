@@ -22,7 +22,7 @@ window.CURUL = window.CURUL || {};
         for (const id of K.plenaria) agenda.push({ id, donde: 'Plenaria ' + C.Congreso.delCamara(J.camara) });
         for (const [n, ids] of Object.entries(K.comisiones)) if (+n === J.comision) ids.forEach(id => agenda.push({ id, donde: 'Tu comisión (' + C.DATA.comisiones[n - 1].nombre + ')' }));
       }
-      for (const p of C.Legislacion.activos(E).filter(p => p.autor === 'J')) if (!agenda.some(a => a.id === p.id)) agenda.push({ id: p.id, donde: 'Tu proyecto · ' + (C.Legislacion.infoEtapa(p) || {}).nombre });
+      for (const p of C.Legislacion.activos(E).filter(p => p.autor === 'J')) if (!agenda.some(a => a.id === p.id)) { const x = C.Legislacion.calendario(E, p).proxima; agenda.push({ id: p.id, donde: 'Tu proyecto · ' + (C.Legislacion.infoEtapa(p) || {}).nombre + (x && x.t != null ? ' · 📅 ' + U.fmtT(x.t) : '') }); }
       const mapa = C.Mapa.svg(E, { capa, altoMax: 460, marcador: J.residencia });
       const misProy = Object.values(E.proyectos).filter(p => p.autor === 'J' || p.coautores.includes('J')).sort((a, b) => b.radicado - a.radicado).slice(0, 4);
       const quick = esCong ? [
