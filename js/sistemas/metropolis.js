@@ -50,6 +50,12 @@ window.CURUL = window.CURUL || {};
       a.indic = { integracion: real ? 40 : 12, movilidad: U.clamp(72 - pobM * 4.5 - (real ? 0 : 9), 20, 85), ambiente: U.clamp(70 - pobM * 2.2 - (d.id === 'ABURRA' ? 7 : 0), 25, 85), seguridad: 55, vivienda: U.clamp(64 - pobM * 3, 20, 80), servicios: U.clamp(66 - pobM * 1.5, 30, 85), tension: 28, legit: 50 };
       return a;
     },
+    /* Ingresos semanales del área: recaudo propio (sobretasa), participación de los municipios, dividendos de su empresa, menos servicio de la deuda */
+    ingresos(E, a) {
+      const pobM = Me.poblacion(a) / 1e6, emp = a.empresa ? C.Empresas.asegurar(E).lista.find(x => x.id === a.empresa) : null;
+      const propio = pobM * 0.004 * (1 + 0.8 * a.sobretasa), municipios = pobM * 0.0015, div = emp ? Math.max(0, emp.capital * (emp.rentabilidad || 0) / 100 / 52 * 0.5) : 0, servicio = (a.caja.deuda || 0) * 0.0035;
+      return { propio, municipios, dividendos: div, servicio, total: propio + municipios + div };
+    },
     sembrarEmpresas(E) {
       const a = Me.area(E, 'ABURRA'), q = C.Empresas.asegurar(E);
       if (a.estado === 'constituida' && U.anio() >= 1995 && !a.empresa && !q.lista.some(e => e.nombre === 'Metro de Medellín')) {
@@ -119,7 +125,7 @@ window.CURUL = window.CURUL || {};
           I.integracion = U.clamp(I.integracion + 0.035 * (0.6 + (dir ? dir.calidad : 50) / 100) - (I.tension > 65 ? 0.05 : 0) + a.proyectos.length * 0.004 + (b.integracion || 0) * 0.0006, 0, 100);
           I.tension = U.clamp(I.tension + (24 + a.sobretasa * 5 - I.integracion * 0.18 + (b.tension || 0) - I.tension) * 0.012 + U.gauss(0, 0.25), 0, 100);
           I.legit = U.clamp(I.legit + (38 + I.integracion * 0.4 - I.tension * 0.2 - I.legit) * 0.01, 5, 95);
-          a.caja.fondoRegalias += pobM * 0.003 * (1 + 0.6 * a.sobretasa);
+          const ing = Me.ingresos(E, a); a.caja.fondoRegalias += ing.total - ing.servicio; a.caja.deuda = Math.max(0, (a.caja.deuda || 0) - ing.servicio * 0.65);
           // proyectos
           for (const p of a.proyectos) {
             p.resta--; if (p.resta > 0) continue;
@@ -189,13 +195,38 @@ window.CURUL = window.CURUL || {};
         ejecutar(E, a) {
           const x = area(E, a), P = PROYECTOS[a.proyecto]; if (!P) return { ok: false, msg: 'Elige el proyecto' };
           if (x.proyectos.length >= 3) return { ok: false, msg: 'Ya hay tres proyectos en marcha' }; if (x.proyectos.some(p => p.tipo === a.proyecto)) return { ok: false, msg: 'Ese proyecto ya está en marcha' };
-          const local = +(P.costo * 0.4).toFixed(2); if (x.caja.fondoRegalias < local) return { ok: false, msg: `El fondo no alcanza: se necesitan ${local.toFixed(2)} billones (el 40 % del costo)` };
+          const local = +(P.costo * 0.4).toFixed(2); if (x.caja.fondoRegalias < local) return { ok: false, msg: `El fondo no alcanza: se necesitan ${local.toFixed(2)} billones (el 40 % del costo) y hay ${x.caja.fondoRegalias.toFixed(2)}. Sube la sobretasa, gestiona cofinanciación de la Nación, cobra valorización o contrata un crédito` };
           const v = Me.votarJunta(E, x, 0.55, 0.05); if (!v.aprobado) return { ok: true, exito: false, msg: `La junta metropolitana no lo aprueba (${v.si} %)` };
           if (P.conpes) { const pr = E.gobierno.presidente === 'J' ? 0.95 : U.clamp(0.45 + x.indic.legit / 250 + (E.opinion.aprobacionPres - 45) / 400, 0.2, 0.85); if (!U.chance(pr)) return { ok: true, exito: false, msg: `El CONPES no declara la importancia estratégica del proyecto (${Math.round(pr * 100)} % de probabilidad)` }; }
           x.caja.fondoRegalias -= local; C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(P.costo * 0.6) * 0.3, p: 'm' }], 'metropolitano');
           x.proyectos.push({ tipo: a.proyecto, resta: P.sem, t: E.fecha.t }); Me.anotar(E, x, `Arranca: ${P.n}`);
           Me.noticia(E, x, `${Me.def(x.id).corto} arranca ${P.n.toLowerCase()}`, 1, true);
           return { ok: true, msg: `${P.n}: ${P.sem} semanas, ${P.costo} billones (40 % del fondo, 60 % cofinanciado por la Nación)` };
+        } });
+      A.registrar({ id: 'contratarCreditoMetropolitano', nombre: 'Contratar un crédito para el área', icono: '🏦', grupo: 'local', costo: 2, disponible: cons,
+        ejecutar(E, a) {
+          const x = area(E, a), m = +a.monto; if (!(m > 0)) return { ok: false, msg: 'Elige el monto' };
+          const ing = Me.ingresos(E, x), tope = +(ing.total * 52 * 6).toFixed(2), deuda = x.caja.deuda || 0;
+          if (deuda + m > tope) return { ok: false, msg: `El área no tiene capacidad de endeudamiento: tope ${tope.toFixed(2)} billones (6 años de ingresos) y debe ${deuda.toFixed(2)}` };
+          const v = Me.votarJunta(E, x, 0.5); if (!v.aprobado) return { ok: true, exito: false, msg: `La junta rechaza endeudar al área (${v.si} %)` };
+          x.caja.deuda = deuda + m; x.caja.fondoRegalias += m; x.indic.tension = Math.min(100, x.indic.tension + 1);
+          return { ok: true, msg: `Crédito de ${m} billones: entra al fondo hoy y se paga con ~0,35 % semanal del saldo` };
+        } });
+      A.registrar({ id: 'gestionarCofinanciacion', nombre: 'Gestionar cofinanciación de la Nación', icono: '🏛', grupo: 'local', costo: 3, disponible: cons,
+        ejecutar(E, a) {
+          const x = area(E, a); if (E.fecha.t - (x.caja.ultCof || -999) < 52) return { ok: false, msg: 'Sólo puedes gestionar una cofinanciación al año' };
+          x.caja.ultCof = E.fecha.t; const pobM = Me.poblacion(x) / 1e6;
+          const p = E.gobierno.presidente === 'J' ? 0.95 : U.clamp(0.35 + x.indic.legit / 250 + (E.opinion.aprobacionPres - 45) / 400 + (x.director ? x.director.calidad / 500 : 0), 0.2, 0.85);
+          if (!U.chance(p)) return { ok: true, exito: false, msg: `La Nación no cofinancia este año (${Math.round(p * 100)} % de probabilidad)` };
+          const monto = +Math.min(0.7, 0.1 + 0.12 * pobM).toFixed(2); x.caja.fondoRegalias += monto; C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(monto), p: 'm' }], 'metropolitano');
+          return { ok: true, msg: `La Nación cofinancia al área con ${monto} billones` };
+        } });
+      A.registrar({ id: 'cobrarValorizacion', nombre: 'Cobrar contribución de valorización', icono: '🏘', grupo: 'local', costo: 3, disponible: cons,
+        ejecutar(E, a) {
+          const x = area(E, a); if (E.fecha.t - (x.caja.ultVal || -999) < 104) return { ok: false, msg: 'La valorización sólo puede cobrarse cada dos años' };
+          const v = Me.votarJunta(E, x, 0.6, 0.05); if (!v.aprobado) return { ok: true, exito: false, msg: `La junta rechaza la valorización (${v.si} %)` };
+          x.caja.ultVal = E.fecha.t; const monto = +(Me.poblacion(x) / 1e6 * 0.12).toFixed(2); x.caja.fondoRegalias += monto; x.indic.tension = Math.min(100, x.indic.tension + 8); x.indic.legit = Math.max(0, x.indic.legit - 6);
+          return { ok: true, msg: `La valorización recauda ${monto} billones, pero crece la tensión y baja la legitimidad` };
         } });
       A.registrar({ id: 'nombrarDirectorMetropolitano', nombre: 'Nombrar al director del área', icono: '🎩', grupo: 'local', costo: 2, disponible: cons,
         ejecutar(E, a) { const x = area(E, a), perfil = a.perfil === 'politico' ? 'politico' : 'tecnico'; const v = Me.votarJunta(E, x, 0.5); if (!v.aprobado) return { ok: true, exito: false, msg: `La junta no acepta tu candidato (${v.si} %)` }; x.director = Me.director(E, perfil); if (perfil === 'politico') x.indic.integracion = Math.max(0, x.indic.integracion - 1); Me.anotar(E, x, `Nuevo director: ${x.director.nombre}`); return { ok: true, msg: `${x.director.nombre} (${perfil === 'tecnico' ? 'técnico' : 'político'}, capacidad ${x.director.calidad}) dirige el área` }; } });
