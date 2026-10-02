@@ -23,6 +23,10 @@ autonomiauniversitaria|Estatuto de autonomía y financiación universitaria|e|-3
 pruebasestado|Reforma de las pruebas de Estado y el ICFES|o|5|0|0.2|0|Maestros|Estudiantes|edu:0.6:l
 `,
 salud: `
+sal_publico|Reforma a la salud: EPS gestoras y red pública fortalecida|g|-50|-5|0|6|Médicos,Hospitales,Pacientes|EPS,Banca|sal:0.6:l,apr:0.4:i
+sal_mixto|Reforma a la salud: modelo mixto con atención primaria|g|-10|0|0|4|Médicos,Pacientes|EPS|sal:0.8:l
+sal_privado|Reforma a la salud: competencia y libre elección de aseguradora|g|50|5|0|-5|EPS,Gremios|Médicos,Hospitales|sal:0.2:m
+sal_giro|Giro directo a hospitales y clínicas|o|-10|0|0.6|9|Hospitales,Médicos|EPS|sal:0.5:m
 atencionprimaria|Modelo de atención primaria preventiva|o|-30|-5|2.5|12|Médicos,Mujeres|EPS|sal:3:l,pob:-0.1:l,apr:0.8:i
 liquidacioneps|Liquidación y reorganización de EPS deficitarias|o|-20|0|1.8|9|Médicos,Pacientes|EPS|sal:1.5:m,conf:-0.2:i,apr:0.6:i
 tarifaspiso|Tarifas mínimas y pago oportuno a hospitales públicos|o|-25|0|1.4|7|Médicos,Hospitales|EPS|sal:2:m,def:0.1:m
@@ -107,6 +111,13 @@ proteccionlideres|Protección colectiva de líderes sociales y defensores|o|-15|
 zonasreserva|Zonas de reserva campesina y desarrollo rural|o|-35|-10|0.8|6|Campesinos|Gremios|pob:-0.2:l,cr:0.05:l
 `,
 hacienda: `
+pen_publico|Reforma pensional: pilar público (Colpensiones) para ingresos bajos y medios|g|-45|-5|0|5|Sindicatos,Pensionados|Banca,Gremios|apr:0.4:i
+pen_mixto|Reforma pensional: sistema mixto de pilares|g|0|0|0|3|Hacienda,Pensionados|Sindicatos,Banca|conf:0.3:m
+pen_privado|Reforma pensional: ahorro individual y fortalecimiento de los fondos privados|g|55|5|0|-6|Banca,Gremios|Sindicatos,Pensionados|conf:0.3:m
+pen_edad|Aumento gradual de la edad de pensión|g|40|10|0|-14|Hacienda,Banca|Sindicatos,Pensionados|def:-0.2:l,apr:-0.8:i
+pen_solidario|Pilar solidario universal para adultos mayores|g|-35|-5|0|13|Pensionados,Pobres|Hacienda|pob:-0.2:l,apr:0.8:i
+banrep_reforma|Reforma a la junta y a la independencia del Banco de la República|a|-25|0|0|-3|Sindicatos|Banca,Hacienda|conf:-0.3:m
+fogafin|Fortalecimiento de Fogafín y del seguro de depósitos|o|20|0|0.4|2|Banca,Hacienda|-|conf:0.4:l
 reformatributaria|Reforma tributaria estructural progresiva|o|-30|0|-3.5|-6|Sindicatos,Hacienda|Gremios,Banca|def:-0.5:m,deu:-0.8:l,inv:-0.3:m,apr:-1:i
 iva|Ampliación de la base del IVA con devolución a hogares pobres|o|10|0|-2.2|-9|Hacienda|Sindicatos,Pobres|def:-0.3:m,inf:0.3:m,pob:0.1:m,apr:-1.4:i
 patrimonio|Impuesto al patrimonio de grandes fortunas|o|-55|0|-1.6|4|Sindicatos|Banca,Gremios|def:-0.2:m,inv:-0.2:m

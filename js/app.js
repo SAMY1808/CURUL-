@@ -7,7 +7,7 @@ window.CURUL = window.CURUL || {};
   const SECCIONES = [
     { id: 'inicio', n: null, items: [['dashboard', '🧭', 'Centro de mando'], ['mapa', '🗺', 'Mapa']] },
     { id: 'legislativo', n: 'Poder legislativo', ic: '🏛', items: [['congreso', '🏛', 'Congreso'], ['proyectos', '📜', 'Proyectos']] },
-    { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio'], ['militar', '🎖', 'Fuerzas armadas'], ['empresas', '🏭', 'Empresas públicas'], ['metropolis', '🏙', 'Áreas metropolitanas'], ['decretos', '📜', 'Decretos y excepción'], ['sociedad', '🌋', 'Riesgo y sociedad']] },
+    { id: 'ejecutivo', n: 'Gobierno', ic: '🦅', items: [['gobierno', '🦅', 'Gobierno y oposición'], ['seguridad', '🛡', 'Seguridad y territorio'], ['militar', '🎖', 'Fuerzas armadas'], ['empresas', '🏭', 'Empresas públicas'], ['metropolis', '🏙', 'Áreas metropolitanas'], ['decretos', '📜', 'Decretos y excepción'], ['sociedad', '🌋', 'Riesgo y sociedad'], ['sectores', '🏛', 'Pensiones, salud y banca']] },
     { id: 'justicia', n: 'Justicia y control', ic: '⚖', items: [['corte', '⚖', 'Corte y órganos de control'], ['inteligencia', '🕶', 'Inteligencia']] },
     { id: 'politica', n: 'Política y elecciones', ic: '🗳', items: [['elecciones', '🗳', 'Elecciones'], ['partidos', '🎗', 'Partidos'], ['encuestas', '📊', 'Encuestas'], ['participacion', '🗳', 'Democracia directa'], ['medios', '📰', 'Medios']] },
     { id: 'mundo', n: 'Mundo y economía', ic: '🌎', items: [['mundo', '🗺', 'Mapa mundial'], ['diplomacia', '🌎', 'Diplomacia'], ['comercio', '🚢', 'Comercio exterior'], ['mundoeco', '📈', 'Economía global'], ['clima', '🌦', 'Clima y recursos']] },
