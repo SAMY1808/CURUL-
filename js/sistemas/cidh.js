@@ -57,7 +57,7 @@ window.CURUL = window.CURUL || {};
     contexto(E) {
       const y = U.anio(), r = E.regimen, seg = U.prom(Object.values(E.deptos).map(d => d.seguridad));
       const era = y < 1950 ? 0.6 : y < 1965 ? 1.4 : y < 1985 ? 1.0 : y < 2003 ? 1.7 : y < 2016 ? 1.2 : 0.8;
-      return era * (1 + (60 - seg) / 45) * (1 + (r && r.junta ? r.junta.repres / 45 : 0));
+      return era * (1 + (60 - seg) / 45) * (1 + (r && r.junta ? r.junta.repres / 45 : 0)) * (1 + (E.historia && E.historia.violencia ? E.historia.violencia.nivel / 80 : 0)) * (E.ins && E.ins.sitio && E.ins.sitio.activo ? 1.3 : 1) * (E.ins && E.ins.guerra && E.ins.guerra.activa ? 1.5 : 1);
     },
     generar(E) {
       const y = U.anio(), r = E.regimen, de = r && r.junta && ['junta', 'autoritario'].includes(r.tipo);

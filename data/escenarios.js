@@ -5,6 +5,7 @@ CURUL.DATA = CURUL.DATA || {};
 (function (C) {
   const tuvo = (E, cargo) => (E.jugador.ocupados || []).includes(cargo);
   const leyes = E => (E.jugador.historialLegislativo || []).filter(h => h.resultado === 'ley').length;
+  const U_anio = () => C.U.anio();
   const noti = (E, txt, tono, imp) => C.Medios.noticia(E, { tipo: 'general', titular: txt, tono: tono || 0, importante: imp !== false });
 
   C.DATA.escenarios = [
@@ -52,6 +53,27 @@ CURUL.DATA = CURUL.DATA || {};
         { id: 'cargo', txt: 'Ocupar un cargo de gobierno (alcalde, gobernador, ministro o Presidente) en 2022', hasta: 2022, check: E => ['alcalde', 'gobernador', 'ministro', 'presidente'].includes(E.jugador.cargo) },
         { id: 'apro', txt: 'Mantener una favorabilidad de al menos 55 a mediados de 2022', hasta: 2022, check: E => E.jugador.popularidad >= 55, alFinal: true }
       ],
+      guion: [] }
+,
+    { id: 'reto_golpe', nombre: 'Reto: sobrevive cuatro años sin golpe', anio: 2026, icono: '🛡', reto: true,
+      desc: 'País polarizado, aprobación baja y militares inquietos. Tu misión: llegar a 2030 sin que la democracia se rompa (ni por golpe ni por autogolpe).',
+      objetivos: [{ id: 'dem', txt: 'Llegar a 2030 con la democracia intacta', hasta: 2030, check: E => !E.regimen || (E.regimen.tipo === 'democracia' && E.regimen.golpes === 0), alFinal: true }],
+      guion: [{ y: 2026, m: 8, fn: E => { E.opinion.aprobacionPres = Math.min(E.opinion.aprobacionPres, 30); noti(E, 'Reto: la aprobación del Gobierno cae y los cuarteles empiezan a murmurar', -1); } }] },
+    { id: 'reto_narco', nombre: 'Reto: sobrevive a Escobar (1989)', anio: 1989, icono: '💣', reto: true,
+      desc: 'Galán ha sido asesinado y el cartel de Medellín declara la guerra al Estado. Hazte un nombre, sobrevive a los atentados y llega a 1994 con el cartel debilitado.',
+      objetivos: [{ id: 'cartel', txt: 'Terminar 1994 con el poder del cartel por debajo de 30', hasta: 1994, check: E => C.Cartel && C.Cartel.asegurar(E).poder < 30, alFinal: true }, { id: 'vivo', txt: 'Llegar a 1994 con buena salud (más de 50)', hasta: 1994, check: E => (E.jugador.salud == null ? 85 : E.jugador.salud) > 50, alFinal: true }],
+      guion: [] },
+    { id: 'reto_deuda', nombre: 'Reto: evita la crisis de deuda', anio: 2024, icono: '📉', reto: true,
+      desc: 'La deuda sube, el déficit se dispara y los mercados desconfían. Evita una crisis de deuda y el rescate del FMI antes de 2028.',
+      objetivos: [{ id: 'sin', txt: 'Llegar a 2028 sin acuerdo con el FMI ni crisis de deuda', hasta: 2028, check: E => !C.Deuda || (C.Deuda.asegurar(E).programas === 0 && !C.Deuda.asegurar(E).crisis), alFinal: true }],
+      guion: [{ y: 2024, m: 8, fn: E => { E.economia.deuda = Math.max(E.economia.deuda, 72); E.economia.deficit = Math.max(E.economia.deficit, 7); noti(E, 'Reto: la deuda pública llega a máximos y el déficit se dispara', -1); } }] },
+    { id: 'reto_transicion', nombre: 'Reto: del régimen a la democracia (1954)', anio: 1954, icono: '🕊', reto: true,
+      desc: 'Rojas Pinilla gobierna por decreto. Tu misión es contribuir a que el país regrese a la democracia antes de 1960: marchas, mesas y resistencia.',
+      objetivos: [{ id: 'dem', txt: 'Ver restablecida la democracia antes de 1960', hasta: 1960, check: E => E.regimen && E.regimen.tipo === 'democracia' && U_anio() > 1957 }],
+      guion: [] },
+    { id: 'reto_lesa', nombre: 'Reto: que no te condene la justicia internacional (2002)', anio: 2002, icono: '⚖', reto: true,
+      desc: 'Una política de resultados militares y la presión de la CPI. Gobierna sin que la sombra de la lesa humanidad te alcance antes de 2012.',
+      objetivos: [{ id: 'cpi', txt: 'Llegar a 2012 sin orden de arresto de la CPI', hasta: 2012, check: E => !E.cidh || E.cidh.cpi.fase !== 'ordenes', alFinal: true }],
       guion: [] }
   ];
 })(window.CURUL);
