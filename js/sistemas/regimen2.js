@@ -134,7 +134,7 @@ window.CURUL = window.CURUL || {};
       j.resistencia = cl(j.resistencia + tam * 0.16 * k, 0, 100); j.legit = cl(j.legit - tam * 0.05 * k, 0, 100);
       if (U.chance(pRep)) {
         j.resistencia = cl(j.resistencia + tam * 0.08, 0, 100); j.legit = cl(j.legit - tam * 0.06, 0, 100); j.aislamiento = cl(j.aislamiento + 3, 0, 100);
-        J.riesgoJudicial = cl((J.riesgoJudicial || 0) + 8, 0, 100); if (C.Poderes) C.Poderes.mover(E, 'ong', 3);
+        J.riesgoJudicial = cl((J.riesgoJudicial || 0) + 8, 0, 100); if (C.Poderes) C.Poderes.mover(E, 'ong', 3); if (C.CIDH) C.CIDH.registrar(E, 'protesta', { inst: 'junta', resp: jefe ? 'J' : null, evid: 50, vis: true });
         msg += ': la fuerza pública la reprime a bala; hay muertos y detenidos, y la indignación crece';
         noti(E, `Represión sangrienta de una ${nombre} contra la junta`, -1, true);
       } else msg += ': la junta no se atreve a reprimirla y su legitimidad se resiente';
@@ -165,7 +165,7 @@ window.CURUL = window.CURUL || {};
         ejecutar(E, a) { Rg.levantarProscripcion(E, a.partido); const j = Rg.asegurar(E).junta; if (j) { j.resistencia = cl(j.resistencia - 4, 0, 100); j.legit = cl(j.legit + 2, 0, 100); } return { ok: true, msg: 'Se restituye la personería del partido' }; } });
       A.registrar({ id: 'perseguirOpositores', nombre: 'Perseguir y desterrar a los opositores', icono: '⛓', grupo: 'regimen', costo: 2,
         disponible(E) { return juntaJ(E) ? true : 'Sólo el jefe de la junta'; },
-        ejecutar(E) { const j = juntaJ(E), n = Rg.exiliarOpositores(E, U.ri(3, 6)); j.repres = cl(j.repres + 7, 0, 100); j.resistencia = cl(j.resistencia - 4, 0, 100); j.aislamiento = cl(j.aislamiento + 3, 0, 100); if (C.Poderes) C.Poderes.mover(E, 'ong', -6); return { ok: true, msg: n.length ? `Destierras o encarcelas a ${n.length} dirigentes (${n.slice(0, 2).join(', ')}…): la oposición se descabeza, pero crece el rechazo internacional` : 'No quedan opositores a quienes perseguir' }; } });
+        ejecutar(E) { const j = juntaJ(E), n = Rg.exiliarOpositores(E, U.ri(3, 6)); if (C.CIDH) for (let i = 0; i < Math.min(3, n.length); i++) C.CIDH.registrar(E, i ? 'detencion' : 'persecucion', { inst: 'junta', resp: 'J', evid: 40 }); j.repres = cl(j.repres + 7, 0, 100); j.resistencia = cl(j.resistencia - 4, 0, 100); j.aislamiento = cl(j.aislamiento + 3, 0, 100); if (C.Poderes) C.Poderes.mover(E, 'ong', -6); return { ok: true, msg: n.length ? `Destierras o encarcelas a ${n.length} dirigentes (${n.slice(0, 2).join(', ')}…): la oposición se descabeza, pero crece el rechazo internacional` : 'No quedan opositores a quienes perseguir' }; } });
       A.registrar({ id: 'propagandaJunta', nombre: 'Propaganda oficial: culto al jefe', icono: '📺', grupo: 'regimen', costo: 1,
         disponible(E) { const r = Rg.asegurar(E); return juntaJ(E) ? (E.fecha.t - (r.ultProp == null ? -99 : r.ultProp) < 4 ? 'Ya hiciste propaganda esta semana' : true) : 'Sólo el jefe de la junta'; },
         ejecutar(E) { const j = juntaJ(E), r = Rg.asegurar(E); r.ultProp = E.fecha.t; j.legit = cl(j.legit + 3 + j.censura / 40, 0, 100); j.aislamiento = cl(j.aislamiento + 1, 0, 100); return { ok: true, msg: 'Cadena nacional, himnos y retratos oficiales: la legitimidad sube un poco' }; } });
