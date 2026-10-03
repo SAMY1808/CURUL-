@@ -1298,3 +1298,13 @@ prueban con el jugador de presidente.
 - 26 eventos con decisión (trancón, vendedores, paro de taxistas, hurtos, basuras, derrumbe, apagón, ratas, cupos del concejo, debate de control, sobrecostos, hallazgo arqueológico, invasión, marcha estudiantil, clásico de fútbol, concierto, visita presidencial, influencer, inundación, incendio, gobernador que te quita una obra, premio, antecesor, animalistas, crucero…), más las fiestas locales de cada ciudad y el alumbrado navideño.
 - 15 acciones: operativo de espacio público, ciclovía, pico y placa, plan de choque, jornada de aseo, mercado campesino, cabildo abierto, recorrido nocturno, TikTok, predial, desayuno con concejales, reclamarle al Gobierno, festivales y alumbrado. Varias son apuestas con resultado viral bueno o malo.
 - Ranking anual de alcaldes (diciembre) contra las 31 demás capitales; los tres primeros ganan fama nacional. Ánimo bajo durante meses → amenaza de revocatoria.
+
+### Notas de la Fase 39 — Gobernación dinámica
+- `sistemas/gobernacion.js`, `data/gobernacion.js`, `pantallas/departamento.js` («Mi departamento», sólo para gobernadores).
+- **Territorio:** el departamento se parte en subregiones (k-medias sobre los polígonos municipales) y cada municipio tiene un alcalde con partido, ideología y afinidad contigo. Los desencantados pueden declararse en rebeldía. Acciones: consejo de alcaldes, visitas, convenios, frenar recursos, gobierno en el territorio y provincias.
+- **Economía regional:** cada departamento tiene vocaciones (café, petróleo, flores, banano, minería, puertos, turismo, frontera…) con shocks, atracción de inversión, planes sectoriales y zona franca votada por la Asamblea.
+- **Seguridad:** amenaza armada por subregión (grupos con control en el departamento), consejos de seguridad, alertas tempranas, recompensas, refuerzo del Ejército y mesas con comunidades.
+- **Asamblea:** ocho ordenanzas con voto nominal (universidad, hospital, estampilla, licores, turismo, seguridad, reforma administrativa, campo) con efectos y rentas persistentes; relación con la Asamblea y cupos.
+- **Nación y regiones:** relación con el Gobierno Nacional, CONPES regionales, fundación de una RAP con otros gobernadores (cumbres con obras conjuntas) y frente común para arrancarle plata a Hacienda.
+- **Plan de desarrollo** con cuatro metas según los rezagos del departamento, evaluado cada año; **ranking** anual de gobernadores (nivel + pulso + mejora) y barra de **aspiración presidencial**.
+- 29 eventos del gobernador (masacre, paro agrario, roya, caída del petróleo, tragedia minera, cierre de frontera, ESE en quiebra, cupos de la Asamblea, creciente, rival departamental, presidenciable…) y la feria regional en su mes.
