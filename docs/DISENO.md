@@ -1308,3 +1308,13 @@ prueban con el jugador de presidente.
 - **Nación y regiones:** relación con el Gobierno Nacional, CONPES regionales, fundación de una RAP con otros gobernadores (cumbres con obras conjuntas) y frente común para arrancarle plata a Hacienda.
 - **Plan de desarrollo** con cuatro metas según los rezagos del departamento, evaluado cada año; **ranking** anual de gobernadores (nivel + pulso + mejora) y barra de **aspiración presidencial**.
 - 29 eventos del gobernador (masacre, paro agrario, roya, caída del petróleo, tragedia minera, cierre de frontera, ESE en quiebra, cupos de la Asamblea, creciente, rival departamental, presidenciable…) y la feria regional en su mes.
+
+### Notas de la Fase 40 — País y poderes
+- `sistemas/poderes.js`, `sistemas/nacional.js`, `data/eventos-pais.js`, `pantallas/pais.js` («País y poderes», sección Política y elecciones).
+- **Poderes fácticos** (Iglesia, cúpula militar, Embajada de EE. UU., barones de la prensa, banca, maquinarias, ONG): afinidad, poder, favores. Te hacen demandas con decisión (14 eventos) cuando tienes mando, mueven tu imagen en segmentos concretos, reaccionan a las leyes que sancionas (según sus «apoyan/opuestos») y se vengan si los desafías (sabotajes específicos de cada poder). Acciones: reunirte, pedir respaldo, cobrar un favor, aceptar financiación, denunciar.
+- **Prensa de investigación:** periodistas abren expedientes contra ti o contra otros políticos; avanzan semana a semana y se publican. Puedes colaborar, adelantarte, comprar silencio, demandar o filtrar información sobre un rival.
+- **Crisis de partido:** con la cohesión baja, una facción amenaza con irse (decisión: negociar, expulsar o dejar); en los partidos NPC hay escisiones y fusiones de partidos pequeños y parecidos.
+- **Actualidad nacional:** ánimo nacional que mueve la aprobación; Mundial (con clasificación, fases y finales), Copa América, Tour de Francia, reinado, premios y sucesos (crímenes, tragedias, virales…) con 14 eventos.
+- **Vida personal:** tres amigos con lealtad (cenar, ayudar, pedir consejo) que pueden traicionarte; 11 eventos de drama personal.
+- **Retos:** 14 retos de carrera, reto semanal, semilla del mundo para compartir; y una pestaña de gráficos con tu reconocimiento, la aprobación, el ánimo nacional y la afinidad de los poderes.
+- Los módulos nuevos usan el registro `C.MODULOS_NUEVOS` (init y migración automáticos).
