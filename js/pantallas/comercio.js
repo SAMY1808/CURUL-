@@ -1,4 +1,4 @@
-/* Comercio exterior: panorama comercial, acuerdos y negociación de TLC, Mercosur y aranceles. */
+/* Comercio exterior: panorama comercial, acuerdos y negociación de TLC, Mercosur, Comunidad Andina y aranceles. */
 window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U, UI = C.UI, esc = U.esc, G = C.Graf, Comp = C.Comp;
@@ -221,6 +221,46 @@ window.CURUL = window.CURUL || {};
     return tabs + (sub === 'inst' ? institucional(E) : mercosurBase(E));
   };
 
+
+  /* ── Comunidad Andina (misma lógica que el Mercosur: membresía y cumbres + reforma institucional) ── */
+  const nomP = id => id === 'COL' ? 'Colombia' : (C.Diplomacia.pais(id) || { nombre: id }).nombre;
+  const barraC = (v, c) => `<div style="display:flex;align-items:center;gap:6px"><div class="barra-h" style="width:110px;height:8px"><i style="width:${U.clamp(v, 0, 100)}%;background:${c || '#2FA58A'}"></i></div><b class="num" style="min-width:28px">${Math.round(v)}</b></div>`;
+  const filaC = (n, v) => `<div class="fila" style="justify-content:space-between;margin:5px 0"><span>${n}</span>${v}</div>`;
+  const selC = (arg, opts) => `<select data-arg="${arg}">${opts.map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select>`;
+  const canBase = E => {
+    const N = C.CAN, c = N.asegurar(E), en = N.enCAN(E), y = U.anio(), D = C.DATA.multi;
+    if (!N.activa()) return `<div class="tarjeta vacio">El Acuerdo de Cartagena (Pacto Andino) se firma en 1969: aún no existe en esta época.</div>`;
+    const m = N.miembrosEn(y), disp = N.disponibles(E), semProx = Math.max(0, c.prox - E.fecha.t);
+    const decs = D.CAN_DEC.filter(d => c.dec[d.id].estado === 'vigente').map(d => `<div class="it"><div class="cuerpo" style="font-size:13px">${esc(d.n)}</div><span class="etq verde">vigente</span></div>`).join('');
+    const ctr = c.controv.slice(0, 6).map(k => `<div class="it"><div class="cuerpo"><b>${esc(nomP(k.pais))}</b> · ${esc(k.obj)}<div class="tenue" style="font-size:12px">${k.fase === 'cerrado' ? esc(k.resultado || '') : k.fase === 'secretaria' ? 'Secretaría General (Lima)' : 'Tribunal de Justicia (Quito)'}</div></div><span class="etq ${k.fase === 'cerrado' ? '' : 'amar'}">${k.fase === 'cerrado' ? 'cerrado' : 'en trámite'}</span></div>`).join('');
+    const herr = en && E.gobierno.presidente === 'J' ? `<div class="tarjeta"><h3>Tus herramientas</h3>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${selC('dec', disp.map(d => [d.id, d.n]))}${UI.botonAccion('proponerDecisionCAN', { dec: disp[0] ? disp[0].id : '' }, 'Proponer decisión', 'chico prim')}</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${selC('pais', N.socios(E).map(id => [id, nomP(id)]))}${UI.botonAccion('cabildearCAN', { pais: N.socios(E)[0] }, 'Cabildear', 'chico')}${UI.botonAccion('demandarIncumplimiento', { pais: N.socios(E)[0] }, 'Demandar ante el Tribunal', 'chico')}</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${selC('tema', [['comercio', 'Comercio'], ['seguridad', 'Seguridad'], ['migracion', 'Migración'], ['energia', 'Energía']])}${UI.botonAccion('convocarCumbreAndina', { tema: 'comercio' }, 'Convocar cumbre andina', 'chico')}</div>
+        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap">${selC('tipo', Object.entries(D.CAF))}${UI.botonAccion('solicitarCAF', { tipo: 'infra' }, 'Crédito de la CAF', 'chico')}</div></div>` : '';
+    return `<div class="grid g3">${Comp.kpi('Colombia', en ? 'Miembro' : 'Fuera de la CAN')}${Comp.kpi('Presidencia pro tempore', esc(nomP(c.ppt.pais)), `<span class="tenue">${c.ppt.anio} · rota cada año</span>`)}${Comp.kpi('Integración', Math.round(c.integ), `<span class="tenue">próxima propuesta en ~${semProx} sem.</span>`)}</div>
+      <div class="fila" style="margin:10px 0;gap:6px;flex-wrap:wrap">${m.map(id => `<span class="etq ${id === 'COL' ? 'oro' : ''}">${esc(nomP(id))}</span>`).join(' ')}</div>
+      <div class="tenue" style="font-size:12px;margin-bottom:10px">Órganos: Consejo Presidencial, Consejo de Cancilleres, Comisión (aprueba Decisiones por mayoría), Secretaría General (Lima), Tribunal de Justicia (Quito), Parlamento Andino (Bogotá) y la CAF como banco de desarrollo. A diferencia del Mercosur, las Decisiones andinas tienen efecto directo y no requieren ratificación de los parlamentos.</div>
+      <div class="grid g2"><div class="col">${herr}<div class="tarjeta"><h3>Controversias y Tribunal Andino</h3>${ctr ? `<div class="lista">${ctr}</div>` : '<div class="tenue" style="font-size:13px">Sin controversias abiertas.</div>'}</div></div>
+      <div class="col"><div class="tarjeta"><h3>Decisiones vigentes</h3>${decs ? `<div class="lista">${decs}</div>` : '<div class="tenue" style="font-size:13px">Aún no hay decisiones vigentes.</div>'}</div>${c.hist.length ? `<div class="tarjeta"><h3>Crónica de la CAN</h3><div class="lista">${c.hist.slice(0, 6).map(h => `<div class="it"><div class="cuerpo">${esc(h.txt)}<div class="tenue" style="font-size:11.5px">${U.fmtT(h.t)}</div></div></div>`).join('')}</div></div>` : ''}</div></div>`;
+  };
+  const canInst = E => {
+    const N = C.CAN, i = N.inst(E), esP = E.gobierno.presidente === 'J' && N.enCAN(E);
+    if (!N.activa()) return canBase(E);
+    const filas = Object.entries(N.EJES).map(([k, e]) => `<div class="it" style="flex-wrap:wrap"><div class="cuerpo" style="min-width:60%"><b>${e.icono} ${esc(e.n)}</b><div class="tenue" style="font-size:12px">${esc(e.txt)}</div><div style="margin-top:4px"><span class="etq oro">${esc(e.niveles[i.niv[k]])}</span></div></div>${esP ? `<div class="fila accion-form" style="gap:6px;flex-wrap:wrap;width:100%;margin-top:6px"><select data-arg="nivel" style="max-width:260px">${e.niveles.map((n, j) => `<option value="${j}" ${j === i.niv[k] ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${UI.botonAccion('reformarCAN', { eje: k, nivel: i.niv[k] }, 'Proponer', 'chico')}</div>` : ''}</div>`).join('');
+    const mods = Object.entries(N.MODELOS).map(([k, m]) => `<div class="it"><div class="cuerpo"><b>${m.icono} ${esc(m.n)}</b><div class="tenue" style="font-size:12px">${esc(m.txt)}</div></div>${esP ? UI.botonAccion('paqueteCAN', { modelo: k }, 'Proponer', 'chico') : ''}</div>`).join('');
+    return `<div class="grid g3">${Comp.kpi('Profundidad institucional', N.indiceInst(E) + ' / 100')}${Comp.kpi('Integración', Math.round(N.asegurar(E).integ))}${Comp.kpi('Reglas de aprobación', 'Mayoría absoluta', '<span class="tenue">las reformas fuertes exigen tres cuartas partes</span>')}</div>
+      <div class="tenue" style="font-size:12px;margin:10px 0">Cada reforma se vota entre los países miembros según su interés: Perú empuja la apertura y los servicios, Bolivia y Ecuador cuidan su soberanía comercial y piden fondos. No hay Congreso, Corte ni parlamentos de por medio: las Decisiones entran en vigor de inmediato.</div>
+      <div class="grid g2"><div class="col"><div class="tarjeta"><h3>Ejes de la integración</h3><div class="lista">${filas}</div></div></div>
+      <div class="col"><div class="tarjeta"><h3>Modelos de integración</h3><div class="lista">${mods}</div></div><div class="tarjeta"><h3>Puente con el Mercosur</h3><div class="tenue" style="font-size:12.5px;margin-bottom:8px">Un acuerdo de convergencia ampliaría el libre comercio con Brasil, Argentina, Uruguay y Paraguay.</div>${esP ? UI.botonAccion('convergenciaMercosur', {}, 'Impulsar la convergencia', 'chico prim') : ''}</div></div></div>`;
+  };
+  const can = E => {
+    const sub = E.ui.canTab || 'bloque';
+    if (!C.CAN.activa()) return canBase(E);
+    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-can="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-can="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
+    return tabs + (sub === 'inst' ? canInst(E) : canBase(E));
+  };
+
   const aranceles = E => {
     const Co = C.Comercio, c = E.comercio, M = C.Mercosur, f = Co.flujos(E);
     const filas = Co.sectores().map(s => {
@@ -242,12 +282,12 @@ window.CURUL = window.CURUL || {};
       const E = C.E, tab = (params && params.tab) || E.ui.comercioTab || 'panorama';
       E.ui.comercioTab = tab;
       const esPres = E.gobierno.presidente === 'J';
-      const tabs = [['panorama', 'Panorama'], ['acuerdos', 'Acuerdos y TLC'], ['mercosur', 'Mercosur'], ['aranceles', 'Aranceles']];
-      const cuerpo = { panorama, acuerdos, mercosur, aranceles }[tab](E);
-      el.innerHTML = `<div class="cab"><div><h1>Comercio exterior</h1><div class="sub">Balanza, aranceles, acuerdos de libre comercio y Mercosur.${esPres ? '' : ' Sólo el Presidente negocia y decide; aquí ves cómo te afecta.'}</div></div></div>
+      const tabs = [['panorama', 'Panorama'], ['acuerdos', 'Acuerdos y TLC'], ['mercosur', 'Mercosur'], ['can', 'Comunidad Andina'], ['aranceles', 'Aranceles']];
+      const cuerpo = { panorama, acuerdos, mercosur, can, aranceles }[tab](E);
+      el.innerHTML = `<div class="cab"><div><h1>Comercio exterior</h1><div class="sub">Balanza, aranceles, acuerdos de libre comercio, Mercosur y Comunidad Andina.${esPres ? '' : ' Sólo el Presidente negocia y decide; aquí ves cómo te afecta.'}</div></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'activo' : ''}">${n}</button>`).join('')}</div>
         <div style="margin-top:14px">${cuerpo}</div>`;
-      el.onclick = e => { const mm = e.target.closest('[data-mer]'); if (mm) { E.ui.merTab = mm.dataset.mer; return C.App.refrescar(); } const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('comercio', { tab: t.dataset.tab }); };
+      el.onclick = e => { const cc = e.target.closest('[data-can]'); if (cc) { E.ui.canTab = cc.dataset.can; return C.App.refrescar(); } const mm = e.target.closest('[data-mer]'); if (mm) { E.ui.merTab = mm.dataset.mer; return C.App.refrescar(); } const t = e.target.closest('.tabs [data-tab]'); if (t) return C.App.ir('comercio', { tab: t.dataset.tab }); };
     }
   };
 })(window.CURUL);

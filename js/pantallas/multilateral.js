@@ -1,4 +1,4 @@
-/* ONU, OEA, CIDH y Comunidad Andina: los organismos multilaterales con vida propia (Fase 43). */
+/* ONU, OEA y CIDH: los organismos multilaterales con vida propia (Fase 43). La CAN se movió a Comercio exterior (Fase 48). */
 window.CURUL = window.CURUL || {};
 (function (C) {
   const U = C.U, UI = C.UI, esc = U.esc, Comp = C.Comp;
@@ -71,32 +71,12 @@ window.CURUL = window.CURUL || {};
       <div class="tarjeta"><h3>🛡 Medidas cautelares</h3>${cautel}</div></div></div>`;
   };
 
-  /* ── CAN ── */
-  const tabCAN = E => {
-    const N = C.CAN, c = N.asegurar(E), en = N.enCAN(E), y = U.anio();
-    if (!N.activa()) return `<div class="tarjeta">${vacio('El Acuerdo de Cartagena, que crea el Pacto Andino, se firma en 1969.')}</div>`;
-    const m = N.miembrosEn(y), dec = D().CAN_DEC.map(d => ({ d, s: c.dec[d.id] })), disp = N.disponibles(E);
-    const decs = dec.filter(x => x.s.estado === 'vigente').map(x => `<div class="it"><div class="cuerpo" style="font-size:13px">${esc(x.d.n)}</div><span class="etq verde">vigente</span></div>`).join('');
-    const ctr = c.controv.slice(0, 6).map(k => `<div class="it"><div class="cuerpo"><b>${esc(nom(k.pais))}</b> · ${esc(k.obj)}<div class="tenue" style="font-size:12px">${k.fase === 'cerrado' ? esc(k.resultado || '') : k.fase === 'secretaria' ? 'Secretaría General (Lima)' : 'Tribunal de Justicia (Quito)'}</div></div><span class="etq ${k.fase === 'cerrado' ? '' : 'amar'}">${k.fase === 'cerrado' ? 'cerrado' : 'en trámite'}</span></div>`).join('');
-    return `<div class="grid g2"><div class="col">
-      <div class="tarjeta"><h3>🏔 Comunidad Andina</h3>${fila('Colombia', en ? '<span class="etq verde">miembro</span>' : '<span class="etq rojo">fuera de la CAN</span>')}${fila('Países miembros', `<b>${m.map(nom).join(', ')}</b>`)}${fila('Presidencia Pro Tempore', `<b>${esc(nom(c.ppt.pais))}</b> (${c.ppt.anio})`)}${fila('Integración', barra(c.integ, '#2FA58A'))}
-        <div class="tenue" style="font-size:12px;margin-top:6px">Órganos: Consejo Presidencial, Consejo de Cancilleres, Comisión (aprueba Decisiones por mayoría), Secretaría General (Lima), Tribunal de Justicia (Quito), Parlamento Andino (Bogotá) y la CAF como banco de desarrollo.</div></div>
-      ${en && E.gobierno.presidente === 'J' ? `<div class="tarjeta"><h3>Tus herramientas</h3>
-        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${sel('dec', disp.map(d => [d.id, d.n]))}${btn('proponerDecisionCAN', { dec: disp[0] ? disp[0].id : '' }, 'Proponer decisión', 'prim')}</div>
-        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${sel('pais', N.socios(E).map(id => [id, nom(id)]))}${btn('cabildearCAN', { pais: N.socios(E)[0] }, 'Cabildear')}${btn('demandarIncumplimiento', { pais: N.socios(E)[0] }, 'Demandar ante el Tribunal')}</div>
-        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">${sel('tema', [['comercio', 'Comercio'], ['seguridad', 'Seguridad'], ['migracion', 'Migración'], ['energia', 'Energía']])}${btn('convocarCumbreAndina', { tema: 'comercio' }, 'Convocar cumbre andina')}</div>
-        <div class="fila accion-form" style="gap:6px;flex-wrap:wrap">${sel('tipo', Object.entries(D().CAF))}${btn('solicitarCAF', { tipo: 'infra' }, 'Crédito de la CAF')}</div></div>` : ''}</div>
-      <div class="col"><div class="tarjeta"><h3>Decisiones vigentes</h3>${decs ? `<div class="lista">${decs}</div>` : vacio('Aún no hay decisiones vigentes.')}</div>
-      <div class="tarjeta"><h3>Controversias y Tribunal Andino</h3>${ctr ? `<div class="lista">${ctr}</div>` : vacio('Sin controversias abiertas.')}</div>
-      ${c.hist.length ? `<div class="tarjeta"><h3>Crónica de la CAN</h3><div class="lista">${c.hist.slice(0, 6).map(h => `<div class="it"><div class="cuerpo">${esc(h.txt)}<div class="tenue" style="font-size:11.5px">${U.fmtT(h.t)}</div></div></div>`).join('')}</div></div>` : ''}</div></div>`;
-  };
-
-  const TABS = [['onu', '🌐 ONU', tabONU], ['oea', '🏛 OEA', tabOEA], ['cidh', '⚖ CIDH y lesa humanidad', tabCIDH], ['can', '🏔 Comunidad Andina', tabCAN]];
+  const TABS = [['onu', '🌐 ONU', tabONU], ['oea', '🏛 OEA', tabOEA], ['cidh', '⚖ CIDH y lesa humanidad', tabCIDH]];
   C.Pantallas.multilateral = {
     render(el, params) {
       const E = C.E, tab = (params && params.tab) || E.ui.mlTab || 'onu'; E.ui.mlTab = tab;
       const cur = TABS.find(t => t[0] === tab) || TABS[0];
-      el.innerHTML = `<div class="cab"><div><h1>ONU, OEA, CIDH y CAN</h1><div class="sub">El sistema multilateral: votos, Carta Democrática, derechos humanos y la integración andina.</div></div></div>
+      el.innerHTML = `<div class="cab"><div><h1>ONU, OEA y CIDH</h1><div class="sub">El sistema multilateral: votos, Carta Democrática y derechos humanos. La Comunidad Andina vive ahora en Comercio exterior, junto al Mercosur.</div></div></div>
         <div class="tabs">${TABS.map(([k, n]) => `<button data-tab="${k}" class="${k === cur[0] ? 'activo' : ''}">${n}</button>`).join('')}</div><div style="margin-top:14px">${cur[2](E)}</div>`;
       el.onclick = e => { const t = e.target.closest('.tabs [data-tab]'); if (t) C.App.ir('multilateral', { tab: t.dataset.tab }); };
     }

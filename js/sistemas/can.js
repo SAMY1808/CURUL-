@@ -65,7 +65,8 @@ window.CURUL = window.CURUL || {};
       if (c.ppt.anio !== y) { c.ppt = { pais: N.pptDe(y), anio: y }; if (N.enCAN(E)) noti(E, `${nom(c.ppt.pais)} asume la Presidencia Pro Tempore de la Comunidad Andina`, 0); }
       if (!N.enCAN(E)) return;
       if (y === 2006 && E.diplomacia.paises.VEN && !c.vzla) { c.vzla = true; noti(E, 'Venezuela anuncia su salida de la Comunidad Andina', -1, true); N.anotar(E, 'Venezuela se retira de la CAN'); }
-      c.integ = cl(c.integ + (60 - c.integ) * 0.004 - c.controv.filter(k => k.fase !== 'cerrado').length * 0.02, 0, 100);
+      c.integ = cl(c.integ + ((35 + N.indiceInst(E) * 0.5) - c.integ) * 0.004 - c.controv.filter(k => k.fase !== 'cerrado').length * 0.02, 0, 100);
+      C.Economia.aplicarDelta(E, 'exportaciones', (c.integ - 55) * 0.0002);
       // propuestas de decisiones
       if (t >= c.prox) {
         c.prox = t + U.ri(20, 45); const l = N.disponibles(E), socios = N.socios(E);
@@ -95,6 +96,55 @@ window.CURUL = window.CURUL || {};
         }
       }
     },
+    /* ── Reforma institucional andina: ejes con niveles, como en el Mercosur, pero con otra herencia: la CAN nació con una Secretaría General,
+       un Tribunal y Decisiones de efecto directo (sin ratificación de los parlamentos), aunque cada socio las cumple a su manera. ── */
+    EJES: {
+      decisiones: { n: 'Regla de decisión', icono: '🗳', niveles: ['Consenso: cualquiera veta', 'Mayoría absoluta de la Comisión (vigente)', 'Mayoría calificada con obligatoriedad inmediata'], txt: 'Cómo se aprueban las Decisiones en el Consejo y la Comisión.' },
+      secretaria: { n: 'Secretaría General', icono: '🏛', niveles: ['Apoyo técnico', 'Órgano ejecutivo con iniciativa (vigente)', 'Comisión supranacional con poder sancionador'], txt: 'El equivalente del directorio ejecutivo: propone, vigila y dictamina incumplimientos.' },
+      parlamento: { n: 'Parlamento Andino', icono: '🏟', niveles: ['Sin parlamento', 'Foro deliberante (vigente)', 'Elección directa con control político', 'Parlamento colegislador'], txt: 'Da legitimidad democrática al bloque.' },
+      tribunal: { n: 'Tribunal de Justicia (Quito)', icono: '⚖', niveles: ['Arbitraje ad hoc', 'Jurisdicción y efecto directo (vigente)', 'Sanciones automáticas y acceso de particulares'], txt: 'Juzga incumplimientos y fija la interpretación obligatoria de la norma andina.' },
+      aduanera: { n: 'Unión aduanera (AEC)', icono: '🛃', niveles: ['Zona de libre comercio', 'Arancel externo común con excepciones (vigente)', 'Unión aduanera plena'], txt: 'Un mismo arancel frente al resto del mundo; Bolivia y Ecuador han tenido trato especial.' },
+      mercado: { n: 'Mercado común', icono: '🏬', niveles: ['Sólo bienes', 'Bienes y servicios (vigente)', 'Servicios, capitales y compras públicas'], txt: 'Más allá de los bienes: servicios, inversión y contratación pública.' },
+      circulacion: { n: 'Circulación de personas', icono: '🛂', niveles: ['Visas y permisos', 'Pasaporte andino y tránsito sin visa (vigente)', 'Libre residencia, trabajo y seguridad social'], txt: 'Ciudadanía andina.' },
+      exterior: { n: 'Política comercial exterior', icono: '🌐', niveles: ['Cada país negocia por su cuenta', 'Coordinación de posiciones', 'Negociación conjunta con terceros'], txt: 'Hoy cada socio firma sus TLC; la CAN apenas coordina.' },
+      fondos: { n: 'Fondos y banca de desarrollo', icono: '🏦', niveles: ['Sin fondos comunes', 'CAF y Fondo de Reservas (vigente)', 'Fondo de cohesión andino'], txt: 'La CAF financia infraestructura; un fondo de cohesión sería nuevo.' }
+    },
+    MODELOS: {
+      aduana: { n: 'Hacia una unión aduanera plena', icono: '🛃', niv: { aduanera: 2, mercado: 2, exterior: 1 }, txt: 'Un solo arancel y servicios abiertos: más comercio, menos soberanía comercial.' },
+      mercosur: { n: 'Parecerse al Mercosur (intergubernamental)', icono: '🤝', niv: { decisiones: 0, secretaria: 0, tribunal: 0, parlamento: 1 }, txt: 'Más consenso y menos poder supranacional: lo contrario a la herencia andina.' },
+      ue: { n: 'Mini Unión Europea andina', icono: '🇪🇺', niv: { decisiones: 2, secretaria: 2, tribunal: 2, parlamento: 2 }, txt: 'Instituciones fuertes y parlamento electo: difícil de aceptar para los socios soberanistas.' },
+      flexible: { n: 'CAN flexible (libre comercio y poco más)', icono: '📄', niv: { aduanera: 0, mercado: 0, circulacion: 0, exterior: 0, fondos: 0 }, txt: 'Zona de libre comercio sin arancel común: cada uno por su lado.' }
+    },
+    INTERES: { BOL: { decisiones: -0.3, secretaria: -0.2, tribunal: -0.3, aduanera: 0.2, mercado: -0.3, circulacion: 0.3, exterior: 0.1, fondos: 0.4, parlamento: 0.1 }, ECU: { decisiones: -0.1, secretaria: 0, tribunal: -0.1, aduanera: 0.2, mercado: -0.1, circulacion: 0.3, exterior: 0, fondos: 0.3, parlamento: 0.2 }, PER: { decisiones: 0.1, secretaria: 0.1, tribunal: 0.2, aduanera: -0.4, mercado: 0.4, circulacion: 0.1, exterior: -0.5, fondos: 0, parlamento: 0.1 }, VEN: { decisiones: -0.3, secretaria: -0.3, tribunal: -0.3, aduanera: -0.2, mercado: -0.4, circulacion: 0.2, exterior: -0.2, fondos: 0.2, parlamento: 0.1 }, CHL: { decisiones: 0, secretaria: 0, tribunal: 0, aduanera: -0.5, mercado: 0.4, circulacion: 0, exterior: -0.5, fondos: 0, parlamento: 0 } },
+    nivelesIniciales(y) { const n = { decisiones: 1, secretaria: 1, parlamento: y >= 1979 ? 1 : 0, tribunal: y >= 1983 ? 1 : 0, aduanera: y >= 1995 ? 1 : 0, mercado: y >= 1998 ? 1 : 0, circulacion: y >= 2001 ? 1 : 0, exterior: 0, fondos: y >= 1970 ? 1 : 0 }; if (y < 1987) n.secretaria = 1; return n; },
+    inst(E) { const c = N.asegurar(E); if (!c.inst) c.inst = { niv: N.nivelesIniciales(U.anio()), hist: [], ult: -999, conv: -999 }; return c.inst; },
+    indiceInst(E) { const i = N.inst(E), ks = Object.keys(N.EJES); return Math.round(U.suma(ks.map(k => i.niv[k] / (N.EJES[k].niveles.length - 1))) / ks.length * 100); },
+    probVotoReforma(E, id, cambios) {
+      let a = 0; for (const x of cambios) a += ((N.INTERES[id] || {})[x.eje] || 0) * (x.nivel > N.inst(E).niv[x.eje] ? 1 : -1);
+      return cl(0.5 + a / cambios.length * 0.7 + ((E.diplomacia.paises[id] || { relacion: 50 }).relacion - 50) * 0.003, 0.05, 0.95);
+    },
+    reformar(E, cambios, etiqueta) {
+      const i = N.inst(E), socios = N.socios(E), m = N.miembrosEn(U.anio());
+      const sube = cambios.some(c => c.nivel > i.niv[c.eje] && (c.eje === 'decisiones' || c.eje === 'secretaria' || c.eje === 'tribunal' || c.eje === 'aduanera'));
+      let f = 1; const votos = socios.map(id => { const si = C.Corte.hash(etiqueta + id + i.ult) < N.probVotoReforma(E, id, cambios); if (si) f++; return { id, si }; });
+      const exig = sube ? Math.ceil(m.length * 0.75) : Math.floor(m.length / 2) + 1;
+      i.ult = E.fecha.t;
+      if (f >= exig) { for (const c of cambios) i.niv[c.eje] = c.nivel; N.asegurar(E).integ = cl(N.asegurar(E).integ + 3, 0, 100); N.anotar(E, `Reforma andina aprobada: ${etiqueta}`); noti(E, `La Comunidad Andina aprueba una reforma: ${etiqueta} (entra en vigor de inmediato, sin ratificaciones)`, 1, true); return { ok: true, f, n: m.length, exig, votos }; }
+      for (const v of votos) if (!v.si) { const st = E.diplomacia.paises[v.id]; if (st) st.relacion = cl(st.relacion - 1.5, 3, 97); }
+      noti(E, `Se cae la reforma andina «${etiqueta}»: sólo ${f} de ${m.length} países la apoyan`, -1); return { ok: false, f, n: m.length, exig, votos };
+    },
+    registrarAcciones2() {
+      const A = C.Acciones, pres = E => esPres(E) ? (N.enCAN(E) ? true : 'Colombia no está en la Comunidad Andina') : 'Sólo el Presidente';
+      A.registrar({ id: 'reformarCAN', nombre: 'Proponer una reforma institucional andina', icono: '🏔', grupo: 'comercio', costo: 3,
+        disponible(E, a) { const p = pres(E); if (p !== true) return p; const e = N.EJES[a.eje]; if (!e) return 'Elige el eje'; const n = +a.nivel; if (!(n >= 0 && n < e.niveles.length)) return 'Elige el nivel'; if (n === N.inst(E).niv[a.eje]) return 'Ya está en ese nivel'; return E.fecha.t - N.inst(E).ult < 13 ? 'Los socios necesitan unas semanas entre propuestas' : true; },
+        ejecutar(E, a) { const r = N.reformar(E, [{ eje: a.eje, nivel: +a.nivel }], `${N.EJES[a.eje].n}: ${N.EJES[a.eje].niveles[+a.nivel]}`); return { ok: true, exito: r.ok, msg: r.ok ? `Aprobada por ${r.f} de ${r.n} países: la reforma entra en vigor` : `Sólo ${r.f} de ${r.n} apoyan (se necesitaban ${r.exig}): la reforma se cae` }; } });
+      A.registrar({ id: 'paqueteCAN', nombre: 'Proponer un modelo de integración andina', icono: '🧩', grupo: 'comercio', costo: 3,
+        disponible(E, a) { const p = pres(E); if (p !== true) return p; return N.MODELOS[a.modelo] ? (E.fecha.t - N.inst(E).ult < 13 ? 'Los socios necesitan unas semanas entre propuestas' : true) : 'Elige el modelo'; },
+        ejecutar(E, a) { const M = N.MODELOS[a.modelo], cambios = Object.entries(M.niv).map(([eje, nivel]) => ({ eje, nivel })).filter(c => c.nivel !== N.inst(E).niv[c.eje]); if (!cambios.length) return { ok: false, msg: 'La CAN ya funciona así' }; const r = N.reformar(E, cambios, M.n); return { ok: true, exito: r.ok, msg: r.ok ? `${M.n}: aprobado (${r.f} de ${r.n})` : `${M.n}: no alcanza (${r.f} de ${r.n}, se necesitaban ${r.exig})` }; } });
+      A.registrar({ id: 'convergenciaMercosur', nombre: 'Impulsar la convergencia CAN-Mercosur', icono: '🌉', grupo: 'comercio', costo: 3,
+        disponible(E) { const p = pres(E); if (p !== true) return p; if (!C.Mercosur || !C.Mercosur.st(E).existe) return 'El Mercosur todavía no existe'; return E.fecha.t - N.inst(E).conv < 104 ? 'Ya se impulsó hace poco' : true; },
+        ejecutar(E) { N.inst(E).conv = E.fecha.t; N.asegurar(E).integ = cl(N.asegurar(E).integ + 4, 0, 100); C.Economia.aplicarDelta(E, 'exportaciones', 0.25); for (const id of ['BRA', 'ARG', 'URY', 'PRY']) { const st = E.diplomacia.paises[id]; if (st) st.relacion = cl(st.relacion + 3, 3, 97); } N.anotar(E, 'Acuerdo de convergencia entre la CAN y el Mercosur'); noti(E, 'La CAN y el Mercosur avanzan en un acuerdo de libre comercio y convergencia', 1, true); C.Opinion.subirRec(E, 1.5); return { ok: true, msg: 'Impulsas la convergencia entre los dos bloques: libre comercio ampliado y mejores relaciones con el Cono Sur' }; } });
+    },
     registrarAcciones() {
       const A = C.Acciones, pres = E => esPres(E) ? (N.enCAN(E) ? true : 'Colombia no está en la Comunidad Andina') : 'Sólo el Presidente';
       A.registrar({ id: 'proponerDecisionCAN', nombre: 'Proponer una Decisión andina', icono: '🏔', grupo: 'diplomacia', costo: 2,
@@ -118,5 +168,5 @@ window.CURUL = window.CURUL || {};
           C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(0.1), p: 'm' }], 'caf'); return { ok: true, msg: `La CAF aprueba un crédito para ${D().CAF[t].toLowerCase()}` }; } });
     }
   };
-  C.CAN = N; C.Tiempo.registrar('can', N, 74); (C.MODULOS_NUEVOS = C.MODULOS_NUEVOS || []).push('CAN'); N.registrarAcciones();
+  C.CAN = N; C.Tiempo.registrar('can', N, 74); (C.MODULOS_NUEVOS = C.MODULOS_NUEVOS || []).push('CAN'); N.registrarAcciones(); N.registrarAcciones2();
 })(window.CURUL);

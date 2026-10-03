@@ -101,7 +101,7 @@ window.CURUL = window.CURUL || {};
     /* ── Control de constitucionalidad de las leyes ── */
     riesgoLey(E, p) {
       const c = E.corte, med = K.mediana(E), dist = U.distIdeo(p, med);
-      const r = 0.05 + dist * 0.5 + (K.activismoMedio(E) - 50) * 0.002 + (p.urgencia ? 0.04 : 0) + (p.gobierno ? c.tension * 0.0012 : 0)
+      const r = 0.05 + dist * 0.5 + (K.activismoMedio(E) - 50) * 0.002 + (p.urgencia ? 0.04 : 0) + (p.apresurado ? 0.05 : 0) + (p.gobierno ? c.tension * 0.0012 : 0)
         + (p.pop < 0 ? 0.03 : 0) + (K.hash(p.id) - 0.5) * 0.12;
       // Un plebiscito ganado sobre la apertura comercial blinda los tratados durante cuatro años.
       const ref = p.ratifica && E.participacion && E.participacion.refrendos.apertura;
@@ -123,7 +123,7 @@ window.CURUL = window.CURUL || {};
     posibleDemanda(E, p) {
       if (!p || EXCLUIDAS.includes(p.plantilla) || K.demandaDe(E, p.id)) return;
       const dist = U.distIdeo(p, K.mediana(E));
-      const prob = U.clamp(0.08 + dist * 0.5 + (p.gobierno ? 0.06 : 0) + (p.pop < 0 ? 0.1 : 0) + (p.urgencia ? 0.06 : 0) + (p.costo > 2 ? 0.04 : 0), 0.06, 0.6);
+      const prob = U.clamp(0.08 + dist * 0.5 + (p.gobierno ? 0.06 : 0) + (p.pop < 0 ? 0.1 : 0) + (p.urgencia ? 0.06 : 0) + (p.apresurado ? 0.05 : 0) + (p.costo > 2 ? 0.04 : 0), 0.06, 0.6);
       if (!U.chance(prob)) return;
       K.crearDemanda(E, p, p.gobierno && U.chance(0.55) ? 'oposicion' : U.pick(['ciudadano', 'ciudadano', 'gremio']));
     },
