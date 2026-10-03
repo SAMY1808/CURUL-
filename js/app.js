@@ -91,7 +91,7 @@ window.CURUL = window.CURUL || {};
       const E = C.E, J = E.jugador;
       const secs = SECCIONES.map(x => ({ ...x, items: x.items.slice() }));
       const en = (sec, despuesDe, item) => { const s = secs.find(x => x.id === sec), k = s.items.findIndex(n => n[0] === despuesDe); s.items.splice(k + 1, 0, item); };
-      if (J.cargo === 'gobernador' || J.cargo === 'alcalde') en('ejecutivo', 'gobierno', ['local', '🏘', J.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']);
+      if (J.cargo === 'gobernador' || J.cargo === 'alcalde') { en('ejecutivo', 'gobierno', ['local', '🏘', J.cargo === 'gobernador' ? 'Gobernación' : 'Alcaldía']); if (J.cargo === 'alcalde') en('ejecutivo', 'gobierno', ['ciudad', '🎪', 'Mi ciudad']); }
       if (J.cargo === 'diputado' || J.cargo === 'concejal') en('legislativo', 'congreso', ['corporacion', '🏘', J.cargo === 'diputado' ? 'Asamblea' : 'Concejo']);
       if (J.cargo === 'ministro') en('ejecutivo', 'gobierno', ['ministerio', '🗂', 'Mi ministerio']);
       const badges = { proyectos: C.Legislacion.activos(E).filter(p => p.autor === 'J').length || '', elecciones: E.elecciones.campana ? '●' : '', crisis: '' };

@@ -1292,3 +1292,9 @@ prueban con el jugador de presidente.
 ### Notas de la Fase 37 — Calendario legislativo
 - `Legislacion.calendario(E, p)` estima la semana de cada debate: espera de ponencia, cola del orden del día (cupo semanal por comisión y plenaria), recesos y plazo del art. 162. Se contrastó con simulaciones reales: la estimación acierta con margen de ±1 semana.
 - Se muestra en el expediente (tabla «Calendario del trámite»), como chip «📅 fecha» en la lista de proyectos, en la agenda del Centro de mando y en la pestaña «Calendario» del Congreso (16 semanas, con filtro de proyectos propios).
+
+### Notas de la Fase 38 — Alcaldía dinámica
+- `sistemas/alcaldia.js` + `data/eventos-alcaldia.js` + `pantallas/ciudad.js` («Mi ciudad», sólo para alcaldes). La ciudad tiene pulso propio: ánimo ciudadano, movilidad, aseo, espacio público, cultura y turismo (más la seguridad del departamento), una caja de libre disposición que se recarga cada semana, y la relación con el concejo.
+- 26 eventos con decisión (trancón, vendedores, paro de taxistas, hurtos, basuras, derrumbe, apagón, ratas, cupos del concejo, debate de control, sobrecostos, hallazgo arqueológico, invasión, marcha estudiantil, clásico de fútbol, concierto, visita presidencial, influencer, inundación, incendio, gobernador que te quita una obra, premio, antecesor, animalistas, crucero…), más las fiestas locales de cada ciudad y el alumbrado navideño.
+- 15 acciones: operativo de espacio público, ciclovía, pico y placa, plan de choque, jornada de aseo, mercado campesino, cabildo abierto, recorrido nocturno, TikTok, predial, desayuno con concejales, reclamarle al Gobierno, festivales y alumbrado. Varias son apuestas con resultado viral bueno o malo.
+- Ranking anual de alcaldes (diciembre) contra las 31 demás capitales; los tres primeros ganan fama nacional. Ánimo bajo durante meses → amenaza de revocatoria.
