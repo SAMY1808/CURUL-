@@ -52,8 +52,10 @@ window.CURUL = window.CURUL || {};
     },
     /* Ingresos semanales del área: recaudo propio (sobretasa), participación de los municipios, dividendos de su empresa, menos servicio de la deuda */
     ingresos(E, a) {
-      const pobM = Me.poblacion(a) / 1e6, emp = a.empresa ? C.Empresas.asegurar(E).lista.find(x => x.id === a.empresa) : null;
-      const propio = pobM * 0.004 * (1 + 0.8 * a.sobretasa), municipios = pobM * 0.0015, div = emp ? Math.max(0, emp.capital * (emp.rentabilidad || 0) / 100 / 52 * 0.5) : 0, servicio = (a.caja.deuda || 0) * 0.0035;
+      const fin = x => Number.isFinite(x) ? x : 0;
+      a.caja.fondoRegalias = Number.isFinite(a.caja.fondoRegalias) ? a.caja.fondoRegalias : 0.3; a.caja.deuda = fin(a.caja.deuda); a.sobretasa = Number.isFinite(a.sobretasa) ? a.sobretasa : 1;   // repara partidas con valores corruptos
+      const pobM = fin(Me.poblacion(a) / 1e6), emp = a.empresa ? C.Empresas.asegurar(E).lista.find(x => x.id === a.empresa) : null;
+      const propio = pobM * 0.004 * (1 + 0.8 * a.sobretasa), municipios = pobM * 0.0015, div = emp ? Math.max(0, fin(emp.capital * (emp.rentabilidad || 0) / 100 / 52 * 0.5)) : 0, servicio = (a.caja.deuda || 0) * 0.0035;
       return { propio, municipios, dividendos: div, servicio, total: propio + municipios + div };
     },
     sembrarEmpresas(E) {
