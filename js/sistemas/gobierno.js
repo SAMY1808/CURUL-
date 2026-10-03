@@ -11,6 +11,7 @@ window.CURUL = window.CURUL || {};
        original de la de 1991; permitida por una sola vez entre el Acto Legislativo 02 de 2004 y
        su derogatoria por el Acto Legislativo 02 de 2015. */
     puedeReelegirseInmediato(E) {
+      if (E.regimen && E.regimen.reeleccionLibre) return true;
       if (E.gobierno.reeleccionUsada) return false;
       const reforma = C.Constitucion && E.constitucion ? C.Constitucion.valor(E, 'reeleccion') : null;
       if (reforma === 'permitida') return true;

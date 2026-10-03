@@ -19,6 +19,7 @@ window.CURUL = window.CURUL || {};
     },
     /* Periodos de sesiones ordinarias: 20 jul – 16 dic y 16 mar – 20 jun */
     enSesion(E) {
+      if (C.Regimen && E.regimen && E.regimen.congreso === false) return false;
       const d = U.hoy(), m = d.getUTCMonth(), dia = d.getUTCDate();
       if (m === 6) return dia >= 20;
       if (m >= 7 && m <= 10) return true;

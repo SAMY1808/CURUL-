@@ -9,7 +9,7 @@ legislativo por etapas, noche electoral, partidos con facciones, gobierno, oposi
 En línea: **https://samy1808.github.io/CURUL-/** (activar GitHub Pages) o de inmediato vía
 **https://cdn.jsdelivr.net/gh/SAMY1808/CURUL-/index.html**.
 
-## Qué hay en esta versión (Fases 1 a 36 completas)
+## Qué hay en esta versión (Fases 1 a 41 completas)
 
 - **Personaje**: identidad, formación, atributos, ideología en dos ejes, 12 trayectorias iniciales
   (líder comunitario, activista, académico, periodista, asesor, empresario, sindicalista, ONG,

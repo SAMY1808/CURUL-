@@ -500,6 +500,7 @@ window.CURUL = window.CURUL || {};
 
     /* ── Turno: ejecuta elecciones que caen esta semana ────── */
     turno(E) {
+      if (E.regimen && E.regimen.elecciones === false) return;   // golpe / régimen de facto: sin elecciones
       const hoy = U.hoy(), antes = U.fechaDe(E.fecha.t - 1);
       const anio = hoy.getUTCFullYear();
       const cal = [];
