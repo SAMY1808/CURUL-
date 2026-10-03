@@ -105,7 +105,7 @@ window.CURUL = window.CURUL || {};
       const d = E.deptos[dId], out = {};
       let tot = 0;
       for (const pa of Object.values(E.partidos)) {
-        if (pa.especial || pa.futuro) continue;
+        if (pa.especial || pa.futuro || pa.proscrito) continue;
         let s = pa.popularidad * (pa.fuertes[dId] || 1) * El.afinidad(d, pa) * (1 + d.maq * (C.FinPartido.estructuraEf(pa) - 0.5)) * (C.Organica ? C.Organica.factor(E, pa, dId) : 1);
         if (d.gobernador && E.politicos[d.gobernador] && E.politicos[d.gobernador].partido === pa.id) s *= 1.12;
         if (pa.id === 'MIS' && !(pa.fuertes[dId] > 1.5)) s *= 0.25;
@@ -200,7 +200,7 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador, cam = E.elecciones.campana;
       const jugCamara = cam && cam.eleccion === 'congreso' ? cam.cargo : null;   // 'senado' | 'camara'
       const res = { id: U.id('el'), tipo: 'congreso', anio, t: E.fecha.t, porDepto: {}, senado: {}, camara: { porDepto: {}, curules: {} }, jugador: null };
-      const partidos = Object.values(E.partidos).filter(p => !p.especial && !p.futuro);
+      const partidos = Object.values(E.partidos).filter(p => !p.especial && !p.futuro && !p.proscrito);
       const movJ = jugCamara && cam.partido === 'MOV';
 
       // 1. Votación por departamento (Senado: circunscripción nacional; Cámara: departamental)
@@ -325,7 +325,7 @@ window.CURUL = window.CURUL || {};
     candidatosPresidencia(E) {
       const cands = [], usados = new Set(), viceUsados = [];
       const J = E.jugador, cam = E.elecciones.campana;
-      const grandes = Object.values(E.partidos).filter(p => !p.especial && !p.futuro && p.popularidad >= 3.5).sort((a, b) => b.popularidad - a.popularidad);
+      const grandes = Object.values(E.partidos).filter(p => !p.especial && !p.futuro && !p.proscrito && p.popularidad >= 3.5).sort((a, b) => b.popularidad - a.popularidad);
       for (const pa of grandes) {
         if (cands.length >= 6) break;
         if (cam && cam.eleccion === 'presidencial' && cam.partido === pa.id) { cands.push({ pol: 'J', partido: pa.id, vice: C.Vice ? C.Vice.formulaDeJ(E) : null }); usados.add(pa.id); continue; }
@@ -352,7 +352,7 @@ window.CURUL = window.CURUL || {};
       const p = E.politicos[c.pol], pa = E.partidos[c.partido];
       let s = (pa ? pa.popularidad : 3) + p.r.car * 0.12 + p.fuerza * 0.05;
       if (c.partido === gob.partido) s *= U.clamp(aprob / 42, 0.4, 1.6);
-      for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
+      for (const o of Object.values(E.partidos)) if (!o.especial && !o.futuro && !o.proscrito && o.id !== c.partido && U.distIdeo(o, p) < 0.14) s += o.popularidad * 0.35;
       if (C.Vice) s += C.Vice.bonusNPC(E, c);
       if (fnGana) s *= c.partido === fnGana ? 2.4 : 0.55;
       return s;
@@ -459,11 +459,11 @@ window.CURUL = window.CURUL || {};
     regionalDesignado(E, res) {
       const gob = E.gobierno;
       for (const d of Object.values(E.deptos)) {
-        const pidGob = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro),
+        const pidGob = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro && !p.proscrito),
           p => (p.id === gob.partido ? 3 : 1) * (1 - U.distIdeo(p, E.partidos[gob.partido] || p)) + 0.3).id;
         const polGob = C.Politicos.crear(E, { partido: pidGob, depto: d.id, cargo: { tipo: 'aspirante', aspira: 'gobernacion' } });
         res.porDepto[d.id] = { candidatos: [{ pol: polGob.id, partido: pidGob, votos: 0, pct: 100 }], validos: 0, participacion: 0, ganador: polGob.id, designado: true };
-        const pidAlc = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro), p => p.id === pidGob ? 3 : 1).id;
+        const pidAlc = U.pesado(Object.values(E.partidos).filter(p => !p.especial && !p.futuro && !p.proscrito), p => p.id === pidGob ? 3 : 1).id;
         const polAlc = C.Politicos.crear(E, { partido: pidAlc, depto: d.id, cargo: { tipo: 'aspirante', aspira: 'alcaldia' } });
         res.alcaldias[d.id] = { candidatos: [{ pol: polAlc.id, partido: pidAlc, votos: 0, pct: 100 }], validos: 0, participacion: 0, ganador: polAlc.id, designado: true };
       }
@@ -645,7 +645,9 @@ window.CURUL = window.CURUL || {};
       const J = E.jugador, ev = El.proxima(E, El.tipoEleccion(cargo));
       if (!ev) return { ok: false, msg: 'No hay elecciones próximas para ese cargo' };
       let partido = J.partido;
+      if (E.regimen && E.regimen.elecciones === false) return { ok: false, msg: 'Las elecciones están suspendidas por el régimen' };
       if (via === 'firmas') partido = 'MOV';
+      else if (E.partidos[partido] && E.partidos[partido].proscrito) return { ok: false, msg: 'Tu partido está proscrito: sólo puedes inscribirte por firmas' };
       E.elecciones.campana = {
         cargo, depto: cargo === 'senado' || cargo === 'presidencia' ? null : (depto || J.residencia),
         eleccion: ev.tipo, fecha: ev.fecha.getTime(), anio: ev.anio, partido, via,

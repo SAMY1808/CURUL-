@@ -35,6 +35,26 @@
       ['Desacreditar a las ONG', E => { const j = R(E).junta; if (j) { j.resistencia += 4; j.aislamiento += 4; } C.Poderes && C.Poderes.mover(E, 'ong', -6); return 'Las ONG se radicalizan'; }],
       ['Ocultarlo con censura', E => { const j = R(E).junta; if (j) { j.censura += 10; j.legit -= 1; } C.Poderes && C.Poderes.mover(E, 'prensa', -6); return 'La prensa calla, pero la rumorología crece'; }]
     ]),
+    ev('rg_partido_golpista', '🕯', 'Tu partido toca la puerta de los cuarteles', 'Los sectores duros de tu partido se reúnen con altos oficiales: «el país no aguanta más a este Gobierno». Te piden que te sumes.', [
+      ['Frenarlos públicamente: «la democracia no se negocia»', E => { const r = R(E); r.golpistas = (r.golpistas || []).filter(g => g.pid !== E.jugador.partido); return C.Pais.ef(E, { rec: 1.5, honestidad: 2, partido: -3 }); }],
+      ['Mirar para otro lado', { rec: 0, honestidad: -1 }],
+      ['Apoyar el movimiento y ofrecerte como el rostro civil', E => { const r = R(E); const g = (r.golpistas || []).find(x => x.pid === E.jugador.partido); if (g) g.jugador = true; if (C.Poderes) C.Poderes.mover(E, 'militares', 4); return C.Pais.ef(E, { partido: 4, honestidad: -4, rec: 0.5 }); }]
+    ]),
+    ev('rg_proscrito_j', '🚫', 'Proscriben a tu partido', 'El régimen declara ilegal a tu partido y prohíbe presentar candidatos en su nombre. Sedes clausuradas, militantes vigilados.', [
+      ['Pasar a la clandestinidad y resistir', E => { const j = R(E).junta; if (j) j.resistencia = Math.min(100, j.resistencia + 4); return C.Pais.ef(E, { rec: 1.5, partido: 3, seg: { jovenes: 1 } }); }],
+      ['Denunciar ante la comunidad internacional', E => { const j = R(E).junta; if (j) j.aislamiento = Math.min(100, j.aislamiento + 4); return C.Pais.ef(E, { rec: 1, poder: { ong: 4 } }); }],
+      ['Pactar con la junta a cambio de seguridad', E => C.Pais.ef(E, { honestidad: -5, partido: -4, patrimonio: 15 })]
+    ]),
+    ev('rg_h_estudiantes', '🎓', 'Masacre de estudiantes', 'El Ejército dispara contra una marcha universitaria en Bogotá. Los muertos son jóvenes de familias conocidas. La opinión se estremece.', [
+      ['Exigir una investigación independiente', { rec: 2, honestidad: 2, seg: { jovenes: 2 } }],
+      ['Guardar silencio por prudencia', { honestidad: -2 }],
+      ['Justificar la «defensa del orden»', { rec: 0.5, honestidad: -4, seg: { jovenes: -2 } }]
+    ]),
+    ev('rg_h_prensa', '📰', 'La dictadura cierra un diario', 'La dictadura clausura un diario liberal y ordena a los demás medios «moderar el tono». Periodistas son citados a declarar.', [
+      ['Solidarizarte y publicar el editorial prohibido', E => { if (C.Poderes) C.Poderes.mover(E, 'prensa', 5); return C.Pais.ef(E, { rec: 2, honestidad: 2 }); }],
+      ['Pedir moderación a ambas partes', { rec: 0 }],
+      ['Aplaudir el «orden informativo»', E => { if (C.Poderes) C.Poderes.mover(E, 'prensa', -5); return C.Pais.ef(E, { honestidad: -4 }); }]
+    ]),
     ev('rg_transicion_ruido', '🕊', 'La calle exige elecciones', 'Gremios, iglesias y universidades piden un calendario electoral. Hasta algunos oficiales hablan de «volver a los cuarteles».', [
       ['Respaldar la apertura', E => { const r = R(E); if (!r.transicion && !C.Regimen.democratico(E)) C.Regimen.iniciarTransicion(E, 'el clamor social'); return C.Pais.ef(E, { rec: 1.5 }); }],
       ['Pedir prudencia a los militares', { rec: 0.3 }],
