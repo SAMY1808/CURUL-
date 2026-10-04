@@ -26,6 +26,14 @@ CURUL.DATA = CURUL.DATA || {};
         { id: 'ley', txt: 'Sacar adelante al menos 3 leyes antes de 1974', hasta: 1974, check: E => leyes(E) >= 3 }
       ],
       guion: [{ y: 1966, m: 7, fn: E => noti(E, 'Carlos Lleras Restrepo llega a la Presidencia y reforma el Estado', 0) }, { y: 1970, m: 3, fn: E => noti(E, 'Elecciones de 1970: la denuncia de fraude sacude al Frente Nacional', -1) }] },
+    { id: 'm19', nombre: 'El M-19: de la guerra a la Constituyente', anio: 1984, icono: '🕊',
+      desc: 'Corinto, el Palacio de Justicia, la desmovilización del M-19 y la Asamblea Constituyente: vive la década que cambió la Constitución de Colombia y toma las decisiones sobre la extradición, la Corte y la tutela.',
+      objetivos: [
+        { id: 'cons', txt: 'Ser elegido miembro de la Asamblea Constituyente de 1991 o apoyar su elección', hasta: 1991, check: E => (E.jugador.reconocimientos || []).some(r => /Constituyente/.test(r.txt)) },
+        { id: 'paz', txt: 'Llegar a 1992 con la violencia política contenida (seguridad media sobre 40)', hasta: 1992, check: E => { const d = Object.values(E.deptos); return d.reduce((a, x) => a + x.seguridad, 0) / d.length >= 40; }, alFinal: true },
+        { id: 'car', txt: 'Ocupar un cargo de elección popular antes de 1994', hasta: 1994, check: E => ['senador', 'representante', 'gobernador', 'alcalde', 'diputado', 'concejal'].some(c => tuvo(E, c)) }
+      ],
+      guion: [] },
     { id: 'constituyente', nombre: 'La Constituyente de 1991', anio: 1990, icono: '📜',
       desc: 'Un país cansado de la violencia pide una nueva Constitución. Están por nacer los partidos nuevos, la tutela, la Corte Constitucional y la elección popular de gobernadores.',
       objetivos: [

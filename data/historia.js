@@ -116,5 +116,56 @@ CURUL.DATA = CURUL.DATA || {};
         { f: [2021, 5, 8], fn: E => { noti(E, 'La CIDH llega a Colombia para investigar la represión de la protesta', -1); if (C.CIDH && !esPres(E)) C.CIDH.visita(E, true); } }
       ] }
   ];
+
+  // M-19 y Constituyente de 1991 (Fase 50)
+  C.DATA.historiaEventos.push(
+    evt('hm_corinto', '🕊', 'La tregua con el M-19 (Corinto)', 'Tras años de guerra, el M-19 y el Gobierno firman el cese al fuego de Corinto. Los sectores militares desconfían; buena parte del país quiere ensayar el diálogo.', [
+      ['Respaldar la tregua y el diálogo nacional', E => { viol(E, -6); if (C.Poderes) C.Poderes.mover(E, 'militares', -3); return C.Pais.ef(E, { rec: 1.5, honestidad: 1 }); }],
+      ['Apoyarla con reservas y vigilancia militar', E => { viol(E, -2); return C.Pais.ef(E, { rec: 0.8 }); }],
+      ['Oponerte: «con terroristas no se negocia»', E => { viol(E, 4); if (C.Poderes) C.Poderes.mover(E, 'militares', 4); return C.Pais.ef(E, { rec: 0.8, honestidad: -1 }); }]]),
+    evt('hm_desmov', '🌱', 'El M-19 entrega las armas', 'En 1990 el M-19 se desmoviliza, deja las armas y funda la Alianza Democrática M-19. Carlos Pizarro, su comandante, es asesinado semanas después de la firma. El país decide si abre la política a los desmovilizados.', [
+      ['Garantizar su participación política con seguridad', E => { viol(E, -8); C.Cartel && C.Cartel.crim(E); return C.Pais.ef(E, { rec: 2, honestidad: 2 }); }],
+      ['Reconocer la paz pero limitar su participación', E => { viol(E, -2); return C.Pais.ef(E, { rec: 0.5 }); }],
+      ['Cuestionar el indulto y la impunidad', E => { viol(E, 3); return C.Pais.ef(E, { rec: 1, honestidad: -1 }); }]]),
+    evt('hm_septima', '🗳', 'La Séptima Papeleta', 'Un movimiento estudiantil propone depositar una «séptima papeleta» en las elecciones de marzo de 1990 pidiendo una Asamblea Constituyente. Cerca de dos millones de votos la respaldan.', [
+      ['Apoyar la Constituyente y la séptima papeleta', E => { if (C.Actores) C.Actores.mover(E, 'estudiantil', 10); return C.Pais.ef(E, { rec: 2.2, honestidad: 2 }); }],
+      ['Defender la reforma por el Congreso, sin Constituyente', E => { if (C.Actores) C.Actores.mover(E, 'estudiantil', -6); return C.Pais.ef(E, { rec: 0.5 }); }],
+      ['Ignorarla', E => { if (C.Actores) C.Actores.mover(E, 'estudiantil', -3); return C.Pais.ef(E, { rec: 0 }); }]]),
+    evt('hm_eleccion', '🗳', 'Elección de la Asamblea Constituyente', 'El 9 de diciembre de 1990 se eligen los 70 constituyentes: la Alianza Democrática M-19, el liberalismo, el conservadurismo de Álvaro Gómez y el movimiento indígena. Puedes buscar un asiento o apoyar a una lista.', [
+      ['Inscribirte y hacer campaña por un asiento en la Constituyente', E => { const J = E.jugador, ok = C.U.chance(0.25 + J.popularidad / 250); if (ok) { J.reconocimientos.push({ t: E.fecha.t, txt: 'Elegido miembro de la Asamblea Constituyente de 1991' }); return C.Pais.ef(E, { rec: 4, poder: 3 }) + ' ¡Resultas elegido constituyente!'; } return C.Pais.ef(E, { rec: 1.5 }) + ' No alcanzas la votación.'; }],
+      ['Apoyar la lista de la Alianza Democrática M-19', E => { if (C.Actores) C.Actores.mover(E, 'estudiantil', 5); return C.Pais.ef(E, { rec: 1.2 }); }],
+      ['Apoyar a los partidos tradicionales', E => C.Pais.ef(E, { rec: 0.8, partido: 1 })]]),
+    evt('hm_extradicion', '✈', 'Constituyente: ¿extradición?', 'Los narcotraficantes presionan a la Asamblea para prohibir la extradición de nacionales. Escobar negocia su entrega a cambio. Estados Unidos advierte que no la aceptará.', [
+      ['Prohibir la extradición de colombianos', E => { C.Cartel.extradicion(E, false); cartel(E, 'amenaza', -25); cartel(E, 'poder', 4); return C.Pais.ef(E, { rec: 0.8, honestidad: -3 }); }],
+      ['Mantener la extradición', E => { C.Cartel.extradicion(E, true); cartel(E, 'amenaza', 20); cartel(E, 'guerra', 40); return C.Pais.ef(E, { rec: 1.5, honestidad: 2 }); }],
+      ['Dejarlo a la ley, sin decidir en la Constitución', E => C.Pais.ef(E, { rec: 0 })]]),
+    evt('hm_corte', '⚖', 'Constituyente: la Corte Constitucional y la tutela', 'La Asamblea debate crear una Corte Constitucional con el poder de anular leyes y una acción de tutela para proteger derechos fundamentales de cualquier ciudadano.', [
+      ['Corte fuerte con tutela amplia', E => { if (E.corte) E.corte.tension = Math.min(100, E.corte.tension + 8); if (C.Actores) C.Actores.mover(E, 'ong', 6); return C.Pais.ef(E, { rec: 1.5, honestidad: 2 }); }],
+      ['Corte con facultades limitadas', E => { if (C.Actores) C.Actores.mover(E, 'ong', -4); return C.Pais.ef(E, { rec: 0.5 }); }],
+      ['Mantener el control constitucional en la Corte Suprema', E => { if (E.corte) E.corte.tension = Math.max(0, E.corte.tension - 6); return C.Pais.ef(E, { rec: 0 }); }]]),
+    evt('hm_reeleccion', '🔁', 'Constituyente: ¿reelección presidencial?', 'Hay que decidir si el presidente puede aspirar a un nuevo mandato. Los defensores hablan de continuidad; los críticos, de caudillismo.', [
+      ['Prohibir la reelección inmediata', E => C.Pais.ef(E, { rec: 1.2, honestidad: 1 })],
+      ['Permitirla', E => C.Pais.ef(E, { rec: 0.4, honestidad: -1 })],
+      ['Pedir un referendo sobre el tema', E => C.Pais.ef(E, { rec: 0.8 })]]),
+    evt('hm_excepcion', '🚨', 'Constituyente: estados de excepción', 'Se discute si el Gobierno conservará el estado de sitio permanente que usó durante décadas o si se limitan las facultades con control de la Corte.', [
+      ['Limitar los estados de excepción con control judicial', E => { if (C.Actores) C.Actores.mover(E, 'ong', 5); if (C.Poderes) C.Poderes.mover(E, 'militares', -2); return C.Pais.ef(E, { rec: 1.2, honestidad: 2 }); }],
+      ['Conservar facultades amplias para el Ejecutivo', E => { if (C.Poderes) C.Poderes.mover(E, 'militares', 3); return C.Pais.ef(E, { rec: 0.5, honestidad: -2 }); }]])
+  );
+  C.DATA.eventos = (C.DATA.eventos || []).concat(C.DATA.historiaEventos.filter(e => /^hm_/.test(e.id)));
+  C.DATA.historiaM19 = { id: 'm19', nombre: 'M-19 y Constituyente de 1991', icono: '🕊', inicio: [1984, 7, 24], fin: [1991, 6, 4],
+    desc: 'De la tregua de Corinto a la Constitución de 1991: Palacio de Justicia, desmovilización del M-19, séptima papeleta, Constituyente y nueva Carta con decisiones tuyas sobre extradición, Corte y tutela.',
+    guion: [
+      { f: [1984, 7, 24], fn: E => { noti(E, 'Se firma el cese al fuego de Corinto entre el Gobierno y el M-19', 1); ev(E, 'hm_corinto'); } },
+      { f: [1990, 2, 9], est: E => viol(E, -6), fn: E => { noti(E, 'El M-19 deja las armas y nace la Alianza Democrática M-19', 1); ev(E, 'hm_desmov'); } },
+      { f: [1990, 2, 11], fn: E => { noti(E, 'La «séptima papeleta» estudiantil pide una Constituyente', 1); ev(E, 'hm_septima'); } },
+      { f: [1990, 11, 9], fn: E => { noti(E, 'Los colombianos eligen la Asamblea Nacional Constituyente', 1); ev(E, 'hm_eleccion'); } },
+      { f: [1991, 1, 5], fn: E => noti(E, 'Se instala la Asamblea Constituyente con tres copresidentes: Navarro Wolff, Gómez Hurtado y Lleras de la Fuente', 1) },
+      { f: [1991, 5, 19], fn: E => ev(E, 'hm_extradicion') },
+      { f: [1991, 2, 20], fn: E => ev(E, 'hm_corte') },
+      { f: [1991, 3, 5], fn: E => ev(E, 'hm_reeleccion') },
+      { f: [1991, 4, 5], fn: E => ev(E, 'hm_excepcion') },
+      { f: [1991, 6, 4], fn: E => noti(E, 'Se promulga la Constitución de 1991: Colombia es un Estado social de derecho', 1) }
+    ] };
+  C.DATA.historia.push(C.DATA.historiaM19);
   C.DATA.historiaT = T;
 })(window.CURUL);
