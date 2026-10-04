@@ -83,6 +83,19 @@ window.CURUL = window.CURUL || {};
       const afin = pr.autor === pais ? 0.25 : 0;
       return cl(0.72 - Math.abs(B.ideo(E, pais) / 100 - tilt) * 0.34 + (rel - 50) * 0.002 + afin + (pr.bonus || 0) + (pr.parlRes === 'favor' ? 0.06 : pr.parlRes === 'contra' ? -0.08 : 0) + (pr.lobbyC && pr.lobbyC[pais] || 0), 0.05, 0.95);
     },
+    /* Delegado de Colombia en la mesa: tú mismo o un embajador; su habilidad facilita o dificulta cambiar votos. */
+    delegadoOpc(E) {
+      const J = E.jugador, out = [{ k: 'yo', n: 'Tú mismo', cal: Math.round(U.clamp(35 + ((J.atributos && J.atributos.negociacion) || 50) * 0.4 + (J.reconocimiento || 0) * 0.2, 20, 95)) }];
+      const X = C.Exterior; if (X) for (const [pid, e] of X.abiertas(E)) if (e.embajador) out.push({ k: pid, n: `Embajador en ${nomP(pid)}: ${e.embajador.nombre}`, cal: Math.round(e.embajador.calidad) });
+      return out;
+    },
+    delegado(E, id) {
+      const s = B.st(E, id), ops = B.delegadoOpc(E); let o = s.delegado && ops.find(x => x.k === s.delegado);
+      if (!o) { const emb = ops.filter(x => x.k !== 'yo').sort((a, b) => b.cal - a.cal)[0], rol = B.rolJ(E, id); o = rol && rol.rol === 'comisionado' ? ops[0] : (emb || { k: 'enc', n: 'Encargado de negocios', cal: 35 }); }
+      return o;
+    },
+    /* multiplicador de eficacia frente a una delegación concreta (0.5 – 1.45) */
+    eficacia(E, id, pais) { const d = B.delegado(E, id), X = C.Exterior, loc = X && pais ? X.calidadEfectiva(E, pais) : 0, cal = d.cal + (loc ? (loc - 45) * 0.2 : -5); return cl(0.4 + cal / 100, 0.5, 1.45); },
     /* ── Mesa redonda de representantes permanentes (Consejo) ── */
     EXIGE: ['una salvaguardia para sus sectores sensibles', 'compensación con recursos del fondo de convergencia', 'un plazo de transición más largo', 'voz y voto en la ejecución de la norma', 'garantías sobre el origen de las mercancías', 'que se respete su política interna'],
     TACTICAS: { argumentar: 'Argumentar (técnico)', compensar: 'Ofrecer compensación', presionar: 'Presionar (diplomático)', aliado: 'Pedir apoyo a un aliado', sondear: 'Sondear su posición' },
@@ -103,13 +116,13 @@ window.CURUL = window.CURUL || {};
       const m = B.mesa(E, id, pr), x = m.pos[pais]; if (!x) return { ok: false, msg: 'Elige una delegación' };
       if (x.ult === m.ronda) return { ok: false, msg: `Ya conversaste con la delegación de ${nomP(pais)} en esta ronda` };
       x.ult = m.ronda; const rel = (E.diplomacia.paises[pais] || { relacion: 50 }).relacion, J = E.jugador, mov = (d, txt) => B.mesaMov(E, pr, pais, d, txt);
-      const fuerza = 1 - x.firmeza * 0.7, r = () => 0.7 + Math.random() * 0.6, sentido = pr.sentido || 1; let msg = '', cambio = null;
-      if (tac === 'sondear') { x.sondeo = true; msg = `Sondeas a ${nomP(pais)}: pide ${x.exige}; firmeza ${x.firmeza > 0.6 ? 'alta' : x.firmeza > 0.35 ? 'media' : 'baja'}`; }
-      else if (tac === 'argumentar') { const d = (0.09 + (J.atributos ? (J.atributos.negociacion || 50) / 1000 : 0.05) + (rel - 50) * 0.001) * fuerza * r(); cambio = mov(d, 'argumentos técnicos'); msg = `Defiendes la norma ante ${nomP(pais)}: ${d > 0.07 ? 'toma nota con interés' : 'escucha sin comprometerse'}`; }
+      const ef = B.eficacia(E, id, pais), dl = B.delegado(E, id), fuerza = (1 - x.firmeza * 0.7) * ef, r = () => 0.7 + Math.random() * 0.6; let msg = '', cambio = null;
+      if (tac === 'sondear') { if (dl.cal < 45 && U.chance(0.45)) { return { ok: true, exito: false, msg: `${dl.n} no logra sacarle información útil a la delegación de ${nomP(pais)}` }; } x.sondeo = true; msg = `Sondeas a ${nomP(pais)}: pide ${x.exige}; firmeza ${x.firmeza > 0.6 ? 'alta' : x.firmeza > 0.35 ? 'media' : 'baja'}`; }
+      else if (tac === 'argumentar') { const d = (0.1 + (rel - 50) * 0.001) * fuerza * r(); cambio = mov(d, 'argumentos técnicos'); msg = `Defiendes la norma ante ${nomP(pais)}: ${d > 0.07 ? 'toma nota con interés' : 'escucha sin comprometerse'}`; }
       else if (tac === 'compensar') { C.Economia.programar(E, [{ v: 'deficit', d: C.Economia.impactoFiscal(0.15), p: 'm' }], 'bloque'); const d = (x.satisf ? 0.05 : 0.2) * (0.6 + fuerza * 0.6) * r(); x.satisf = true; x.firmeza = cl(x.firmeza - 0.1, 0.05, 0.95); cambio = mov(d, 'compensación acordada'); msg = `Ofreces a ${nomP(pais)} ${x.exige.startsWith('que') ? 'respetar' : 'atender'} lo que pide (${x.exige}): a cambio, mejora su disposición`; }
-      else if (tac === 'presionar') { const d = 0.16 * fuerza * r() * (rel > 40 ? 1 : 0.6); const reb = U.chance(0.15 + x.firmeza * 0.2 - (rel - 50) * 0.002); if (reb) { x.firmeza = cl(x.firmeza + 0.15, 0.05, 0.95); cambio = mov(-0.1, 'rechaza la presión'); msg = `La presión sobre ${nomP(pais)} sale mal: se atrinchera`; } else { cambio = mov(d, 'presión diplomática'); msg = `Presionas a ${nomP(pais)}: cede terreno`; } const st = E.diplomacia.paises[pais]; if (st) st.relacion = cl(st.relacion - 2, 3, 97); }
+      else if (tac === 'presionar') { const d = 0.16 * fuerza * r() * (rel > 40 ? 1 : 0.6); const reb = U.chance(cl(0.15 + x.firmeza * 0.2 - (rel - 50) * 0.002 - (ef - 1) * 0.25, 0.02, 0.6)); if (reb) { x.firmeza = cl(x.firmeza + 0.15, 0.05, 0.95); cambio = mov(-0.1, 'rechaza la presión'); msg = `La presión sobre ${nomP(pais)} sale mal: se atrinchera`; } else { cambio = mov(d, 'presión diplomática'); msg = `Presionas a ${nomP(pais)}: cede terreno`; } const st = E.diplomacia.paises[pais]; if (st) st.relacion = cl(st.relacion - 2, 3, 97); }
       else if (tac === 'aliado') { const al = Object.entries(m.pos).filter(([k, v]) => k !== pais && B.postura(v) === 'favor').sort((a, b) => ((E.diplomacia.paises[b[0]] || { relacion: 50 }).relacion) - ((E.diplomacia.paises[a[0]] || { relacion: 50 }).relacion))[0]; if (!al) { x.ult = -1; return { ok: false, msg: 'Ninguna delegación a favor puede interceder todavía' }; } const d = 0.12 * fuerza * r(); cambio = mov(d, `intercede ${nomP(al[0])}`); msg = `${nomP(al[0])} habla con ${nomP(pais)} a tu favor`; }
-      const x2 = B.postura(x); return { ok: true, msg: `${msg}${cambio ? `. ¡Cambia de postura: ahora está ${cambio === 'favor' ? 'a favor' : cambio === 'contra' ? 'en contra' : 'indecisa'}!` : ''}`, exito: !!cambio };
+      const x2 = B.postura(x); return { ok: true, msg: `[${dl.n}, habilidad ${dl.cal} → eficacia ×${ef.toFixed(2)}] ${msg}${cambio ? `. ¡Cambia de postura: ahora está ${cambio === 'favor' ? 'a favor' : cambio === 'contra' ? 'en contra' : 'indecisa'}!` : ''}`, exito: !!cambio };
     },
     enmendar(E, id, pr) { const m = B.mesa(E, id, pr); if (m.enm >= 2) return 'La norma ya fue enmendada dos veces'; m.enm++; for (const p of Object.keys(m.pos)) B.mesaMov(E, pr, p, 0.05, 'texto enmendado'); m.log.unshift(`Ronda ${m.ronda}: se enmienda el texto con salvaguardias; baja su alcance integrador`); return ''; },
     /* cada semana la mesa avanza: las delegaciones se coordinan entre sí */
@@ -229,6 +242,9 @@ window.CURUL = window.CURUL || {};
       A.registrar({ id: 'negociarMesaBloque', nombre: 'Intentar cambiar el voto de una delegación (mesa redonda)', icono: '🪑', grupo: 'comercio', costo: 1,
         disponible(E, a) { const id = bid(a), p = B.puedeMesa(E, id); if (p !== true) return p; const pr = prC(E, a); if (!pr || pr.fase !== 'consejo') return 'La norma no está en la mesa del Consejo'; if (!a.pais || a.pais === 'COL') return 'Elige una delegación'; if (!B.TACTICAS[a.tactica || 'argumentar']) return 'Elige la táctica'; const m = pr.mesa; return m && m.pos[a.pais] && m.pos[a.pais].ult === m.ronda ? 'Ya conversaste con esta delegación en la ronda' : true; },
         ejecutar(E, a) { const pr = prC(E, a), r = B.negociar(E, bid(a), pr, a.pais, a.tactica || 'argumentar'); if (r.ok) C.Opinion.subirRec(E, 0.2); return r; } });
+      A.registrar({ id: 'designarDelegadoBloque', nombre: 'Designar al delegado de Colombia en la mesa del Consejo', icono: '🎩', grupo: 'comercio', costo: 1,
+        disponible(E, a) { const id = bid(a), p = B.puedeMesa(E, id); if (p !== true) return p; return a.delegado === 'auto' || B.delegadoOpc(E).some(o => o.k === a.delegado) ? true : 'Elige un delegado'; },
+        ejecutar(E, a) { const id = bid(a); B.st(E, id).delegado = a.delegado === 'auto' ? null : a.delegado; const d = B.delegado(E, id); return { ok: true, msg: `${d.n} (habilidad ${d.cal}) representa a Colombia en la mesa del Consejo` }; } });
       A.registrar({ id: 'enmendarNormaMesa', nombre: 'Enmendar la norma para destrabar la mesa', icono: '✏', grupo: 'comercio', costo: 1,
         disponible(E, a) { const id = bid(a), p = B.puedeMesa(E, id); if (p !== true) return p; const pr = prC(E, a); return pr && pr.fase === 'consejo' ? (pr.mesa && pr.mesa.enm >= 2 ? 'Ya fue enmendada dos veces' : true) : 'La norma no está en la mesa del Consejo'; },
         ejecutar(E, a) { const m = B.enmendar(E, bid(a), prC(E, a)); return { ok: !m, msg: m || 'Aceptas enmiendas al texto: todas las delegaciones se ablandan un poco, pero la norma pierde alcance' }; } });
