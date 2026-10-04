@@ -17,7 +17,7 @@ window.CURUL = window.CURUL || {};
   };
   const A = {
     ACT, clave: 'actores',
-    asegurar(E) { if (E.actores && E.actores.alianzas) return E.actores; E.actores = { alianzas: {}, agendas: [], ult: -999, hist: [], lideres: {}, ultReu: {}, pactos: [], ultFrente: -999 }; return E.actores; },
+    asegurar(E) { if (E.actores && E.actores.alianzas) { const a = E.actores; if (!a.lideres) { a.lideres = {}; a.ultReu = {}; a.pactos = []; a.ultFrente = -999; } return a; } E.actores = { alianzas: {}, agendas: [], ult: -999, hist: [], lideres: {}, ultReu: {}, pactos: [], ultFrente: -999 }; return E.actores; },
     // Fase 50: líderes, reuniones, pactos y frentes
     lider(E, id) { const a = A.asegurar(E); if (!a.lideres) { a.lideres = {}; a.ultReu = {}; a.pactos = []; a.ultFrente = -999; } let l = a.lideres[id]; if (!l || E.fecha.t - l.t0 > 208 + l.dur) { const N = C.DATA.nombres, h = U.chance(0.62); l = a.lideres[id] = { nombre: U.pick(h ? N.h : N.m) + ' ' + U.pick(N.a), t0: E.fecha.t, dur: U.ri(0, 150), perfil: U.pick(['dialoguista', 'combativo', 'pragmático', 'doctrinario']) }; } return l; },
     opositores(E) { return Object.keys(ACT).filter(id => A.afin(E, id) < 35); },
