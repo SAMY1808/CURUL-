@@ -145,7 +145,7 @@ window.CURUL = window.CURUL || {};
         else if (k.fase === 'investigacion') { k.fase = 'juicio'; k.dur = U.ri(25, 60); }
         else if (k.fase === 'juicio') {
           const cond = !k.prot && U.chance(0.35 + ind / 200); k.fase = cond ? 'condena' : 'impune'; c.indice = cl(c.indice + (cond ? -3 : 1.5), 0, 100);
-          if (cond) { const vict = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && ['senador', 'representante', 'ministro', 'gobernador', 'alcalde'].includes(p.cargo.tipo)); if (vict.length) { const p = U.pick(vict); p.activo = false; p.cargo = null; C.Politicos.anotar(p, `Condenado por «${k.n}»`); k.culpable = p.nombre; } if (k.resp === 'J') { C.Pais.ef(E, { escandalo: `Condena por «${k.n}»`, honestidad: -8 }); E.jugador.riesgoJudicial = cl((E.jugador.riesgoJudicial || 0) + 20, 0, 100); } if (!E.meta.presim) C.Medios.noticia(E, { tipo: 'escandalo', titular: `CONDENA en el caso «${k.n}»${k.culpable ? ': cae ' + k.culpable : ''}`, tono: 1, importante: true }); }
+          if (cond) { const vict = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && ['ministro', 'gobernador', 'alcalde'].includes(p.cargo.tipo)); if (vict.length) { const p = U.pick(vict); p.activo = false; p.cargo = null; C.Politicos.anotar(p, `Condenado por «${k.n}»`); k.culpable = p.nombre; } if (k.resp === 'J') { C.Pais.ef(E, { escandalo: `Condena por «${k.n}»`, honestidad: -8 }); E.jugador.riesgoJudicial = cl((E.jugador.riesgoJudicial || 0) + 20, 0, 100); } if (!E.meta.presim) C.Medios.noticia(E, { tipo: 'escandalo', titular: `CONDENA en el caso «${k.n}»${k.culpable ? ': cae ' + k.culpable : ''}`, tono: 1, importante: true }); }
         }
       }
     },

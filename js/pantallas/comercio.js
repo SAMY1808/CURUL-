@@ -217,8 +217,8 @@ window.CURUL = window.CURUL || {};
   const mercosur = E => {
     const sub = E.ui.merTab || 'bloque', m = C.Mercosur.st(E);
     if (!m.existe || !C.MercosurInst) return mercosurBase(E);
-    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-mer="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-mer="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
-    return tabs + (sub === 'inst' ? institucional(E) : mercosurBase(E));
+    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-mer="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-mer="estr" class="${sub === 'estr' ? 'activo' : ''}">Instituciones</button><button data-mer="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
+    return tabs + (sub === 'inst' ? institucional(E) : sub === 'estr' ? estructura(E, 'mercosur') : mercosurBase(E));
   };
 
 
@@ -257,8 +257,60 @@ window.CURUL = window.CURUL || {};
   const can = E => {
     const sub = E.ui.canTab || 'bloque';
     if (!C.CAN.activa()) return canBase(E);
-    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-can="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-can="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
-    return tabs + (sub === 'inst' ? canInst(E) : canBase(E));
+    const tabs = `<div class="tabs" style="margin-bottom:12px"><button data-can="bloque" class="${sub === 'bloque' ? 'activo' : ''}">Membresía y cumbres</button><button data-can="estr" class="${sub === 'estr' ? 'activo' : ''}">Instituciones</button><button data-can="inst" class="${sub === 'inst' ? 'activo' : ''}">Reforma institucional</button></div>`;
+    return tabs + (sub === 'inst' ? canInst(E) : sub === 'estr' ? estructura(E, 'can') : canBase(E));
+  };
+
+
+  /* ── Estructura política de los bloques (CAN y Mercosur): Consejo, Comisión, Parlamento y Tribunal ── */
+  const hemi = par => {
+    const G = C.Bloques.GRUPOS, N = par.total; if (!N) return '';
+    const R = N > 80 ? 6 : N > 40 ? 4 : 3, pos = []; const r0 = 55, dr = 22;
+    const tot = U.suma(Array.from({ length: R }, (_, k) => r0 + k * dr));
+    for (let k = 0; k < R; k++) { const r = r0 + k * dr, n = Math.round(N * r / tot); for (let i = 0; i < n; i++) pos.push({ a: Math.PI - (n === 1 ? Math.PI / 2 : i * Math.PI / (n - 1)), r }); }
+    while (pos.length > N) pos.pop(); while (pos.length < N) pos.push({ a: Math.PI / 2, r: r0 });
+    pos.sort((x, y) => y.a - x.a || x.r - y.r);
+    const seq = []; for (const g of G) for (let i = 0; i < (par.tot[g[0]] || 0); i++) seq.push(g);
+    const rr = N > 80 ? 4.2 : N > 40 ? 5.5 : 7;
+    const circ = pos.map((q, i) => { const g = seq[i] || G[2]; return `<circle cx="${(150 + q.r * Math.cos(q.a)).toFixed(1)}" cy="${(150 - q.r * Math.sin(q.a)).toFixed(1)}" r="${rr}" fill="${g[2]}"/>`; }).join('');
+    return `<svg viewBox="0 0 300 165" style="width:100%;max-width:480px">${circ}<text x="150" y="146" text-anchor="middle" fill="currentColor" style="font-size:20px;font-weight:700">${N}</text><text x="150" y="160" text-anchor="middle" fill="currentColor" style="font-size:9px;opacity:.7">ESCAÑOS</text></svg>`;
+  };
+  const estructura = (E, id) => {
+    const Bl = C.Bloques, nv = Bl.niveles(E, id), s = Bl.st(E, id), nom = Bl.nombre(id), esP = E.gobierno.presidente === 'J' && Bl.colMiembro(E, id), rol = Bl.rolJ(E, id), cat = Bl.catalogo(E, id).filter(n => !s.prop.some(p => p.norma === n.id && !['aprobada', 'rechazada'].includes(p.fase)) && !(id === 'can' && C.CAN.asegurar(E).dec[n.id].estado === 'vigente'));
+    if (!Bl.existe(E, id)) return `<div class="tarjeta vacio">La ${nom} aún no existe en esta época.</div>`;
+    const ms = Bl.miembros(E, id), com = Bl.comision(E, id), par = Bl.parlamento(E, id), jue = Bl.jueces(E, id);
+    const REGLA = { unanimidad: 'Unanimidad (cualquiera puede vetar)', mayoria: 'Mayoría absoluta', calificada: 'Mayoría calificada (dos tercios)', ponderada: 'Mayoría ponderada por población y PIB' };
+    const ppt = id === 'can' ? C.CAN.asegurar(E).ppt.pais : C.Mercosur.st(E).ppt;
+    const abiertas = s.prop.filter(p => !['aprobada', 'rechazada'].includes(p.fase)), cerradas = s.prop.filter(p => ['aprobada', 'rechazada'].includes(p.fase)).slice(0, 5);
+    const consejo = `<div class="tarjeta"><h3>🏛 Consejo (jefes de Estado y cancilleres)</h3><div class="tenue" style="font-size:12px;margin-bottom:6px">Un voto por país. Regla vigente: <b>${esc(REGLA[nv.regla])}</b>.</div>
+      <div class="fila" style="gap:6px;flex-wrap:wrap">${ms.map(p => `<span class="etq ${p === 'COL' ? 'oro' : ''}">${esc(nomP(p))}${p === ppt ? ' · presidencia' : ''}</span>`).join('')}</div></div>`;
+    const sugs = s.sug.filter(x => x.estado === 'abierta');
+    const candCom = nv.comision >= 3 ? (id === 'can' ? `<div style="margin-top:8px">${UI.botonAccion('postularComisionBloque', { bloque: 'can' }, null, 'chico')}</div>` : `<div style="margin-top:8px">${UI.botonAccion('postularDirectorioMercosur', {}, null, 'chico')}</div>`) : '';
+    const comisionCard = nv.comision === 0 ? `<div class="tarjeta"><h3>🎩 Comisión</h3><div class="tenue" style="font-size:12.5px">El ${nom} no tiene una comisión ejecutiva: sólo una Presidencia Pro Tempore rotativa y una secretaría técnica. Una reforma del Directorio crearía comisionados.</div></div>`
+      : `<div class="tarjeta"><h3>🎩 ${nv.comision === 3 ? (nv.iniciativa ? 'Comisión (un comisionado por país)' : 'Representantes permanentes') : nv.comision === 2 ? 'Secretaría con iniciativa' : 'Secretaría técnica'}</h3><div class="tenue" style="font-size:12px;margin-bottom:6px">${nv.iniciativa ? 'Tiene iniciativa: propone las normas al Parlamento y al Consejo.' : 'Sin iniciativa: ejecuta y asesora a los gobiernos.'} Sede: ${esc(nv.sedes[0])}.</div>
+        <div class="lista">${com.map(c => `<div class="it" style="${c.jug ? 'border-left:3px solid var(--oro);padding-left:6px' : ''}"><div class="cuerpo"><b>${esc(c.nombre)}</b>${c.jug ? ' <span class="etq oro">tú</span>' : ''}<div class="tenue" style="font-size:12px">${esc(c.cargo)} · ${esc(c.cartera)} · ${esc(nomP(c.pais))}</div></div></div>`).join('')}</div>
+        ${rol && rol.rol === 'comisionado' ? `<h4 class="sub-h" style="margin:12px 0 6px">📬 Sugerencias recibidas</h4>${sugs.length ? `<div class="lista">${sugs.map(g => `<div class="it" style="flex-wrap:wrap"><div class="cuerpo"><b>${esc(g.titulo)}</b><div class="tenue" style="font-size:12px">La envía ${esc(g.de)}</div></div><div class="fila" style="gap:6px">${UI.botonAccion('atenderSugerencia', { bloque: id, sug: g.id, via: 'adoptar' }, 'Adoptar', 'chico')}${UI.botonAccion('atenderSugerencia', { bloque: id, sug: g.id, via: 'devolver' }, 'Devolver', 'chico')}${UI.botonAccion('atenderSugerencia', { bloque: id, sug: g.id, via: 'archivar' }, 'Archivar', 'chico')}</div></div>`).join('')}</div>` : '<div class="tenue" style="font-size:12.5px">No hay sugerencias pendientes: llegan de gobiernos, gremios y ONG.</div>'}
+          <div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:8px"><select data-arg="norma" style="max-width:260px">${cat.map(n => `<option value="${n.id}">${esc(n.n)}</option>`).join('')}</select>${UI.botonAccion('proponerNormaComisionado', { bloque: id, norma: (cat[0] || {}).id }, 'Presentar una norma', 'chico prim')}</div>`
+          : `<div class="tenue" style="font-size:12px;margin:10px 0 6px">No eres parte de la Comisión: puedes presentar una sugerencia o aspirar a una silla.</div>
+          <div class="fila accion-form" style="gap:6px;flex-wrap:wrap"><select data-arg="norma" style="max-width:260px">${cat.map(n => `<option value="${n.id}">${esc(n.n)}</option>`).join('')}</select>${UI.botonAccion('sugerirComision', { bloque: id, norma: (cat[0] || {}).id }, 'Presentar sugerencia', 'chico')}</div>${candCom}`}</div>`;
+    const grupos = Bl.GRUPOS.filter(g => par.tot[g[0]]).map(g => `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px"><i style="width:10px;height:10px;border-radius:50%;background:${g[2]};display:inline-block"></i>${esc(g[1])} <b>${par.tot[g[0]]}</b></span>`).join(' ');
+    const porPais = par.paises.map(p => `<tr><td>${esc(nomP(p.id))}</td><td class="num">${p.esc}</td><td>${Bl.GRUPOS.map(g => p.grupos[g[0]] ? `<span style="color:${g[2]}">●</span>${p.grupos[g[0]]}` : '').join(' ')}</td></tr>`).join('');
+    const colPar = id === 'mercosur' && C.MercosurInst ? (rol && rol.rol === 'parlamentario' ? '' : `<div style="margin-top:8px">${UI.botonAccion('postularParlamentoMercosur', {}, null, 'chico')}</div>`) : (rol && rol.rol === 'parlamentario' ? '' : `<div style="margin-top:8px">${UI.botonAccion('postularParlamentoBloque', { bloque: 'can' }, null, 'chico')}</div>`);
+    const parCard = `<div class="tarjeta"><h3>🏟 Parlamento ${id === 'can' ? 'Andino' : 'del Mercosur'}</h3><div class="tenue" style="font-size:12px;margin-bottom:6px">${esc(par.txt)}. Sede: ${esc(nv.sedes[1])}.</div>${par.nivel ? `<div style="text-align:center">${hemi(par)}</div><div class="fila" style="gap:10px;flex-wrap:wrap;margin:6px 0">${grupos}</div><table class="tabla"><thead><tr><th>País</th><th>Escaños</th><th>Grupos</th></tr></thead><tbody>${porPais}</tbody></table>` : '<div class="tenue" style="font-size:12.5px">Aún no hay parlamento. Una reforma institucional lo crearía.</div>'}${rol && rol.rol === 'parlamentario' ? '<div class="etq oro" style="margin-top:8px">Eres parlamentario/a: votas las normas de abajo</div>' : par.nivel ? colPar : ''}</div>`;
+    const tribunal = `<div class="tarjeta"><h3>⚖ Tribunal de Justicia</h3><div class="tenue" style="font-size:12px;margin-bottom:6px">${nv.tribunal >= 2 ? 'Jurisdicción obligatoria' : nv.tribunal === 1 ? 'Opiniones y arbitraje permanente' : 'Arbitraje ad hoc'}. Sede: ${esc(nv.sedes[2])}.</div><div class="fila" style="gap:6px;flex-wrap:wrap">${jue.map(j => `<span class="etq">${esc(j.nombre)} (${esc(nomP(j.pais))})</span>`).join('')}</div></div>`;
+    const FASES = { comision: 'En la Comisión', dictamen: 'Dictamen del foro parlamentario', parlamento: 'En el Parlamento', consejo: 'En el Consejo', aprobada: 'Aprobada', rechazada: 'Rechazada' };
+    const filaProp = p => {
+      let acc = '', info = '';
+      if (p.parl) info += `Parlamento: ${p.parl.f} a favor, ${p.parl.c} en contra. `;
+      if (p.cons) info += `Consejo: ${p.cons.f} de ${p.cons.n} países. `;
+      if (rol && rol.rol === 'parlamentario' && ['parlamento', 'dictamen'].includes(p.fase)) acc = `<div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:6px"><select data-arg="voto"><option value="si">Votar a favor</option><option value="no">Votar en contra</option></select>${UI.botonAccion('votarParlamentoBloque', { bloque: id, prop: p.id, voto: 'si' }, 'Votar', 'chico prim')}<select data-arg="grupo">${Bl.GRUPOS.map(g => `<option value="${g[0]}">${esc(g[1])}</option>`).join('')}</select>${UI.botonAccion('cabildearGrupoBloque', { bloque: id, prop: p.id, grupo: 'cen' }, 'Cabildear al grupo', 'chico')}</div>${p.votoJ ? `<div class="tenue" style="font-size:11.5px">Tu voto: ${p.votoJ === 'si' ? 'a favor' : 'en contra'}</div>` : ''}`;
+      else if (esP && p.fase === 'consejo') acc = `<div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:6px"><select data-arg="pais">${ms.filter(x => x !== 'COL').map(x => `<option value="${x}">${esc(nomP(x))}</option>`).join('')}</select>${UI.botonAccion('cabildearPaisBloque', { bloque: id, prop: p.id, pais: ms.filter(x => x !== 'COL')[0] }, 'Cabildear su voto', 'chico')}</div>`;
+      return `<div class="it" style="flex-wrap:wrap"><div class="cuerpo"><b>${esc(p.titulo)}</b> <span class="etq ${p.fase === 'aprobada' ? 'verde' : p.fase === 'rechazada' ? 'rojo' : 'amar'}">${esc(FASES[p.fase])}</span><div class="tenue" style="font-size:12px">${p.autor === 'Comisión' ? 'Propone la Comisión' : 'Propone ' + esc(nomP(p.autor))} · ${esc(info)}</div>${acc}</div></div>`;
+    };
+    const props = `<div class="tarjeta"><h3>📜 Normas comunitarias en trámite</h3><div class="tenue" style="font-size:12px;margin-bottom:8px">Recorren ${nv.comision >= 2 && nv.iniciativa ? 'Comisión → ' : ''}${nv.parlamento >= 2 ? 'Parlamento → ' : nv.parlamento === 1 ? 'dictamen del foro (no vinculante) → ' : ''}Consejo.</div>${abiertas.length ? `<div class="lista">${abiertas.map(filaProp).join('')}</div>` : '<div class="tenue" style="font-size:13px">No hay normas en trámite.</div>'}${cerradas.length ? `<h4 class="sub-h" style="margin:12px 0 6px">Resueltas</h4><div class="lista">${cerradas.map(filaProp).join('')}</div>` : ''}
+      ${esP ? `<div class="fila accion-form" style="gap:6px;flex-wrap:wrap;margin-top:10px"><select data-arg="norma" style="max-width:280px">${cat.map(n => `<option value="${n.id}">${esc(n.n)}</option>`).join('')}</select>${UI.botonAccion('proponerNormaBloque', { bloque: id, norma: (cat[0] || {}).id }, 'Proponer una norma', 'chico prim')}</div>` : ''}</div>`;
+    return `<div class="grid g4">${Comp.kpi('Regla del Consejo', esc(REGLA[nv.regla].split(' (')[0]))}${Comp.kpi('Comisión', nv.comision === 0 ? 'Sólo secretaría' : nv.comision === 3 ? (nv.iniciativa ? 'Con iniciativa' : 'Representantes') : 'Secretaría')}${Comp.kpi('Parlamento', ['Ninguno', 'Foro', 'Elegido', 'Colegislador'][nv.parlamento])}${Comp.kpi('Tribunal', ['Ad hoc', 'Permanente', 'Obligatorio'][nv.tribunal] || '')}</div>
+      <div class="grid g2" style="margin-top:12px"><div class="col">${consejo}${comisionCard}${tribunal}</div><div class="col">${parCard}${props}${s.hist.length ? `<div class="tarjeta"><h3>Crónica</h3><div class="lista">${s.hist.slice(0, 6).map(h => `<div class="it"><div class="cuerpo" style="font-size:13px">${esc(h.txt)}<div class="tenue" style="font-size:11.5px">${U.fmtT(h.t)}</div></div></div>`).join('')}</div></div>` : ''}</div></div>`;
   };
 
   const aranceles = E => {

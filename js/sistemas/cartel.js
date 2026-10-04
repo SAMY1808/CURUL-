@@ -16,7 +16,7 @@ window.CURUL = window.CURUL || {};
     extradicion(E, on) { ca.asegurar(E).ext = !!on; if (C.Interv) C.Interv.ayuda(E, on ? 4 : -4); const st = E.diplomacia && E.diplomacia.paises.USA; if (st) st.relacion = cl(st.relacion + (on ? 4 : -4), 3, 97); },
     /* Asesinato de un político (NPC): candidatos, congresistas y dirigentes */
     magnicidio(E, motivo) {
-      const c = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && p.r && p.r.amb > 25 && !(p.cargo.tipo === 'presidente'));
+      const c = Object.values(E.politicos).filter(p => p.activo && p.id !== 'J' && p.cargo && p.r && p.r.amb > 25 && !['presidente', 'senador', 'representante'].includes(p.cargo.tipo));
       if (!c.length) return null;
       const p = U.pesado(c, x => 1 + x.fuerza / 30 + (x.cargo.tipo === 'aspirante' ? 2 : 0)); p.activo = false; const cargo = p.cargo.tipo; p.cargo = null; C.Politicos.anotar(p, `Es asesinado (${motivo})`);
       E.cartel && (E.cartel.ultMagni = E.fecha.t); E.opinion.escandalos = (E.opinion.escandalos || 0) + 0.3;

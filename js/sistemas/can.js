@@ -67,15 +67,7 @@ window.CURUL = window.CURUL || {};
       if (y === 2006 && E.diplomacia.paises.VEN && !c.vzla) { c.vzla = true; noti(E, 'Venezuela anuncia su salida de la Comunidad Andina', -1, true); N.anotar(E, 'Venezuela se retira de la CAN'); }
       c.integ = cl(c.integ + ((35 + N.indiceInst(E) * 0.5) - c.integ) * 0.004 - c.controv.filter(k => k.fase !== 'cerrado').length * 0.02, 0, 100);
       C.Economia.aplicarDelta(E, 'exportaciones', (c.integ - 55) * 0.0002);
-      // propuestas de decisiones
-      if (t >= c.prox) {
-        c.prox = t + U.ri(20, 45); const l = N.disponibles(E), socios = N.socios(E);
-        if (l.length && socios.length) {
-          const d = U.pick(l), prop = U.pick(socios.concat(['COL', 'COL']));
-          if (prop === 'COL' && esPres(E)) {} else if (esPres(E) && !E.meta.presim && !E.eventos.pendientes.length) { c.dec[d.id].estado = 'propuesta'; c.dec[d.id].por = prop; C.Eventos.disparar(E, C.Eventos.plantilla('ml_can_decision'), { forzar: true, vars: { dec: d.n, did: d.id, pais: nom(prop) } }); }
-          else { const tt = N.tally(E, d, prop, U.chance(0.6) ? 1 : -1); if (tt.ok) N.aprobar(E, d, prop); }
-        }
-      }
+      // las propuestas de decisiones y su voto viven ahora en C.Bloques (Comisión → Parlamento → Consejo)
       // conflictos comerciales
       const socios = N.socios(E);
       if (socios.length && U.chance(0.01)) {
@@ -149,7 +141,7 @@ window.CURUL = window.CURUL || {};
       const A = C.Acciones, pres = E => esPres(E) ? (N.enCAN(E) ? true : 'Colombia no está en la Comunidad Andina') : 'Sólo el Presidente';
       A.registrar({ id: 'proponerDecisionCAN', nombre: 'Proponer una Decisión andina', icono: '🏔', grupo: 'diplomacia', costo: 2,
         disponible(E, a) { const p = pres(E); if (p !== true) return p; const d = D().CAN_DEC.find(x => x.id === a.dec); if (!d) return 'Elige la decisión'; return N.asegurar(E).dec[d.id].estado === 'disponible' && N.disponibles(E).includes(d) ? true : 'Esa decisión no está disponible'; },
-        ejecutar(E, a) { const d = D().CAN_DEC.find(x => x.id === a.dec), t = N.tally(E, d, 'COL', 1); if (t.ok) { N.aprobar(E, d, 'COL'); C.Opinion.subirRec(E, 1.5); return { ok: true, msg: `Aprobada por ${t.f} de ${t.n} países: «${d.n}» queda vigente` }; } return { ok: true, exito: false, msg: `Sólo ${t.f} de ${t.n} países la apoyan: no alcanza la mayoría` }; } });
+        ejecutar(E, a) { const pr = C.Bloques.proponer(E, 'can', a.dec, 'COL', { autoriaJ: true }); C.Opinion.subirRec(E, 1); return { ok: !!pr, msg: pr ? `Presentas la decisión: entra a trámite (${pr.fase === 'comision' ? 'la Comisión la estudia' : pr.fase === 'consejo' ? 'va directo al Consejo' : 'pasa al Parlamento'})` : 'Ya está en trámite' }; } });
       A.registrar({ id: 'cabildearCAN', nombre: 'Cabildear con un socio andino', icono: '🤝', grupo: 'diplomacia', costo: 1,
         disponible(E, a) { const p = pres(E); if (p !== true) return p; return N.socios(E).includes(a.pais) ? true : 'Elige un socio andino'; },
         ejecutar(E, a) { const st = E.diplomacia.paises[a.pais]; st.relacion = cl(st.relacion + 3, 3, 97); return { ok: true, msg: `Tu visita mejora la relación con ${nom(a.pais)}` }; } });
